@@ -58,7 +58,7 @@ public class Limelight {
     }
 
     double[] GetDistanceToTag() {
-
+        // returns the distance to the tag in x,y,z
         double[] distances = {tagPositions[id-1][0]-botPos[0],tagPositions[id-1][1]-botPos[1],-x};
 
         return distances;
