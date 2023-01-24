@@ -25,13 +25,13 @@ public class SwerveKinematics {
     double robotRotation = 0;
     Utils utils;
 
-    double[] anglePID = {0.003, 0, 0.0000001};
+    double[] anglePID = {0.3, 0, 0.00001};
     double[] drivePID = {0, 0, 0};
     final double anglePosTolerance = 1;
     final double angleVelTolerance = 1;
 
-    final double L = .6;
-    final double W = .6;
+    final double L = 0.58705;
+    final double W = 0.58705;
     final double maxSpeedMetersPerSecond = 7;
     double maxRadiansPerSecond = 0.75;
 

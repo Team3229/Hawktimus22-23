@@ -108,7 +108,7 @@ public class SwerveModule {
         
        // drivePIDController.setReference(utils.mpsToRPM(moduleState.speedMetersPerSecond), ControlType.kVelocity);
         driveMotor.set(moduleState.speedMetersPerSecond);
-        angleMotor.set(anglePIDController.calculate(GetAbsoluteEncoder(), moduleState.angle.getDegrees()));
+        angleMotor.set(anglePIDController.calculate(GetAbsoluteEncoder(), moduleState.angle.getDegrees())/100);
             
     }
 

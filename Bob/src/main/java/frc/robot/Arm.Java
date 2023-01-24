@@ -1,5 +1,10 @@
 package frc.robot;
 
+import com.ctre.phoenix.sensors.CANCoder;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /*
@@ -37,11 +42,55 @@ All switch statements need to be filled in once we know how to program the arm
 */
 
 public class Arm {
+
+    Utils utils = new Utils();
+    
     // 0 Docked, 1 Undocked, 2,3,4 Low,mid,high 5 ground, 6, humanstation Square
     int armLevel = 0;
+    final int motor1ID = 13;
+    final int motor2ID = 14;
+    final int encoder1ID = 13;
+    final int encoder2ID = 14;
+
+    int encoderBuffer = 0;
+    double encoderValue = 0;
+    
+    // motor 1 is the big arm and 2 is the smaller arm
+    CANSparkMax motor1;
+    CANSparkMax motor2;
+    
+    CANCoder encoder1;
+    CANCoder encoder2;
+
+    double[] pidv1 = {0,0,0};
+    double[] pidv2 = {0,0,0};
+
+    PIDController pid1 = new PIDController(pidv1[0], pidv1[1], pidv1[2]);
+    PIDController pid2 = new PIDController(pidv2[0], pidv2[1], pidv2[2]);
 
     Arm() {
+
+        motor1 = new CANSparkMax(motor1ID, MotorType.kBrushless);
+        motor2 = new CANSparkMax(motor2ID, MotorType.kBrushless);
+
+        encoder1 = new CANCoder(encoder1ID);
+        encoder2 = new CANCoder(encoder2ID);
+
         SmartDashboard.putNumber("ArmLevel",armLevel);
+        SmartDashboard.putNumberArray("PIDArm1", pidv1);
+        SmartDashboard.putNumberArray("PIDArm2", pidv2);
+
+    }
+
+    double GetAbsoluteEncoder(CANCoder encoder) {
+ 
+        if (encoderBuffer++ > 5) {
+            encoderBuffer = 0;
+            encoderValue = encoder.getAbsolutePosition();
+        }
+
+        return utils.convertAngle(encoderValue);
+
     }
 
     void setArmLevel(int level){
