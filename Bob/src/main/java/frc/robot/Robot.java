@@ -32,7 +32,7 @@ public class Robot extends TimedRobot {
   Utils utils = new Utils();
   Leveling leveling = new Leveling();
   Limelight limelight = new Limelight();
-  Arm arm = new Arm();
+  //Arm arm = new Arm();
 
   double bufferZone = 0.1;
 
