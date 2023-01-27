@@ -30,8 +30,8 @@ public class SwerveKinematics {
     final double anglePosTolerance = 1;
     final double angleVelTolerance = 1;
 
-    final double L = 0.58705;
-    final double W = 0.58705;
+    final double L = 0.594;
+    final double W = 0.594;
     final double maxSpeedMetersPerSecond = 7;
     double maxRadiansPerSecond = 0.75;
 

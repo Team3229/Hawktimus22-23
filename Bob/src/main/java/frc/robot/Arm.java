@@ -1,12 +1,13 @@
 package frc.robot;
 
-import com.ctre.phoenix.sensors.CANCoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+import com.revrobotics.AbsoluteEncoder;
 /*
     Needs to do:
     Go from docked to undocked position and vice versa
@@ -37,57 +38,74 @@ left trigger - retract placing object if started to place
     -placing cubes/cones depending on how we do the controls
     
 All switch statements need to be filled in once we know how to program the arm
+
+ 0 is stowed pos
+ +angle is around the long way avoiding dead zone
+ 340 max
 */
 
 public class Arm {
 
     Utils utils = new Utils();
     
-    // 0 Docked, 1 Undocked, 2,3,4 Low,mid,high 5 ground, 6, humanstation Square
+    /*
+    0 docked
+    1 low
+    2 mid
+    3 high
+    4 ground
+    5 human station
+    */
     int armLevel = 0;
-    final int motor1ID = 13;
-    final int motor2ID = 14;
-    final int encoder1ID = 13;
-    final int encoder2ID = 14;
+    
+    final int longArmID = 16;
+    final int shortArmID = 17;
+    final int leftHandID = 14;
+    final int rightHandID = 15;
 
     int encoderBuffer = 0;
     double encoderValue = 0;
     
     // motor 1 is the big arm and 2 is the smaller arm
-    CANSparkMax motor1;
-    CANSparkMax motor2;
+    CANSparkMax longArm;
+    CANSparkMax shortArm;
+
+    CANSparkMax leftHand;
+    CANSparkMax rightHand;
     
-    CANCoder encoder1;
-    CANCoder encoder2;
+    AbsoluteEncoder longArmEncoder;
+    AbsoluteEncoder shortArmEncoder;
+
+    RelativeEncoder leftHandEncoder;
+    RelativeEncoder rightHandEncoder;
 
     double[] pidv1 = {0,0,0};
     double[] pidv2 = {0,0,0};
+
+    double leftHandLastValue = 0;
+    double rightHandLastValue = 0;
+
+    boolean isGrabbing = false;
 
     PIDController pid1 = new PIDController(pidv1[0], pidv1[1], pidv1[2]);
     PIDController pid2 = new PIDController(pidv2[0], pidv2[1], pidv2[2]);
 
     Arm() {
 
-        motor1 = new CANSparkMax(motor1ID, MotorType.kBrushless);
-        motor2 = new CANSparkMax(motor2ID, MotorType.kBrushless);
+        longArm = new CANSparkMax(longArmID, MotorType.kBrushless);
+        shortArm = new CANSparkMax(shortArmID, MotorType.kBrushless);
+        leftHand = new CANSparkMax(leftHandID, MotorType.kBrushless);
+        rightHand = new CANSparkMax(rightHandID, MotorType.kBrushless);
 
-        encoder1 = new CANCoder(encoder1ID);
-        encoder2 = new CANCoder(encoder2ID);
+        longArmEncoder = longArm.getAbsoluteEncoder(Type.kDutyCycle);
+        shortArmEncoder = shortArm.getAbsoluteEncoder(Type.kDutyCycle);
+
+        leftHandEncoder =leftHand.getEncoder();
+        rightHandEncoder = rightHand.getEncoder();
 
         SmartDashboard.putNumber("ArmLevel",armLevel);
         SmartDashboard.putNumberArray("PIDArm1", pidv1);
         SmartDashboard.putNumberArray("PIDArm2", pidv2);
-
-    }
-
-    double GetAbsoluteEncoder(CANCoder encoder) {
- 
-        if (encoderBuffer++ > 5) {
-            encoderBuffer = 0;
-            encoderValue = encoder.getAbsolutePosition();
-        }
-
-        return utils.convertAngle(encoderValue);
 
     }
 
@@ -98,23 +116,24 @@ public class Arm {
         armLevel = level;
         SmartDashboard.putNumber("ArmLevel",armLevel);
         switch(armLevel){
+            case 0:
+                // dock
+                pid1.setSetpoint(0);
+                break;
             case 1:
-                // Undock
+                // low
                 break;
             case 2:
-                // Low
+                // mid
                 break;
             case 3:
-                // Mid
+                // high
                 break;
             case 4:
-                // High
+                // ground
                 break;
             case 5:
-                // Ground
-                break;
-            case 6:
-                // Human Station Height
+                // station
                 break;
             default:
                 // go to docked pos
@@ -144,16 +163,90 @@ public class Arm {
     }
 
     void pickupObject(){
+        if(!isGrabbing){
+            return;
+        }
         switch(armLevel){
             case 5:
                 //pickup from ground
+                if(!closeHands(true)){
+                    isGrabbing = false;
+                }
                 break;
             case 6:
                 //human station
+                closeHands(true);
                 break;
             default:
                 break;
         }
     }
 
+    boolean closeHands(boolean cube){
+
+        if (cube) {
+            //picking up cube
+
+            leftHand.set((leftHand.get() != 0) ? (leftHandEncoder.getPosition() != leftHandLastValue) ? -0.07 : 0 : 0);
+            rightHand.set((rightHand.get() != 0) ? (rightHandEncoder.getPosition() != rightHandLastValue) ? -0.07 : 0 : 0);
+
+            leftHandLastValue = leftHandEncoder.getPosition();
+            rightHandLastValue = rightHandEncoder.getPosition();
+
+            if(leftHand.get() == 0 | rightHand.get() == 0){
+                return false;
+            } else {
+                return true;
+            }
+
+        } else {
+            return false;
+        }
+
+}
+
+    //for testing only, remove once done
+    // PLEASE DON"T FORGET :)
+    void grabPiece() {
+
+        leftHand.set((leftHand.get() != 0) ? (leftHandEncoder.getPosition() != leftHandLastValue) ? -0.07 : 0 : 0);
+        rightHand.set((rightHand.get() != 0) ? (rightHandEncoder.getPosition() != rightHandLastValue) ? -0.07 : 0 : 0);
+
+        leftHandLastValue = leftHandEncoder.getPosition();
+        rightHandLastValue = rightHandEncoder.getPosition();
+
+    }
+
+    void startGrab() {
+
+        leftHand.set(-0.07);
+        rightHand.set(-0.07);
+
+        leftHandLastValue = leftHandEncoder.getPosition();
+        rightHandLastValue = rightHandEncoder.getPosition();
+
+    }
+
+    void release() {
+
+        leftHand.set(0.07);
+        rightHand.set(0.07);
+
+    }
+
+    void softStop() {
+
+        if (leftHand.get() == 0.07 | rightHand.get() == 0.07) {
+
+            leftHand.stopMotor();
+            rightHand.stopMotor();
+
+        } else if (leftHand.get() == 0 | rightHand.get() == 0) {
+
+            leftHand.stopMotor();
+            rightHand.stopMotor();
+
+        }
+
+    }
 }

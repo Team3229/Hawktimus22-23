@@ -229,9 +229,21 @@ public class Robot extends TimedRobot {
       if (Math.abs(limelightDist[0]) < bufferZone & Math.abs(limelightDist[1]) < bufferZone){
         goToTarget = false;
       } else {
-        chassis.Drive(limelightDist[0]*0.5, limelightDist[1]*0.5, limelightDist[2]*0.5);
+        chassis.Drive(limelightDist[0]*0.25, limelightDist[1]*0.25, limelightDist[2]*0.25);
       }
     }
+
+
+    //for testing; revise later
+    if (inputs.LeftBumper) {
+      arm.startGrab();
+    } else if (inputs.RightBumper){
+      arm.release();
+    } else {
+      arm.softStop();
+    }
+
+    arm.grabPiece();
     
   }
 }
