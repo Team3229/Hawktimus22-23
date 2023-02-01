@@ -19,8 +19,6 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   private double[] encVals = {0, 0, 0, 0};
   private boolean autoLevel = false;
-  private boolean goToTarget = false;
-  private boolean lastBInput = false;
 
   Controller controller = new Controller();
   ControllerInputs inputs;
@@ -111,17 +109,20 @@ public class Robot extends TimedRobot {
 
     autoLevel = false;
 
+    auto.autoFinished = false;
+
   }
 
   /** This function is called periodically during autonomous. */
   @Override
   public void autonomousPeriodic() {
 
-    inputs = auto.ReadFile();
     if (auto.autoFinished) {
       chassis.Stop();
+      inputs = controller.nullControls();
     } else {
-    RunControls();
+      inputs = auto.ReadFile();
+      RunControls();
     }
 
   }
@@ -194,56 +195,54 @@ public class Robot extends TimedRobot {
   @Override
   public void simulationPeriodic() {}
 
-  void RunControls() {
+void RunControls() {
+  ExecuteDriveControls();
+  ExecuteManipControls();
+}
 
-    if (Math.abs(inputs.leftX) > 0 | Math.abs(inputs.leftY) > 0 | Math.abs(inputs.rightX) > 0) {
-      chassis.Drive(inputs.leftX, inputs.leftY, inputs.rightX);
-    } else {
-      dp = utils.dirPad(inputs.POV);
-      chassis.Drive(dp[0]/2,dp[1]/2,dp[2]/2);
-    }
-    if(inputs.AButton){
-      chassis.navxGyro.zeroYaw();
-    }
-    if(inputs.YButton){
-      autoLevel = true;
-    }
-    if((inputs.BButton != lastBInput) & inputs.BButton){
+void ExecuteDriveControls(){
 
-      // if we just changed input to on, toggle
-        goToTarget = !goToTarget;
-      
-    }
-    
-    lastBInput = inputs.BButton;
-
-    if (autoLevel) {
-
-      chassis.Drive(0, Leveling.GetBalanced(chassis.navxGyro.getRoll()), 0);
-
-    }
-
-    if (goToTarget) {
-      
-      limelightDist = limelight.GetDistanceToTag();
-      if (Math.abs(limelightDist[0]) < bufferZone & Math.abs(limelightDist[1]) < bufferZone){
-        goToTarget = false;
-      } else {
-        chassis.Drive(limelightDist[0]*0.25, limelightDist[1]*0.25, limelightDist[2]*0.25);
-      }
-    }
-
-
-    //for testing; revise later
-    if (inputs.LeftBumper) {
-      arm.startGrab();
-    } else if (inputs.RightBumper){
-      arm.release();
-    } else {
-      arm.softStop();
-    }
-
-    arm.grabPiece();
-    
+  // Drive swerve chassis with joystick deadbands
+  if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0 | Math.abs(inputs.d_rightX) > 0) {
+      chassis.Drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+  } else {
+    // D-Pad driving slowly
+    dp = utils.dirPad(inputs.d_POV);
+    chassis.Drive(dp[0]/2,dp[1]/2,dp[2]/2);
   }
+
+  // Zero NavX Gyro
+  if(inputs.d_AButton){
+    chassis.navxGyro.zeroYaw();
+  }
+
+  // toggle auto level
+  if(inputs.d_YButton){
+    autoLevel = true;
+  }
+
+  // if we're auto leveling, move to work
+  if (autoLevel) {
+    chassis.Drive(0, Leveling.GetBalanced(chassis.navxGyro.getRoll()), 0);
+  }
+
+  arm.checkHandMotors();
+    
+}
+void ExecuteManipControls(){
+  // grabbing things functions
+  if (inputs.m_LeftBumper) {
+    arm.startCubeGrab();
+  } else if (inputs.m_RightBumper){
+    arm.placeObject(true);
+  } else {
+    arm.softStop();
+  }
+
+  if(inputs.m_AButton){
+    double[] a = limelight.alignWithTag();
+    chassis.Drive(a[0], a[1], a[2]);
+  }
+
+}
 }

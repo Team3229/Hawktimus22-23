@@ -13,65 +13,114 @@ class Controller {
   static final double triggerDeadband = 0.1;
 
   // Controller
-  private XboxController controller;
+  private XboxController d_controller;
+  private XboxController m_controller;
 
   Controller() {
-    controller = new XboxController(0);
+    d_controller = new XboxController(0);
+    m_controller = new XboxController(1);
   }
 
   ControllerInputs getControls() {
     ControllerInputs ci = new ControllerInputs();
-    ci.rightY = ((Math.abs(controller.getRightY()) < stickDeadband) ? 0 : controller.getRightY());
-    ci.rightX = ((Math.abs(controller.getRightX()) < stickDeadband) ? 0 : controller.getRightX());
-    ci.leftY = ((Math.abs(controller.getLeftY()) < stickDeadband) ? 0 : controller.getLeftY());
-    ci.leftX = ((Math.abs(controller.getLeftX()) < stickDeadband) ? 0 : controller.getLeftX());
-    ci.AButton = controller.getAButton();
-    ci.BButton = controller.getBButton();
-    ci.XButton = controller.getXButton();
-    ci.YButton = controller.getYButton();
-    ci.StartButton = controller.getStartButton();
-    ci.RightBumper = controller.getRightBumper();
-    ci.LeftBumper = controller.getLeftBumper();
-    ci.RightTriggerAxis = ((Math.abs(controller.getRightTriggerAxis()) < triggerDeadband) ? 0 : controller.getRightTriggerAxis());
-    ci.LeftTriggerAxis = ((Math.abs(controller.getLeftTriggerAxis()) < triggerDeadband) ? 0 : controller.getLeftTriggerAxis());
-    ci.POV = controller.getPOV();
+    ci.d_rightY = ((Math.abs(d_controller.getRightY()) < stickDeadband) ? 0 : d_controller.getRightY());
+    ci.d_rightX = ((Math.abs(d_controller.getRightX()) < stickDeadband) ? 0 : d_controller.getRightX());
+    ci.d_leftY = ((Math.abs(d_controller.getLeftY()) < stickDeadband) ? 0 : d_controller.getLeftY());
+    ci.d_leftX = ((Math.abs(d_controller.getLeftX()) < stickDeadband) ? 0 : d_controller.getLeftX());
+    ci.d_AButton = d_controller.getAButton();
+    ci.d_BButton = d_controller.getBButton();
+    ci.d_XButton = d_controller.getXButton();
+    ci.d_YButton = d_controller.getYButton();
+    ci.d_StartButton = d_controller.getStartButton();
+    ci.d_RightBumper = d_controller.getRightBumper();
+    ci.d_LeftBumper = d_controller.getLeftBumper();
+    ci.d_RightTriggerAxis = ((Math.abs(d_controller.getRightTriggerAxis()) < triggerDeadband) ? 0 : d_controller.getRightTriggerAxis());
+    ci.d_LeftTriggerAxis = ((Math.abs(d_controller.getLeftTriggerAxis()) < triggerDeadband) ? 0 : d_controller.getLeftTriggerAxis());
+    ci.d_POV = d_controller.getPOV();
+
+    ci.m_rightY = ((Math.abs(m_controller.getRightY()) < stickDeadband) ? 0 : m_controller.getRightY());
+    ci.m_rightX = ((Math.abs(m_controller.getRightX()) < stickDeadband) ? 0 : m_controller.getRightX());
+    ci.m_leftY = ((Math.abs(m_controller.getLeftY()) < stickDeadband) ? 0 : m_controller.getLeftY());
+    ci.m_leftX = ((Math.abs(m_controller.getLeftX()) < stickDeadband) ? 0 : m_controller.getLeftX());
+    ci.m_AButton = m_controller.getAButton();
+    ci.m_BButton = m_controller.getBButton();
+    ci.m_XButton = m_controller.getXButton();
+    ci.m_YButton = m_controller.getYButton();
+    ci.m_StartButton = m_controller.getStartButton();
+    ci.m_RightBumper = m_controller.getRightBumper();
+    ci.m_LeftBumper = m_controller.getLeftBumper();
+    ci.m_RightTriggerAxis = ((Math.abs(m_controller.getRightTriggerAxis()) < triggerDeadband) ? 0 : m_controller.getRightTriggerAxis());
+    ci.m_LeftTriggerAxis = ((Math.abs(m_controller.getLeftTriggerAxis()) < triggerDeadband) ? 0 : m_controller.getLeftTriggerAxis());
+    ci.m_POV = m_controller.getPOV();
+    
     return ci;
   }
 
   ControllerInputs nullControls() {
     ControllerInputs ci = new ControllerInputs();
-    ci.rightY = 0;
-    ci.rightX = 0;
-    ci.leftY = 0;
-    ci.leftX = 0;
-    ci.AButton = false;
-    ci.BButton = false;
-    ci.XButton = false;
-    ci.YButton = false;
-    ci.StartButton = false;
-    ci.RightBumper = false;
-    ci.LeftBumper = false;
-    ci.RightTriggerAxis = 0;
-    ci.LeftTriggerAxis = 0;
-    ci.POV = -1;
+    ci.d_rightY = 0;
+    ci.d_rightX = 0;
+    ci.d_leftY = 0;
+    ci.d_leftX = 0;
+    ci.d_AButton = false;
+    ci.d_BButton = false;
+    ci.d_XButton = false;
+    ci.d_YButton = false;
+    ci.d_StartButton = false;
+    ci.d_RightBumper = false;
+    ci.d_LeftBumper = false;
+    ci.d_RightTriggerAxis = 0;
+    ci.d_LeftTriggerAxis = 0;
+    ci.d_POV = -1;
+
+    ci.m_rightY = 0;
+    ci.m_rightX = 0;
+    ci.m_leftY = 0;
+    ci.m_leftX = 0;
+    ci.m_AButton = false;
+    ci.m_BButton = false;
+    ci.m_XButton = false;
+    ci.m_YButton = false;
+    ci.m_StartButton = false;
+    ci.m_RightBumper = false;
+    ci.m_LeftBumper = false;
+    ci.m_RightTriggerAxis = 0;
+    ci.m_LeftTriggerAxis = 0;
+    ci.m_POV = -1;
     return ci;
   }
 }
 
 class ControllerInputs  implements Serializable {
   // Driver Controls
-  double rightY;
-  double rightX;
-  double leftX;
-  double leftY;
-  boolean AButton;
-  boolean BButton;
-  boolean XButton;
-  boolean YButton;
-  boolean RightBumper;
-  boolean LeftBumper;
-  double RightTriggerAxis;
-  double LeftTriggerAxis;
-  int POV;
-  boolean StartButton;
+  double d_rightY;
+  double d_rightX;
+  double d_leftX;
+  double d_leftY;
+  boolean d_AButton;
+  boolean d_BButton;
+  boolean d_XButton;
+  boolean d_YButton;
+  boolean d_RightBumper;
+  boolean d_LeftBumper;
+  double d_RightTriggerAxis;
+  double d_LeftTriggerAxis;
+  int d_POV;
+  boolean d_StartButton;
+
+  // Manip Controls
+  double m_rightY;
+  double m_rightX;
+  double m_leftX;
+  double m_leftY;
+  boolean m_AButton;
+  boolean m_BButton;
+  boolean m_XButton;
+  boolean m_YButton;
+  boolean m_RightBumper;
+  boolean m_LeftBumper;
+  double m_RightTriggerAxis;
+  double m_LeftTriggerAxis;
+  int m_POV;
+  boolean m_StartButton;
 }

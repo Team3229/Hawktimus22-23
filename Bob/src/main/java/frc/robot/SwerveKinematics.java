@@ -78,10 +78,10 @@ public class SwerveKinematics {
 
     double[] EncoderValues() {
 
-        encoderValues[0] = frontLeftModule.GetAbsoluteEncoder();
-        encoderValues[1] = frontRightModule.GetAbsoluteEncoder();
-        encoderValues[2] = backLeftModule.GetAbsoluteEncoder();
-        encoderValues[3] = backRightModule.GetAbsoluteEncoder();
+        encoderValues[0] = frontLeftModule.GetEncoder();
+        encoderValues[1] = frontRightModule.GetEncoder();
+        encoderValues[2] = backLeftModule.GetEncoder();
+        encoderValues[3] = backRightModule.GetEncoder();
         robotRotation = utils.convertAngle(navxGyro.getYaw()*-1);
         return encoderValues;
 

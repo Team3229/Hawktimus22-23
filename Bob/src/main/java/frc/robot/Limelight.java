@@ -58,11 +58,24 @@ public class Limelight {
     }
 
     double[] GetDistanceToTag() {
-        // returns the distance to the tag in x,y (meters), z(rotation)
-        double[] distances = {tagPositions[id-1][0]-botPos[0],tagPositions[id-1][1]-botPos[1],-x};
+        // returns the distance to the closest tag in x,y (meters), z(rotation)
+        double[] distances = {tagPositions[id-1][0]-botPos[0],tagPositions[id-1][1]-botPos[1],-x,id};
 
         return distances;
 
+    }
+    
+    double[] alignWithTag(){
+        // 1.2192 meters is the minimum distance to be, that's how far from the tag we want to be.
+        double alignScaleFactor = 0.05;
+        double[] distanceToTag = GetDistanceToTag();
+        double[] actualMove = {0,distanceToTag[1]*alignScaleFactor,distanceToTag[2]};
+        // if the abs of x is > 0, we´re still movin'.
+        if(Math.abs(distanceToTag[0]) > 1.2192){
+            actualMove[0] = distanceToTag[0]*alignScaleFactor;
+        }
+        
+        return actualMove;
     }
 
 }

@@ -29,7 +29,8 @@ class Auto {
   private FileOutputStream fWriter;
   private ObjectOutputStream cmdWrite;
 
-  Controller controller;
+  Controller controller = new Controller();
+
 
   Auto() {
   }

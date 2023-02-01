@@ -14,10 +14,10 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.MathUtil;
 
 public class SwerveModule {
 
@@ -26,7 +26,7 @@ public class SwerveModule {
     CANCoder encoder;
     RelativeEncoder driveEncoder;
     RelativeEncoder angleEncoder;
-    PIDController anglePIDController;
+    SparkMaxPIDController anglePIDController;
     SparkMaxPIDController drivePIDController;
     Utils utils;
     SwerveModuleState moduleState;
@@ -51,10 +51,12 @@ public class SwerveModule {
         encoder = new CANCoder(encoderID);
         encoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
         driveEncoder = driveMotor.getEncoder();
+        angleEncoder = angleMotor.getEncoder();
+        angleEncoder.setPositionConversionFactor(360);
         drivePIDController = driveMotor.getPIDController();
         angleMotor.setInverted(false);
 
-        anglePIDController = new PIDController(anglePID[0], anglePID[1], anglePID[2], 0.2);
+        anglePIDController = angleMotor.getPIDController();
         drivePIDController.setP(drivePID[0]);
         drivePIDController.setI(drivePID[1]);
         drivePIDController.setD(drivePID[2]);
@@ -74,29 +76,26 @@ public class SwerveModule {
     void ConfigEncoder(double oofset) {
 
         encoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
-        encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Signed_PlusMinus180);
+        encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         encoder.configMagnetOffset(oofset);
+
+        angleEncoder.setPosition(encoder.getAbsolutePosition());
 
     }
 
     void ConfigPID(double[] anglePID, double[] drivePID) {
         
-        anglePIDController.setPID(anglePID[0], anglePID[1], anglePID[2]);
+        anglePIDController.setP(anglePID[0]);
+        anglePIDController.setI(anglePID[1]);
+        anglePIDController.setD(anglePID[2]);
         drivePIDController.setP(drivePID[0]);
         drivePIDController.setI(drivePID[1]);
         drivePIDController.setD(drivePID[2]);
-        anglePIDController.enableContinuousInput(0, 360);
-
-    }
-
-    double GetAbsoluteEncoder() {
-
-        if (encoderBuffer++ > 5) {
-            encoderBuffer = 0;
-            encoderValue = encoder.getAbsolutePosition();
-        }
-
-        return utils.convertAngle(encoderValue);
+        anglePIDController.setPositionPIDWrappingEnabled(true);
+        anglePIDController.setPositionPIDWrappingMinInput(0);
+        anglePIDController.setPositionPIDWrappingMaxInput(360);
+        angleMotor.burnFlash();
+        driveMotor.burnFlash();
 
     }
 
@@ -104,12 +103,20 @@ public class SwerveModule {
 
         driveRPM = driveEncoder.getVelocity();
 
-        moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(GetAbsoluteEncoder()));
+        moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(angleEncoder.getPosition()));
         
-       // drivePIDController.setReference(utils.mpsToRPM(moduleState.speedMetersPerSecond), ControlType.kVelocity);
+        // drivePIDController.setReference(utils.mpsToRPM(moduleState.speedMetersPerSecond), ControlType.kVelocity);
         driveMotor.set(moduleState.speedMetersPerSecond);
-        angleMotor.set(anglePIDController.calculate(GetAbsoluteEncoder(), moduleState.angle.getDegrees())/100);
+        // angleMotor.set(anglePIDController.calculate(GetAbsoluteEncoder(), moduleState.angle.getDegrees())/100);
+        anglePIDController.setReference(MathUtil.inputModulus(moduleState.angle.getDegrees(), 0, 360), ControlType.kPosition);
+    
             
+    }
+
+    double GetEncoder() {
+
+        return angleEncoder.getPosition();
+
     }
 
     void Stop() {
