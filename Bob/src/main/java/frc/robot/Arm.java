@@ -9,6 +9,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import com.revrobotics.AbsoluteEncoder;
 
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 
@@ -78,7 +79,10 @@ CANSparkMax shortArm;
 CANSparkMax leftHand;
 CANSparkMax rightHand;
 
-Solenoid handSolenoid;
+Solenoid onSolenoid;
+Solenoid offSolenoid;
+
+Compressor compressor;
 
 AbsoluteEncoder longArmEncoder;
 AbsoluteEncoder shortArmEncoder;
@@ -105,7 +109,9 @@ Arm() {
     leftHand = new CANSparkMax(leftHandID, MotorType.kBrushless);
     rightHand = new CANSparkMax(rightHandID, MotorType.kBrushless);
 
-    handSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
+    compressor = new Compressor(1, PneumaticsModuleType.CTREPCM);
+    onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
+    offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 
     longArmEncoder = longArm.getAbsoluteEncoder(Type.kDutyCycle);
     shortArmEncoder = shortArm.getAbsoluteEncoder(Type.kDutyCycle);
@@ -161,7 +167,8 @@ void placeObject(boolean gamePiece){
         
     } else {
         // move the cone bits
-        handSolenoid.set(false);
+        offSolenoid.set(true);
+        onSolenoid.set(false);
     }
     
 }
@@ -179,7 +186,8 @@ void closeHands(boolean cube){
 
     } else {
         // picking up cone
-        handSolenoid.set(true);
+        offSolenoid.set(false);
+        onSolenoid.set(true);
     }
 }
 

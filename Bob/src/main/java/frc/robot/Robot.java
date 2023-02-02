@@ -230,6 +230,9 @@ void ExecuteDriveControls(){
     
 }
 void ExecuteManipControls(){
+  if(arm.compressor.getPressure() >= 50){
+    arm.compressor.disable();
+  }
   // grabbing things functions
   if (inputs.m_LeftBumper) {
     arm.startCubeGrab();
@@ -240,9 +243,24 @@ void ExecuteManipControls(){
   }
 
   if(inputs.m_AButton){
-    double[] a = limelight.alignWithTag();
-    chassis.Drive(a[0], a[1], a[2]);
+    // double[] a = limelight.alignWithTag();
+    // chassis.Drive(a[0], a[1], a[2]);
+    
   }
-
+  if(inputs.m_BButton){
+    // close solenoid
+    arm.offSolenoid.set(true);
+    arm.onSolenoid.set(false);
+  }
+  if(inputs.m_XButton){
+    // open/on
+    arm.offSolenoid.set(false);
+    arm.onSolenoid.set(true);
+  }
+  if(inputs.m_YButton){
+    // shut it all down.
+    arm.offSolenoid.set(false);
+    arm.onSolenoid.set(false);
+  }
 }
 }
