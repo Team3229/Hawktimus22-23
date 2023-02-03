@@ -8,16 +8,15 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.RelativeEncoder;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.MathUtil;
 
 public class SwerveModule {
 
@@ -26,8 +25,8 @@ public class SwerveModule {
     CANCoder encoder;
     RelativeEncoder driveEncoder;
     RelativeEncoder angleEncoder;
-    SparkMaxPIDController anglePIDController;
-    SparkMaxPIDController drivePIDController;
+    PIDController anglePIDController;
+    PIDController drivePIDController;
     Utils utils;
     SwerveModuleState moduleState;
 
@@ -53,13 +52,9 @@ public class SwerveModule {
         driveEncoder = driveMotor.getEncoder();
         angleEncoder = angleMotor.getEncoder();
         angleEncoder.setPositionConversionFactor(360);
-        drivePIDController = driveMotor.getPIDController();
         angleMotor.setInverted(false);
 
-        anglePIDController = angleMotor.getPIDController();
-        drivePIDController.setP(drivePID[0]);
-        drivePIDController.setI(drivePID[1]);
-        drivePIDController.setD(drivePID[2]);
+        anglePIDController = new PIDController(anglePID[0], anglePID[1], anglePID[2]);
 
         location = new Translation2d(X/2, Y/2);
 
@@ -85,17 +80,11 @@ public class SwerveModule {
 
     void ConfigPID(double[] anglePID, double[] drivePID) {
         
-        anglePIDController.setP(anglePID[0]);
-        anglePIDController.setI(anglePID[1]);
-        anglePIDController.setD(anglePID[2]);
-        drivePIDController.setP(drivePID[0]);
-        drivePIDController.setI(drivePID[1]);
-        drivePIDController.setD(drivePID[2]);
-        anglePIDController.setPositionPIDWrappingEnabled(true);
-        anglePIDController.setPositionPIDWrappingMinInput(0);
-        anglePIDController.setPositionPIDWrappingMaxInput(360);
-        angleMotor.burnFlash();
-        driveMotor.burnFlash();
+        anglePIDController.setPID(anglePID[0],anglePID[1],anglePID[2]);
+        // drivePIDController.setP(drivePID[0]);
+        // drivePIDController.setI(drivePID[1]);
+        // drivePIDController.setD(drivePID[2]);
+        anglePIDController.enableContinuousInput(0, 360);
 
     }
 
@@ -103,26 +92,31 @@ public class SwerveModule {
 
         driveRPM = driveEncoder.getVelocity();
 
-        moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(angleEncoder.getPosition()));
+        moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(GetEncoder()));
         
         // drivePIDController.setReference(utils.mpsToRPM(moduleState.speedMetersPerSecond), ControlType.kVelocity);
         driveMotor.set(moduleState.speedMetersPerSecond);
-        // angleMotor.set(anglePIDController.calculate(GetAbsoluteEncoder(), moduleState.angle.getDegrees())/100);
-        anglePIDController.setReference(MathUtil.inputModulus(moduleState.angle.getDegrees(), 0, 360), ControlType.kPosition);
+        // angleMotor.set(anglePIDController.calculate(GetAbsoluteEncoder(), moduleState.angle.getDegrees()));
+        angleMotor.set(anglePIDController.calculate(GetEncoder(), moduleState.angle.getDegrees()));
     
             
     }
 
     double GetEncoder() {
 
-        return angleEncoder.getPosition();
+        if (encoderBuffer++ > 5) {
+            encoderBuffer = 0;
+            encoderValue = encoder.getAbsolutePosition();
+        }
+
+        return MathUtil.inputModulus(encoderValue, 0, 360);
 
     }
 
     void Stop() {
 
         angleMotor.stopMotor();
-        drivePIDController.setReference(0, ControlType.kVelocity);
+        // drivePIDController.setReference(0, ControlType.kVelocity);
         driveMotor.stopMotor();
 
     }

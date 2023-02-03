@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -33,6 +34,7 @@ public class Robot extends TimedRobot {
   Arm arm = new Arm();
 
   double bufferZone = 0.1;
+  boolean controllerError = false;
 
   /**
    * This function is run when the robot is first started up and should be used for any
@@ -196,6 +198,7 @@ public class Robot extends TimedRobot {
   public void simulationPeriodic() {}
 
 void RunControls() {
+
   ExecuteDriveControls();
   ExecuteManipControls();
 }
@@ -203,13 +206,19 @@ void RunControls() {
 void ExecuteDriveControls(){
 
   // Drive swerve chassis with joystick deadbands
-  if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0 | Math.abs(inputs.d_rightX) > 0) {
-      chassis.Drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+
+  
+  if (!DriverStation.isJoystickConnected(0)) {
+    chassis.Stop();
   } else {
-    // D-Pad driving slowly
-    dp = utils.dirPad(inputs.d_POV);
-    chassis.Drive(dp[0]/2,dp[1]/2,dp[2]/2);
-  }
+    if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0 | Math.abs(inputs.d_rightX) > 0) {
+        chassis.Drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+    } else {
+      // D-Pad driving slowly
+      dp = utils.dirPad(inputs.d_POV);
+      chassis.Drive(dp[0]/2,dp[1]/2,dp[2]/2);
+    }
+}
 
   // Zero NavX Gyro
   if(inputs.d_AButton){

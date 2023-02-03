@@ -64,17 +64,19 @@ Utils utils = new Utils();
 int armLevel = 0;
 
 final int longArmID = 16;
-final int shortArmID = 17;
+final int intakeArmID = 17;
 final int leftHandID = 14;
 final int rightHandID = 15;
 final double cubeBuffer = 0.00000001;
+final double armLength = 0.8218;
+final double armPivotHeight = 0.9836;
 
 int encoderBuffer = 0;
 double encoderValue = 0;
 
 // motor 1 is the big arm and 2 is the smaller arm/wristed intake
 CANSparkMax longArm;
-CANSparkMax shortArm;
+CANSparkMax intakeArm;
 
 CANSparkMax leftHand;
 CANSparkMax rightHand;
@@ -85,7 +87,7 @@ Solenoid offSolenoid;
 Compressor compressor;
 
 AbsoluteEncoder longArmEncoder;
-AbsoluteEncoder shortArmEncoder;
+AbsoluteEncoder intakeArmEncoder;
 
 RelativeEncoder leftHandEncoder;
 RelativeEncoder rightHandEncoder;
@@ -105,7 +107,7 @@ PIDController shortPID = new PIDController(shortPIDv[0], shortPIDv[1], shortPIDv
 Arm() {
 
     longArm = new CANSparkMax(longArmID, MotorType.kBrushless);
-    shortArm = new CANSparkMax(shortArmID, MotorType.kBrushless);
+    intakeArm = new CANSparkMax(intakeArmID, MotorType.kBrushless);
     leftHand = new CANSparkMax(leftHandID, MotorType.kBrushless);
     rightHand = new CANSparkMax(rightHandID, MotorType.kBrushless);
 
@@ -114,7 +116,7 @@ Arm() {
     offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 
     longArmEncoder = longArm.getAbsoluteEncoder(Type.kDutyCycle);
-    shortArmEncoder = shortArm.getAbsoluteEncoder(Type.kDutyCycle);
+    intakeArmEncoder = intakeArm.getAbsoluteEncoder(Type.kDutyCycle);
 
     leftHandEncoder = leftHand.getEncoder();
     rightHandEncoder = rightHand.getEncoder();
@@ -227,4 +229,12 @@ void softStop() {
     }
 
 }
+/*
+double trigJunk(double yGoal){
+
+    
+    return yGoal + Math.random() * Math.random() * Math.random()
+
+}
+*/
 }

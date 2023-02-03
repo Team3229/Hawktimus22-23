@@ -12,8 +12,8 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
 
 public class SwerveKinematics {
-    //126.9140625     255.5859375    346.728515625    6.416015625
-    double[] offsets = {53.0859375,-255.5859375,-346.728515625,-6.416015625};
+    // add these numbers to the offset
+    double[] offsets = {1.93359375, 102.04015625, -86.572265625, 22.32421875};
     SwerveModule frontLeftModule;
     SwerveModule frontRightModule;
     SwerveModule backLeftModule;
@@ -25,7 +25,7 @@ public class SwerveKinematics {
     double robotRotation = 0;
     Utils utils;
 
-    double[] anglePID = {0.3, 0, 0.00001};
+    double[] anglePID = {0.003, 0, 0.0000001};
     double[] drivePID = {0, 0, 0};
     final double anglePosTolerance = 1;
     final double angleVelTolerance = 1;
@@ -44,7 +44,7 @@ public class SwerveKinematics {
         frontLeftModule = new SwerveModule(1, 2, 9, anglePID, drivePID, L, W, false);
         frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePID,L, -W, true);
         backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePID, -L, W, true);
-        backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePID, -L, -W, false);
+        backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePID, -L, -W, true);
 
         frontLeftModule.ConfigEncoder(offsets[0]);
         frontRightModule.ConfigEncoder(offsets[1]);
