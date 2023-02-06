@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.SPI;
 public class SwerveKinematics {
     // add these numbers to the offset
     double[] offsets = {1.93359375, 102.04015625, -86.572265625, 22.32421875};
+
     SwerveModule frontLeftModule;
     SwerveModule frontRightModule;
     SwerveModule backLeftModule;
@@ -24,6 +25,7 @@ public class SwerveKinematics {
     SwerveModuleState[] states;
     double robotRotation = 0;
     Utils utils;
+    SwerveOffsets offset;
 
     double[] anglePID = {0.003, 0, 0.0000001};
     double[] drivePID = {0, 0, 0};
@@ -46,16 +48,12 @@ public class SwerveKinematics {
         backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePID, -L, W, true);
         backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePID, -L, -W, true);
 
-        frontLeftModule.ConfigEncoder(offsets[0]);
-        frontRightModule.ConfigEncoder(offsets[1]);
-        backLeftModule.ConfigEncoder(offsets[2]);
-        backRightModule.ConfigEncoder(offsets[3]);
-
         navxGyro = new AHRS(SPI.Port.kMXP);
 
         kinematicsObject = new SwerveDriveKinematics(frontLeftModule.location, frontRightModule.location, backLeftModule.location, backRightModule.location);
 
         utils = new Utils();
+        offset = new SwerveOffsets();
 
     }
 
@@ -93,6 +91,21 @@ public class SwerveKinematics {
         frontRightModule.ConfigPID(anglePID, drivePID);
         backLeftModule.ConfigPID(anglePID, drivePID);
         backRightModule.ConfigPID(anglePID, drivePID);
+    }
+
+    void ConfigOffsets() {
+
+        // Remove after running once
+        offset.writeOffsets(1.93359375, 102.04015625, -86.572265625, 22.32421875);
+        SwerveOffsets.ModuleOffsets offsets = offset.readOffsets();
+        //put this here after
+        //offset.writeOffsets(offsets.frontLeft-frontLeftModule.GetEncoder(), offsets.frontRight-frontRightModule.GetEncoder(), offsets.backLeft-backLeftModule.GetEncoder(), offsets.backRight-backRightModule.GetEncoder());
+
+        frontLeftModule.ConfigEncoder(offsets.frontLeft);
+        frontRightModule.ConfigEncoder(offsets.frontRight);
+        backLeftModule.ConfigEncoder(offsets.backLeft);
+        backRightModule.ConfigEncoder(offsets.backRight);
+
     }
 
     void Stop() {

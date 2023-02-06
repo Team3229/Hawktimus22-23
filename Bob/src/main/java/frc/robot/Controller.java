@@ -91,7 +91,7 @@ class Controller {
   }
 }
 
-class ControllerInputs  implements Serializable {
+class ControllerInputs implements Serializable {
   // Driver Controls
   double d_rightY;
   double d_rightX;

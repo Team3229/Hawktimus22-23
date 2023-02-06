@@ -1,17 +1,16 @@
 package frc.robot;
 
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import com.revrobotics.AbsoluteEncoder;
-
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /*
     Needs to do:
@@ -51,185 +50,184 @@ All switch statements need to be filled in once we know how to program the arm
 
 public class Arm {
 
-Utils utils = new Utils();
+    Utils utils = new Utils();
 
-/*
-0 docked
-1 low
-2 mid
-3 high
-4 ground
-5 human station
-*/
-int armLevel = 0;
+    /*
+    0 docked
+    1 low
+    2 mid
+    3 high
+    4 ground
+    5 human station
+    */
+    int armLevel = 0;
 
-final int longArmID = 16;
-final int intakeArmID = 17;
-final int leftHandID = 14;
-final int rightHandID = 15;
-final double cubeBuffer = 0.00000001;
-final double armLength = 0.8218;
-final double armPivotHeight = 0.9836;
+    final int longArmID = 16;
+    final int intakeArmID = 17;
+    final int leftHandID = 14;
+    final int rightHandID = 15;
+    final double cubeBuffer = 0.00000001;
+    final double armLength = 0.8218;
+    final double armPivotHeight = 0.9836;
 
-int encoderBuffer = 0;
-double encoderValue = 0;
+    int encoderBuffer = 0;
+    double encoderValue = 0;
 
-// motor 1 is the big arm and 2 is the smaller arm/wristed intake
-CANSparkMax longArm;
-CANSparkMax intakeArm;
+    // motor 1 is the big arm and 2 is the smaller arm/wristed intake
+    CANSparkMax longArm;
+    CANSparkMax intakeArm;
 
-CANSparkMax leftHand;
-CANSparkMax rightHand;
+    CANSparkMax leftHand;
+    CANSparkMax rightHand;
 
-Solenoid onSolenoid;
-Solenoid offSolenoid;
+    Solenoid onSolenoid;
+    Solenoid offSolenoid;
 
-Compressor compressor;
+    Compressor compressor;
 
-AbsoluteEncoder longArmEncoder;
-AbsoluteEncoder intakeArmEncoder;
+    AbsoluteEncoder longArmEncoder;
+    AbsoluteEncoder intakeArmEncoder;
 
-RelativeEncoder leftHandEncoder;
-RelativeEncoder rightHandEncoder;
+    RelativeEncoder leftHandEncoder;
+    RelativeEncoder rightHandEncoder;
 
-double[] longPIDv = {0,0,0};
-double[] shortPIDv = {0,0,0};
+    double[] longPIDv = {0,0,0};
+    double[] shortPIDv = {0,0,0};
 
-double leftHandLastValue = 0;
-double rightHandLastValue = 0;
+    double leftHandLastValue = 0;
+    double rightHandLastValue = 0;
 
 
-boolean isGrabbing = false;
+    boolean isGrabbing = false;
 
-PIDController longPID = new PIDController(longPIDv[0], longPIDv[1], longPIDv[2]);
-PIDController shortPID = new PIDController(shortPIDv[0], shortPIDv[1], shortPIDv[2]);
+    PIDController longPID = new PIDController(longPIDv[0], longPIDv[1], longPIDv[2]);
+    PIDController shortPID = new PIDController(shortPIDv[0], shortPIDv[1], shortPIDv[2]);
 
-Arm() {
+    Arm() {
 
-    longArm = new CANSparkMax(longArmID, MotorType.kBrushless);
-    intakeArm = new CANSparkMax(intakeArmID, MotorType.kBrushless);
-    leftHand = new CANSparkMax(leftHandID, MotorType.kBrushless);
-    rightHand = new CANSparkMax(rightHandID, MotorType.kBrushless);
+        longArm = new CANSparkMax(longArmID, MotorType.kBrushless);
+        intakeArm = new CANSparkMax(intakeArmID, MotorType.kBrushless);
+        leftHand = new CANSparkMax(leftHandID, MotorType.kBrushless);
+        rightHand = new CANSparkMax(rightHandID, MotorType.kBrushless);
 
-    compressor = new Compressor(1, PneumaticsModuleType.CTREPCM);
-    onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
-    offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+        compressor = new Compressor(1, PneumaticsModuleType.CTREPCM);
+        onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
+        offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 
-    longArmEncoder = longArm.getAbsoluteEncoder(Type.kDutyCycle);
-    intakeArmEncoder = intakeArm.getAbsoluteEncoder(Type.kDutyCycle);
+        longArmEncoder = longArm.getAbsoluteEncoder(Type.kDutyCycle);
+        intakeArmEncoder = intakeArm.getAbsoluteEncoder(Type.kDutyCycle);
 
-    leftHandEncoder = leftHand.getEncoder();
-    rightHandEncoder = rightHand.getEncoder();
+        leftHandEncoder = leftHand.getEncoder();
+        rightHandEncoder = rightHand.getEncoder();
 
-    SmartDashboard.putNumber("CurrentArmLevel",armLevel);
-    SmartDashboard.putNumberArray("LongArmPID", longPIDv);
-    SmartDashboard.putNumberArray("ShortArmPID", shortPIDv);
+        SmartDashboard.putNumber("CurrentArmLevel",armLevel);
+        SmartDashboard.putNumberArray("LongArmPID", longPIDv);
+        SmartDashboard.putNumberArray("ShortArmPID", shortPIDv);
 
-}
-
-void setArmLevel(int level){
-    if(armLevel == level){
-        return;
     }
-    armLevel = level;
-    SmartDashboard.putNumber("ArmLevel",armLevel);
-    switch(armLevel){
-        case 0:
-            // dock
-            longPID.setSetpoint(0);
-            shortPID.setSetpoint(340);
-            break;
-        case 1:
-            // low
-            break;
-        case 2:
-            // mid
-            break;
-        case 3:
-            // high
-            break;
-        case 4:
-            // ground
-            break;
-        case 5:
-            // station
-            break;
-        default:
-            // go to docked pos
-            break;
-    }
-}
 
-void placeObject(boolean gamePiece){
-    
-    if(gamePiece){
-        // holding a cube
-        leftHand.set(0.07);
-        rightHand.set(0.07);
+    void setArmLevel(int level){
+        if(armLevel == level){
+            return;
+        }
+        armLevel = level;
+        SmartDashboard.putNumber("ArmLevel",armLevel);
+        switch(armLevel){
+            case 0:
+                // dock
+                longPID.setSetpoint(0);
+                shortPID.setSetpoint(340);
+                break;
+            case 1:
+                // low
+                break;
+            case 2:
+                // mid
+                break;
+            case 3:
+                // high
+                break;
+            case 4:
+                // ground
+                break;
+            case 5:
+                // station
+                break;
+            default:
+                // go to docked pos
+                break;
+        }
+    }
+
+    void placeObject(boolean gamePiece){
         
-    } else {
-        // move the cone bits
-        offSolenoid.set(true);
-        onSolenoid.set(false);
+        if(gamePiece){
+            // holding a cube
+            leftHand.set(0.07);
+            rightHand.set(0.07);
+            
+        } else {
+            // move the cone bits
+            offSolenoid.set(true);
+            onSolenoid.set(false);
+        }
+        
     }
-    
-}
 
-void closeHands(boolean cube){
+    void closeHands(boolean cube){
 
-    if (cube) {
-        //picking up cube
+        if (cube) {
+            //picking up cube
 
-        leftHand.set((leftHand.get() != 0) ? (leftHandEncoder.getPosition() != leftHandLastValue) ? -0.07 : 0 : 0);
-        rightHand.set((rightHand.get() != 0) ? (rightHandEncoder.getPosition() != rightHandLastValue) ? -0.07 : 0 : 0);
+            leftHand.set((leftHand.get() != 0) ? (leftHandEncoder.getPosition() != leftHandLastValue) ? -0.07 : 0 : 0);
+            rightHand.set((rightHand.get() != 0) ? (rightHandEncoder.getPosition() != rightHandLastValue) ? -0.07 : 0 : 0);
+
+            leftHandLastValue = leftHandEncoder.getPosition();
+            rightHandLastValue = rightHandEncoder.getPosition();
+
+        } else {
+            // picking up cone
+            offSolenoid.set(false);
+            onSolenoid.set(true);
+        }
+    }
+
+    void checkHandMotors() {
+
+        // Cube
+        // if they have not moved and are moving, stop them to prevent burnout.
+        leftHand.set((leftHand.get() != 0) ? (Math.abs(leftHandEncoder.getPosition()) != Math.abs(leftHandLastValue) + cubeBuffer) ? -0.07 : 0 : 0);
+        rightHand.set((rightHand.get() != 0) ? (Math.abs(rightHandEncoder.getPosition()) != Math.abs(rightHandLastValue) + cubeBuffer) ? -0.07 : 0 : 0);
 
         leftHandLastValue = leftHandEncoder.getPosition();
         rightHandLastValue = rightHandEncoder.getPosition();
 
-    } else {
-        // picking up cone
-        offSolenoid.set(false);
-        onSolenoid.set(true);
     }
-}
 
-void checkHandMotors() {
+    void startCubeGrab() {
 
-    // Cube
-    // if they have not moved and are moving, stop them to prevent burnout.
-    leftHand.set((leftHand.get() != 0) ? (Math.abs(leftHandEncoder.getPosition()) != Math.abs(leftHandLastValue) + cubeBuffer) ? -0.07 : 0 : 0);
-    rightHand.set((rightHand.get() != 0) ? (Math.abs(rightHandEncoder.getPosition()) != Math.abs(rightHandLastValue) + cubeBuffer) ? -0.07 : 0 : 0);
-
-    leftHandLastValue = leftHandEncoder.getPosition();
-    rightHandLastValue = rightHandEncoder.getPosition();
-
-}
-
-void startCubeGrab() {
-
-    leftHand.set(-0.07);
-    rightHand.set(-0.07);
-    leftHandLastValue = leftHandEncoder.getPosition();
-    rightHandLastValue = rightHandEncoder.getPosition();
-
-}
-
-void softStop() {
-
-    if (leftHand.get() == 0.07 | rightHand.get() == 0.07) {
-
-        leftHand.stopMotor();
-        rightHand.stopMotor();
-
-    } else if (leftHand.get() == 0 | rightHand.get() == 0) {
-
-        leftHand.stopMotor();
-        rightHand.stopMotor();
+        leftHand.set(-0.07);
+        rightHand.set(-0.07);
+        leftHandLastValue = leftHandEncoder.getPosition();
+        rightHandLastValue = rightHandEncoder.getPosition();
 
     }
 
+    void softStop() {
+
+        if (leftHand.get() == 0.07 | rightHand.get() == 0.07) {
+
+            leftHand.stopMotor();
+            rightHand.stopMotor();
+
+        } else if (leftHand.get() == 0 | rightHand.get() == 0) {
+
+            leftHand.stopMotor();
+            rightHand.stopMotor();
+    }
 }
-    double largeArmGetAngleFromHeight(double height){
+
+    double armGetAngleFromHeight(double height){
         return Math.acos(height/32);
     }
 }

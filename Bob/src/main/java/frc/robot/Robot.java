@@ -32,6 +32,7 @@ public class Robot extends TimedRobot {
   Leveling leveling = new Leveling();
   Limelight limelight = new Limelight();
   Arm arm = new Arm();
+  SwerveOffsets swerveOffsets = new SwerveOffsets();
 
   double bufferZone = 0.1;
   boolean controllerError = false;
@@ -158,6 +159,10 @@ public class Robot extends TimedRobot {
     inputs = controller.getControls();
     RunControls();
 
+    if(SmartDashboard.getBoolean("resetAngleOffsets", false)) {
+      chassis.ConfigOffsets();
+    }
+
   }
 
   /** This function is called once when the robot is disabled. */
@@ -196,7 +201,7 @@ public class Robot extends TimedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {}
-
+  
 void RunControls() {
 
   ExecuteDriveControls();
