@@ -229,12 +229,7 @@ void softStop() {
     }
 
 }
-/*
-double trigJunk(double yGoal){
-
-    
-    return yGoal + Math.random() * Math.random() * Math.random()
-
-}
-*/
+    double largeArmGetAngleFromHeight(double height){
+        return Math.acos(height/32);
+    }
 }
