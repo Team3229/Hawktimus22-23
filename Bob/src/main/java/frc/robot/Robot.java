@@ -228,8 +228,13 @@ void ExecuteDriveControls(){
         chassis.Drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
     } else {
       // D-Pad driving slowly
-      dp = utils.dirPad(inputs.d_POV);
-      chassis.Drive(dp[0]/2,dp[1]/2,dp[2]/2);
+
+      if (inputs.d_POV != -1) {
+        dp = utils.dirPad(inputs.d_POV);
+        chassis.Drive(dp[0]/2,dp[1]/2,dp[2]/2);
+      } else {
+        chassis.Stop();
+      }
     }
   }
 

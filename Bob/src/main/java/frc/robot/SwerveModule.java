@@ -50,8 +50,6 @@ public class SwerveModule {
         encoder = new CANCoder(encoderID);
         encoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
         driveEncoder = driveMotor.getEncoder();
-        angleEncoder = angleMotor.getEncoder();
-        angleEncoder.setPositionConversionFactor(360);
         angleMotor.setInverted(false);
 
         anglePIDController = new PIDController(anglePID[0], anglePID[1], anglePID[2]);
@@ -68,13 +66,14 @@ public class SwerveModule {
 
     }
 
-    void ConfigEncoder(double oofset) {
+    void ConfigEncoder(double oofset, boolean changeOffset) {
 
         encoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
-        encoder.configMagnetOffset(oofset);
-
-        angleEncoder.setPosition(encoder.getAbsolutePosition());
+        
+        if (changeOffset) {
+            encoder.configMagnetOffset(oofset);
+        }
 
     }
 

@@ -43,10 +43,15 @@ public class SwerveKinematics {
 
     public SwerveKinematics() {
 
-        frontLeftModule = new SwerveModule(1, 2, 9, anglePID, drivePID, L, W, false);
+        frontLeftModule = new SwerveModule(2, 1, 9, anglePID, drivePID, L, W, false);
         frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePID,L, -W, true);
         backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePID, -L, W, true);
         backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePID, -L, -W, true);
+
+        frontLeftModule.ConfigEncoder(0, false);
+        frontRightModule.ConfigEncoder(0, false);
+        backLeftModule.ConfigEncoder(0, false);
+        backRightModule.ConfigEncoder(0, false);
 
         navxGyro = new AHRS(SPI.Port.kMXP);
 
@@ -96,10 +101,10 @@ public class SwerveKinematics {
     void fixOffsets() {
 
         double[] offsets = offset.calculateOffsets(frontLeftModule.GetEncoder(), frontRightModule.GetEncoder(), backLeftModule.GetEncoder(), backRightModule.GetEncoder());
-        frontLeftModule.ConfigEncoder(offsets[0]);
-        frontRightModule.ConfigEncoder(offsets[1]);
-        backLeftModule.ConfigEncoder(offsets[2]);
-        backRightModule.ConfigEncoder(offsets[3]);
+        frontLeftModule.ConfigEncoder(offsets[0], true);
+        frontRightModule.ConfigEncoder(offsets[1], true);
+        backLeftModule.ConfigEncoder(offsets[2], true);
+        backRightModule.ConfigEncoder(offsets[3], true);
 
     }
 
