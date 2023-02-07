@@ -37,6 +37,8 @@ public class Robot extends TimedRobot {
   double bufferZone = 0.1;
   boolean controllerError = false;
 
+  boolean inAuto = false;
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -114,6 +116,8 @@ public class Robot extends TimedRobot {
 
     auto.autoFinished = false;
 
+    inAuto = true;
+
   }
 
   /** This function is called periodically during autonomous. */
@@ -150,6 +154,8 @@ public class Robot extends TimedRobot {
 
     autoLevel = false;
 
+    inAuto = false;
+
   }
 
   /** This function is called periodically during operator control. */
@@ -182,6 +188,8 @@ public class Robot extends TimedRobot {
 
     autoLevel = false;
 
+    inAuto = true;
+
   }
 
   /** This function is called periodically during test mode. */
@@ -211,8 +219,6 @@ void RunControls() {
 void ExecuteDriveControls(){
 
   // Drive swerve chassis with joystick deadbands
-
-  
   if (!DriverStation.isJoystickConnected(0)) {
     chassis.Stop();
   } else {
@@ -223,15 +229,10 @@ void ExecuteDriveControls(){
       dp = utils.dirPad(inputs.d_POV);
       chassis.Drive(dp[0]/2,dp[1]/2,dp[2]/2);
     }
-}
-
-  // Zero NavX Gyro
-  if(inputs.d_AButton){
-    chassis.navxGyro.zeroYaw();
   }
 
   // toggle auto level
-  if(inputs.d_YButton){
+  if(inputs.d_YButton && inAuto){
     autoLevel = true;
   }
 
@@ -243,38 +244,36 @@ void ExecuteDriveControls(){
   arm.checkHandMotors();
     
 }
-void ExecuteManipControls(){
-  if(arm.compressor.getPressure() >= 50){
-    arm.compressor.disable();
-  }
-  // grabbing things functions
-  if (inputs.m_LeftBumper) {
-    arm.startCubeGrab();
-  } else if (inputs.m_RightBumper){
-    arm.placeObject(true);
-  } else {
-    arm.softStop();
+
+  void ExecuteManipControls(){
+    if(arm.compressor.getPressure() >= 50){
+      arm.compressor.disable();
+    }
+    if(inputs.m_XButton){
+      // low
+      arm.setArmLevel(1);
+    } else if(inputs.m_AButton){
+      //mid
+      arm.setArmLevel(2);
+    } else if(inputs.m_BButton){
+      // high
+      arm.setArmLevel(3);
+    }
+    // grabbing cube
+    if (inputs.m_LeftBumper) {
+      arm.closeHands(true);
+    } else if (inputs.m_RightBumper){
+      arm.closeHands(false);
+    }
+
+    if (inputs.m_LeftTriggerAxis > 0.1){
+      arm.placeObject(true);
+    } else {
+      arm.softStop();
+      if(inputs.m_RightTriggerAxis > 0.1){
+      arm.placeObject(false);
+    }
   }
 
-  if(inputs.m_AButton){
-    // double[] a = limelight.alignWithTag();
-    // chassis.Drive(a[0], a[1], a[2]);
-    
   }
-  if(inputs.m_BButton){
-    // close solenoid
-    arm.offSolenoid.set(true);
-    arm.onSolenoid.set(false);
-  }
-  if(inputs.m_XButton){
-    // open/on
-    arm.offSolenoid.set(false);
-    arm.onSolenoid.set(true);
-  }
-  if(inputs.m_YButton){
-    // shut it all down.
-    arm.offSolenoid.set(false);
-    arm.onSolenoid.set(false);
-  }
-}
 }

@@ -8,6 +8,7 @@ import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -57,8 +58,7 @@ public class Arm {
     1 low
     2 mid
     3 high
-    4 ground
-    5 human station
+    4 human station
     */
     int armLevel = 0;
 
@@ -66,9 +66,23 @@ public class Arm {
     final int intakeArmID = 17;
     final int leftHandID = 14;
     final int rightHandID = 15;
-    final double cubeBuffer = 0.00000001;
+    final double cubeDeadZone = 0.00000001;
     final double armLength = 0.8218;
     final double armPivotHeight = 0.9836;
+
+    boolean holdingCone = false;
+    boolean holdingCube = false;
+
+    //50 in
+    final double highCone = 11.277;
+    //39.5 in
+    final double highCube = 0.777;
+    //38 in
+    final double midCone = -0.723;
+    //27.5 in
+    final double midCube = -11.223;
+    //4 in
+    final double hybrid = -34.723;
 
     int encoderBuffer = 0;
     double encoderValue = 0;
@@ -97,11 +111,8 @@ public class Arm {
     double leftHandLastValue = 0;
     double rightHandLastValue = 0;
 
-
-    boolean isGrabbing = false;
-
     PIDController longPID = new PIDController(longPIDv[0], longPIDv[1], longPIDv[2]);
-    PIDController shortPID = new PIDController(shortPIDv[0], shortPIDv[1], shortPIDv[2]);
+    PIDController intakePID = new PIDController(shortPIDv[0], shortPIDv[1], shortPIDv[2]);
 
     Arm() {
 
@@ -135,22 +146,40 @@ public class Arm {
         switch(armLevel){
             case 0:
                 // dock
-                longPID.setSetpoint(0);
-                shortPID.setSetpoint(340);
+                longPID.setSetpoint(340);
+                intakePID.setSetpoint(45);
                 break;
             case 1:
-                // low
+                // hybrid
+                longPID.setSetpoint(armGetAngleFromHeight(hybrid));
                 break;
             case 2:
                 // mid
+                if(holdingCone & !holdingCube){
+                    // we have a cone
+                    longPID.setSetpoint(armGetAngleFromHeight(midCone));
+                } else if(holdingCube & !holdingCone){
+                    // we have a cube
+                    longPID.setSetpoint(armGetAngleFromHeight(midCube));
+                } else {
+                    // driver ur an idiot
+                    DriverStation.reportError("DRIVERS AN IDIOT LOL", null);
+                }
                 break;
             case 3:
                 // high
+                if(holdingCone & !holdingCube){
+                    // we have a cone
+                    longPID.setSetpoint(armGetAngleFromHeight(highCone));
+                } else if(holdingCube & !holdingCone){
+                    // we have a cube
+                    longPID.setSetpoint(armGetAngleFromHeight(highCube));
+                } else {
+                    // driver ur an idiot
+                    DriverStation.reportError("DRIVERS AN IDIOT LOL", null);
+                }
                 break;
             case 4:
-                // ground
-                break;
-            case 5:
                 // station
                 break;
             default:
@@ -159,15 +188,19 @@ public class Arm {
         }
     }
 
-    void placeObject(boolean gamePiece){
+    void placeObject(boolean cube){
         
-        if(gamePiece){
+        if(cube){
             // holding a cube
+            holdingCone = false;
+            holdingCube = false;
             leftHand.set(0.07);
             rightHand.set(0.07);
             
         } else {
             // move the cone bits
+            holdingCone = false;
+            holdingCube = false;
             offSolenoid.set(true);
             onSolenoid.set(false);
         }
@@ -178,15 +211,18 @@ public class Arm {
 
         if (cube) {
             //picking up cube
-
-            leftHand.set((leftHand.get() != 0) ? (leftHandEncoder.getPosition() != leftHandLastValue) ? -0.07 : 0 : 0);
-            rightHand.set((rightHand.get() != 0) ? (rightHandEncoder.getPosition() != rightHandLastValue) ? -0.07 : 0 : 0);
-
+            holdingCone = false;
+            holdingCube = true;
+            
+            leftHand.set(-0.07);
+            rightHand.set(-0.07);
             leftHandLastValue = leftHandEncoder.getPosition();
             rightHandLastValue = rightHandEncoder.getPosition();
 
         } else {
             // picking up cone
+            holdingCone = true;
+            holdingCube = false;
             offSolenoid.set(false);
             onSolenoid.set(true);
         }
@@ -196,21 +232,16 @@ public class Arm {
 
         // Cube
         // if they have not moved and are moving, stop them to prevent burnout.
-        leftHand.set((leftHand.get() != 0) ? (Math.abs(leftHandEncoder.getPosition()) != Math.abs(leftHandLastValue) + cubeBuffer) ? -0.07 : 0 : 0);
-        rightHand.set((rightHand.get() != 0) ? (Math.abs(rightHandEncoder.getPosition()) != Math.abs(rightHandLastValue) + cubeBuffer) ? -0.07 : 0 : 0);
+        leftHand.set((leftHand.get() < 0) ? (Math.abs(leftHandEncoder.getPosition()) != Math.abs(leftHandLastValue) + cubeDeadZone) ? -0.07 : 0 : leftHand.get());
+        rightHand.set((rightHand.get() < 0) ? (Math.abs(rightHandEncoder.getPosition()) != Math.abs(rightHandLastValue) + cubeDeadZone) ? -0.07 : 0 : rightHand.get());
 
         leftHandLastValue = leftHandEncoder.getPosition();
         rightHandLastValue = rightHandEncoder.getPosition();
 
     }
 
-    void startCubeGrab() {
-
-        leftHand.set(-0.07);
-        rightHand.set(-0.07);
-        leftHandLastValue = leftHandEncoder.getPosition();
-        rightHandLastValue = rightHandEncoder.getPosition();
-
+    double armGetAngleFromHeight(double height){
+        return Math.acos(height/32);
     }
 
     void softStop() {
@@ -225,9 +256,5 @@ public class Arm {
             leftHand.stopMotor();
             rightHand.stopMotor();
     }
-}
-
-    double armGetAngleFromHeight(double height){
-        return Math.acos(height/32);
     }
 }
