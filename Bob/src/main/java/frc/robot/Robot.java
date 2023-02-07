@@ -4,10 +4,11 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.DriverStation;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -20,6 +21,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
   private double[] encVals = {0, 0, 0, 0};
   private boolean autoLevel = false;
+  private int rumbleBuffer = 0;
 
   Controller controller = new Controller();
   ControllerInputs inputs;
@@ -166,7 +168,7 @@ public class Robot extends TimedRobot {
     RunControls();
 
     if(SmartDashboard.getBoolean("resetAngleOffsets", false)) {
-      chassis.ConfigOffsets();
+      chassis.fixOffsets();
     }
 
   }
@@ -245,7 +247,37 @@ void ExecuteDriveControls(){
     
 }
 
+
+//Manip Controls
+
+
   void ExecuteManipControls(){
+    
+    switch(inputs.m_POV) {
+
+      case 0:
+          arm.setArmLevel(3);
+          break;
+      case 90:
+          arm.setArmLevel(2);
+          break;
+      case 180:
+          arm.setArmLevel(1);
+          break; 
+      case 270:
+          //Important- tell driver their an idiot (Rumble)
+          controller.m_rumble.setRumble(RumbleType.kLeftRumble, 1);
+          rumbleBuffer = 1;
+          break;
+
+    }
+    //Stops Rumble
+    if (rumbleBuffer == 100) {
+      controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
+      rumbleBuffer = 0;
+    }
+    rumbleBuffer += 1;
+    
     if(arm.compressor.getPressure() >= 50){
       arm.compressor.disable();
     }

@@ -1,0 +1,20 @@
+TODO list for programming
+
+ONCE WE HAVE THE BOT
+ - tune drivePID
+ - tune ArmPID
+ - tune intakePID
+ - test april tag following
+ - set up autonomous things
+ - Change controls till its good
+
+ONCE WE HAVE TEST PARTS
+ - test going to different heights (If mentors build it)
+ - test auto leveling
+ 
+    if(mentorsBuildIt) {
+        testIt(atSchool);
+    } else {
+        testIt(onPracticeField);
+    }
+

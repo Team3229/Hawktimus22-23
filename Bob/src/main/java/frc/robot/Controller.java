@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import java.io.Serializable;
 
@@ -15,10 +16,12 @@ class Controller {
   // Controller
   private XboxController d_controller;
   private XboxController m_controller;
+  GenericHID m_rumble;
 
   Controller() {
     d_controller = new XboxController(0);
     m_controller = new XboxController(1);
+    m_rumble = new GenericHID(1);
   }
 
   ControllerInputs getControls() {

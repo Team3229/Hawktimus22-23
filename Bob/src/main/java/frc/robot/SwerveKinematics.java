@@ -93,18 +93,13 @@ public class SwerveKinematics {
         backRightModule.ConfigPID(anglePID, drivePID);
     }
 
-    void ConfigOffsets() {
+    void fixOffsets() {
 
-        // Remove after running once
-        offset.writeOffsets(1.93359375, 102.04015625, -86.572265625, 22.32421875);
-        SwerveOffsets.ModuleOffsets offsets = offset.readOffsets();
-        //put this here after
-        //offset.writeOffsets(offsets.frontLeft-frontLeftModule.GetEncoder(), offsets.frontRight-frontRightModule.GetEncoder(), offsets.backLeft-backLeftModule.GetEncoder(), offsets.backRight-backRightModule.GetEncoder());
-
-        frontLeftModule.ConfigEncoder(offsets.frontLeft);
-        frontRightModule.ConfigEncoder(offsets.frontRight);
-        backLeftModule.ConfigEncoder(offsets.backLeft);
-        backRightModule.ConfigEncoder(offsets.backRight);
+        double[] offsets = offset.calculateOffsets(frontLeftModule.GetEncoder(), frontRightModule.GetEncoder(), backLeftModule.GetEncoder(), backRightModule.GetEncoder());
+        frontLeftModule.ConfigEncoder(offsets[0]);
+        frontRightModule.ConfigEncoder(offsets[1]);
+        backLeftModule.ConfigEncoder(offsets[2]);
+        backRightModule.ConfigEncoder(offsets[3]);
 
     }
 
