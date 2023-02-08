@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.math.MathUtil;
 
 public class SwerveKinematics {
     // add these numbers to the offset
@@ -66,7 +67,7 @@ public class SwerveKinematics {
 
         rotating = ((Math.abs(Z) > 0) ? true : false);
 
-        robotRotation = utils.convertAngle(navxGyro.getYaw()*-1);
+        robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
         speeds = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxRadiansPerSecond, Rotation2d.fromDegrees(robotRotation));
         states = kinematicsObject.toSwerveModuleStates(speeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(states, maxSpeedMetersPerSecond);
@@ -85,7 +86,7 @@ public class SwerveKinematics {
         encoderValues[1] = frontRightModule.GetEncoder();
         encoderValues[2] = backLeftModule.GetEncoder();
         encoderValues[3] = backRightModule.GetEncoder();
-        robotRotation = utils.convertAngle(navxGyro.getYaw()*-1);
+        robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
         return encoderValues;
 
     }

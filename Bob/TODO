@@ -9,10 +9,10 @@ ONCE WE HAVE THE BOT
  - Change controls till its good
 
 ONCE WE HAVE TEST PARTS
- - test going to different heights (If mentors build it)
+ - test going to different heights (When mentors build grid)
  - test auto leveling
  
-    if(mentorsBuildIt) {
+    if(mentorsBuildChargeStation) {
         testIt(atSchool);
     } else {
         testIt(onPracticeField);

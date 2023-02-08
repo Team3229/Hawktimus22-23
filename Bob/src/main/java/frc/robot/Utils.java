@@ -9,16 +9,6 @@ public class Utils {
     Utils() {}
     
     /**
-     * Converts from any, positive or negative, angle to the range of 0-360
-     * @param input Input angle
-     * @return Output angle
-     */
-    double convertAngle(double input) {
-
-        return (input)-(360*Math.floor((input)/360));
-
-    }
-    /**
      * Converts from Meters Per Second to RPM (wheel radius already included)
      * @param input Input m/s
      * @return Output RPM
