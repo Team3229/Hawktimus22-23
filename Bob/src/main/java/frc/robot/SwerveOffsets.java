@@ -10,14 +10,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class SwerveOffsets {
 
     private final String path = "/home/lvuser/";
-    boolean resetOffsets = false;
     String frontLeftPath = path + "frontLeft.txt";
     String frontRightPath = path + "frontRight.txt";
     String backLeftPath = path + "backLeft.txt";
     String backRightPath = path + "backRight.txt";
 
     SwerveOffsets() {
-        SmartDashboard.putBoolean("resetAngleOffsets", resetOffsets);
+        SmartDashboard.putBoolean("resetAngleOffsets", false);
     }
 
     double[] calculateOffsets(double fL, double fR, double bL, double bR) {
@@ -26,10 +25,10 @@ public class SwerveOffsets {
         // if the values passed, which are the current values, and should be zero.
         double[] currentValues = readFiles();
         double[] newOffsets = {
-            currentValues[0] + fL < 90 ? -fL: fL > 90 & fL < 270 ? 180 - fL:360 - fL,
-            currentValues[1] + fR < 90 ? -fR: fR > 90 & fR < 270 ? 180 - fR:360 - fR,
-            currentValues[2] + bL < 90 ? -bL: bL > 90 & bL < 270 ? 180 - bL:360 - bL,
-            currentValues[3] + bR < 90 ? -bR: bR > 90 & bR < 270 ? 180 - bR:360 - bR
+            currentValues[0] + (fL < 90 ? -fL: fL > 90 & fL < 270 ? 180 - fL:360 - fL),
+            currentValues[1] + (fR < 90 ? -fR: fR > 90 & fR < 270 ? 180 - fR:360 - fR),
+            currentValues[2] + (bL < 90 ? -bL: bL > 90 & bL < 270 ? 180 - bL:360 - bL),
+            currentValues[3] + (bR < 90 ? -bR: bR > 90 & bR < 270 ? 180 - bR:360 - bR)
         };
         writeOffsets(newOffsets);
         return newOffsets;

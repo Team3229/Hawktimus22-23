@@ -66,14 +66,12 @@ public class SwerveModule {
 
     }
 
-    void ConfigEncoder(double oofset, boolean changeOffset) {
+    void ConfigEncoder(double oofset) {
 
         encoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         
-        if (changeOffset) {
-            encoder.configMagnetOffset(oofset);
-        }
+        encoder.configMagnetOffset(oofset);
 
     }
 

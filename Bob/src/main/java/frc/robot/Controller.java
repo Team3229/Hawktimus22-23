@@ -17,10 +17,12 @@ class Controller {
   private XboxController d_controller;
   private XboxController m_controller;
   GenericHID m_rumble;
+  GenericHID d_rumble;
 
   Controller() {
     d_controller = new XboxController(0);
     m_controller = new XboxController(1);
+    d_rumble = new GenericHID(0);
     m_rumble = new GenericHID(1);
   }
 

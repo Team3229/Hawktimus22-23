@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -158,6 +159,12 @@ public class Robot extends TimedRobot {
 
     inAuto = false;
 
+    if(SmartDashboard.getBoolean("resetAngleOffsets", false)) {
+      chassis.fixOffsets();
+      System.out.println("Reset Offsets");
+      SmartDashboard.putBoolean("resetAngleOffsets", false);
+    }
+
   }
 
   /** This function is called periodically during operator control. */
@@ -167,15 +174,13 @@ public class Robot extends TimedRobot {
     inputs = controller.getControls();
     RunControls();
 
-    if(SmartDashboard.getBoolean("resetAngleOffsets", false)) {
-      chassis.fixOffsets();
-    }
-
   }
 
   /** This function is called once when the robot is disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
+  }
 
   /** This function is called periodically when disabled. */
   @Override
@@ -220,6 +225,12 @@ void RunControls() {
 
 void ExecuteDriveControls(){
 
+  if (RobotController.getBatteryVoltage() < 9) {
+    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.3);
+  } else {
+    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
+  }
+
   // Drive swerve chassis with joystick deadbands
   if (!DriverStation.isJoystickConnected(0)) {
     chassis.Stop();
@@ -249,6 +260,10 @@ void ExecuteDriveControls(){
   }
 
   arm.checkHandMotors();
+
+  if (inputs.d_AButton) {
+    chassis.navxGyro.zeroYaw();
+  }
     
 }
 

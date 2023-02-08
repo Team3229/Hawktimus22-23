@@ -28,7 +28,7 @@ public class SwerveKinematics {
     Utils utils;
     SwerveOffsets offset;
 
-    double[] anglePID = {0.003, 0, 0.0000001};
+    double[] anglePID = {0.003, 0.0002, 0.00001};
     double[] drivePID = {0, 0, 0};
     final double anglePosTolerance = 1;
     final double angleVelTolerance = 1;
@@ -41,25 +41,27 @@ public class SwerveKinematics {
     double[] encoderValues = {0, 0, 0, 0};
 
     boolean rotating = false;
+    double[] initialOffsets;
 
     public SwerveKinematics() {
 
+        utils = new Utils();
+        offset = new SwerveOffsets();
+
         frontLeftModule = new SwerveModule(2, 1, 9, anglePID, drivePID, L, W, false);
-        frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePID,L, -W, true);
-        backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePID, -L, W, true);
+        frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePID,L, -W, false);
+        backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePID, -L, W, false);
         backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePID, -L, -W, true);
 
-        frontLeftModule.ConfigEncoder(0, false);
-        frontRightModule.ConfigEncoder(0, false);
-        backLeftModule.ConfigEncoder(0, false);
-        backRightModule.ConfigEncoder(0, false);
+        initialOffsets = offset.readFiles();
+        frontLeftModule.ConfigEncoder(initialOffsets[0]);
+        frontRightModule.ConfigEncoder(initialOffsets[1]);
+        backLeftModule.ConfigEncoder(initialOffsets[2]);
+        backRightModule.ConfigEncoder(initialOffsets[3]);
 
         navxGyro = new AHRS(SPI.Port.kMXP);
 
         kinematicsObject = new SwerveDriveKinematics(frontLeftModule.location, frontRightModule.location, backLeftModule.location, backRightModule.location);
-
-        utils = new Utils();
-        offset = new SwerveOffsets();
 
     }
 
@@ -102,10 +104,10 @@ public class SwerveKinematics {
     void fixOffsets() {
 
         double[] offsets = offset.calculateOffsets(frontLeftModule.GetEncoder(), frontRightModule.GetEncoder(), backLeftModule.GetEncoder(), backRightModule.GetEncoder());
-        frontLeftModule.ConfigEncoder(offsets[0], true);
-        frontRightModule.ConfigEncoder(offsets[1], true);
-        backLeftModule.ConfigEncoder(offsets[2], true);
-        backRightModule.ConfigEncoder(offsets[3], true);
+        frontLeftModule.ConfigEncoder(offsets[0]);
+        frontRightModule.ConfigEncoder(offsets[1]);
+        backLeftModule.ConfigEncoder(offsets[2]);
+        backRightModule.ConfigEncoder(offsets[3]);
 
     }
 
