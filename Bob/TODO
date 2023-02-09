@@ -1,5 +1,7 @@
 TODO list for programming
 
+NOW
+
 ONCE WE HAVE THE BOT
  - tune drivePID
  - tune ArmPID
@@ -11,13 +13,7 @@ ONCE WE HAVE THE BOT
 ONCE WE HAVE TEST PARTS
  - test going to different heights (When mentors build grid)
  - test auto leveling
- 
-    if(mentorsBuildChargeStation) {
-        testIt(atSchool);
-    } else {
-        testIt(onPracticeField);
-    }
 
 AT COMP REMEMBER
 
- - Check 
+ - Check angles

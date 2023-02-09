@@ -30,6 +30,8 @@ public class SwerveModule {
     Utils utils;
     SwerveModuleState moduleState;
 
+    //PID anglePID = new PID("anglePID.txt");
+    //PID drivePID = new PID("drivePID.txt");
     /**Location of the Swerve Module realtive to robot center*/
     Translation2d location;
     int encoderBuffer = 0;
@@ -74,13 +76,14 @@ public class SwerveModule {
         encoder.configMagnetOffset(oofset);
 
     }
-
+    
     void ConfigPID(double[] anglePID, double[] drivePID) {
         
         anglePIDController.setPID(anglePID[0],anglePID[1],anglePID[2]);
         // drivePIDController.setP(drivePID[0]);
         // drivePIDController.setI(drivePID[1]);
         // drivePIDController.setD(drivePID[2]);
+        //drivePIDController.setPID(drivePID[0],drivePID[1],drivePID[2])
         anglePIDController.enableContinuousInput(0, 360);
 
     }
