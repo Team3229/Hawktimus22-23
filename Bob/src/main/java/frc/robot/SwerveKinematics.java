@@ -13,8 +13,6 @@ import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.math.MathUtil;
 
 public class SwerveKinematics {
-    // add these numbers to the offset
-    double[] offsets = {1.93359375, 102.04015625, -86.572265625, 22.32421875};
 
     SwerveModule frontLeftModule;
     SwerveModule frontRightModule;
@@ -28,8 +26,10 @@ public class SwerveKinematics {
     Utils utils;
     SwerveOffsets offset;
 
-    double[] anglePID = {0.003, 0.0002, 0.00001};
-    double[] drivePID = {0, 0, 0};
+    //double[] anglePID = {0.003, 0.0002, 0.00001};
+    //double[] drivePID = {0, 0, 0};
+    PID anglePID = new PID("anglePID.txt", new double[] {0.003,0.0002,0.00001});
+    PID drivePID = new PID("drivePID.txt",new double[] {0,0,0});
     final double anglePosTolerance = 1;
     final double angleVelTolerance = 1;
 
@@ -48,10 +48,10 @@ public class SwerveKinematics {
         utils = new Utils();
         offset = new SwerveOffsets();
 
-        frontLeftModule = new SwerveModule(2, 1, 9, anglePID, drivePID, L, W, false);
-        frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePID,L, -W, false);
-        backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePID, -L, W, false);
-        backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePID, -L, -W, true);
+        frontLeftModule = new SwerveModule(2, 1, 9, anglePID.pidValues, drivePID.pidValues, L, W, false);
+        frontRightModule = new SwerveModule(5, 6, 10, anglePID.pidValues, drivePID.pidValues,L, -W, false);
+        backLeftModule = new SwerveModule(3, 4, 11, anglePID.pidValues, drivePID.pidValues, -L, W, false);
+        backRightModule = new SwerveModule(7, 8, 12, anglePID.pidValues, drivePID.pidValues, -L, -W, true);
 
         initialOffsets = offset.readFiles();
         frontLeftModule.ConfigEncoder(initialOffsets[0]);
@@ -95,10 +95,10 @@ public class SwerveKinematics {
 
     void ConfigPIDS() {
 
-        frontLeftModule.ConfigPID(anglePID, drivePID);
-        frontRightModule.ConfigPID(anglePID, drivePID);
-        backLeftModule.ConfigPID(anglePID, drivePID);
-        backRightModule.ConfigPID(anglePID, drivePID);
+        frontLeftModule.ConfigPID(anglePID.pidValues, drivePID.pidValues);
+        frontRightModule.ConfigPID(anglePID.pidValues, drivePID.pidValues);
+        backLeftModule.ConfigPID(anglePID.pidValues, drivePID.pidValues);
+        backRightModule.ConfigPID(anglePID.pidValues, drivePID.pidValues);
     }
 
     void fixOffsets() {

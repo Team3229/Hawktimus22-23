@@ -8,9 +8,14 @@ import java.util.Scanner;
 public class PID {
     double[] pidValues = {0,0,0};
     String totalPath = "/home/lvuser/";
-    PID(String path){
+    PID(String path,double[] DefaultValues){
         totalPath += path;
-        pidValues = readPID();
+        if(DefaultValues != null){
+            pidValues = DefaultValues;
+            writePID();
+        } else {
+            pidValues = readPID();
+        }
     }
     void writePID(){
         try{

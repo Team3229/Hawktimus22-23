@@ -54,13 +54,13 @@ public class Robot extends TimedRobot {
     chassis.navxGyro.zeroYaw();
     chassis.navxGyro.calibrate();
 
-    SmartDashboard.putNumber("driveP", chassis.drivePID[0]);
-    SmartDashboard.putNumber("driveI", chassis.drivePID[1]);
-    SmartDashboard.putNumber("driveD", chassis.drivePID[2]);
+    SmartDashboard.putNumber("driveP", chassis.drivePID.pidValues[0]);
+    SmartDashboard.putNumber("driveI", chassis.drivePID.pidValues[1]);
+    SmartDashboard.putNumber("driveD", chassis.drivePID.pidValues[2]);
 
-    SmartDashboard.putNumber("angleP", chassis.anglePID[0]);
-    SmartDashboard.putNumber("angleI", chassis.anglePID[1]);
-    SmartDashboard.putNumber("angleD", chassis.anglePID[2]);
+    SmartDashboard.putNumber("angleP", chassis.anglePID.pidValues[0]);
+    SmartDashboard.putNumber("angleI", chassis.anglePID.pidValues[1]);
+    SmartDashboard.putNumber("angleD", chassis.anglePID.pidValues[2]);
 
     SmartDashboard.putNumber("navxGs", 0);
 
@@ -142,14 +142,17 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
 
     auto.CloseFile();
+    
+    chassis.drivePID.pidValues[0] = SmartDashboard.getNumber("driveP", 0);
+    chassis.drivePID.pidValues[1] = SmartDashboard.getNumber("driveI", 0);
+    chassis.drivePID.pidValues[2] = SmartDashboard.getNumber("driveD", 0);
+    chassis.drivePID.writePID();
 
-    chassis.drivePID[0] = SmartDashboard.getNumber("driveP", 0);
-    chassis.drivePID[1] = SmartDashboard.getNumber("driveI", 0);
-    chassis.drivePID[2] = SmartDashboard.getNumber("driveD", 0);
+    chassis.anglePID.pidValues[0] = SmartDashboard.getNumber("angleP", 0);
+    chassis.anglePID.pidValues[1] = SmartDashboard.getNumber("angleI", 0);
+    chassis.anglePID.pidValues[2] = SmartDashboard.getNumber("angleD", 0);
+    chassis.anglePID.writePID();
 
-    chassis.anglePID[0] = SmartDashboard.getNumber("angleP", 0);
-    chassis.anglePID[1] = SmartDashboard.getNumber("angleI", 0);
-    chassis.anglePID[2] = SmartDashboard.getNumber("angleD", 0);
 
     chassis.ConfigPIDS();
 

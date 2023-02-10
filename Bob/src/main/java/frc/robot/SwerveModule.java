@@ -30,8 +30,7 @@ public class SwerveModule {
     Utils utils;
     SwerveModuleState moduleState;
 
-    //PID anglePID = new PID("anglePID.txt");
-    //PID drivePID = new PID("drivePID.txt");
+   
     /**Location of the Swerve Module realtive to robot center*/
     Translation2d location;
     int encoderBuffer = 0;
