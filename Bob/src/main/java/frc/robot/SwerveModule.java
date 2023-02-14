@@ -40,8 +40,9 @@ public class SwerveModule {
     double driveRPM = 0;
 
     double encoderOffset = 0;
-    double customOutput = 0;
-    double customOutput2 = 0;
+
+    final double anglePosTolerance = 1;
+    final double angleVelTolerance = 1;
 
     public SwerveModule(int driveID, int angleID, int encoderID, double[] anglePID, double[] drivePID, double X, double Y, boolean invertMotor) {
 
@@ -54,6 +55,7 @@ public class SwerveModule {
         angleMotor.setInverted(false);
 
         anglePIDController = new PIDController(anglePID[0], anglePID[1], anglePID[2]);
+        anglePIDController.setTolerance(anglePosTolerance, angleVelTolerance);
 
         location = new Translation2d(X/2, Y/2);
 

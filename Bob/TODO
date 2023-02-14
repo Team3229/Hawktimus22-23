@@ -1,6 +1,10 @@
 TODO list for programming
 
-NOW
+TODAY
+ - write auto pid tuning
+ - clean up code
+     - smartdashboard class
+ - color sensor code (yellow (cone), purple (cube))
 
 ONCE WE HAVE THE BOT
  - tune drivePID
@@ -11,7 +15,7 @@ ONCE WE HAVE THE BOT
  - Change controls till its good
 
 ONCE WE HAVE TEST PARTS
- - test going to different heights (When mentors build grid)
+ - test going to different heights
  - test auto leveling
 
 AT COMP REMEMBER
