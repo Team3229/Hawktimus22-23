@@ -1,7 +1,6 @@
 TODO list for programming
 
 TODAY
- - write auto pid tuning
  - clean up code
      - smartdashboard class
  - color sensor code (yellow (cone), purple (cube))
@@ -20,4 +19,4 @@ ONCE WE HAVE TEST PARTS
 
 AT COMP REMEMBER
 
- - Check angles
+ - Check cancoder angles

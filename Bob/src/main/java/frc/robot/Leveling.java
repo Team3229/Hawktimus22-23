@@ -3,29 +3,21 @@ package frc.robot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Leveling {
+    private static final double MOVE_SPEED = 0.1;
+    private static final double TOTAL_ANGLE = 10;
 
+    Leveling() {}
 
-    Leveling() {
-
-    }
-
-    static double GetBalanced(double currentAngle) {
+    public static double getBalanced(double currentAngle) {
 
         SmartDashboard.putNumber("navX-roll", currentAngle);
-        double moveSpeed = 0.1;
-        double totalAngle = 10;
-        if(currentAngle < -totalAngle){
-            // move forward
-            return moveSpeed;
-        } else if (currentAngle > totalAngle){
-            // backwards
-            return -moveSpeed;
+
+        if (currentAngle < -TOTAL_ANGLE) {
+            return MOVE_SPEED;
+        } else if (currentAngle > TOTAL_ANGLE) {
+            return -MOVE_SPEED;
         } else {
-            // nothing
             return 0;
         }
-        
     }
-
-    
 }

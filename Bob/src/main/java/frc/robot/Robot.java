@@ -89,7 +89,7 @@ public class Robot extends TimedRobot {
 
     SmartDashboard.putNumber("navxGs", chassis.navxGyro.getAccelFullScaleRangeG());
 
-    limelight.GetValues();
+    limelight.getValues();
 
   }
 
@@ -244,7 +244,7 @@ void ExecuteDriveControls(){
       // D-Pad driving slowly
 
       if (inputs.d_POV != -1) {
-        dp = utils.dirPad(inputs.d_POV);
+        dp = utils.getDirectionalPadValues(inputs.d_POV);
         chassis.Drive(dp[0]/2,dp[1]/2,dp[2]/2);
       } else {
         chassis.Stop();
@@ -259,7 +259,7 @@ void ExecuteDriveControls(){
 
   // if we're auto leveling, move to work
   if (autoLevel) {
-    chassis.Drive(0, Leveling.GetBalanced(chassis.navxGyro.getRoll()), 0);
+    chassis.Drive(0, Leveling.getBalanced(chassis.navxGyro.getRoll()), 0);
   }
 
   arm.checkHandMotors();

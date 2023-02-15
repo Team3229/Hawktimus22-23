@@ -2,6 +2,7 @@ package frc.robot;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
@@ -11,43 +12,9 @@ import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
-/*
-    Needs to do:
-    Go from docked to undocked position and vice versa
-    Semi-auto orient with april tag
-    ID 4 is blue´s human station
-    ID 5 is red´s
-    orient to place at different levels. (Preferable auto and not by driver eyeballing it)
-    total inputs for whichever controller or one if single driver
-    One of the four a,b,x,y xbox buttons:
-    -align with visible april tag (Assuming there is one) If driver inputs anything during this it overrules the auto
-    -prepare to place high
-    -low
-    -mid
-Right trigger - move to place object
-left trigger - retract placing object if started to place
-    these triggers can base off of whatever height mode were in to not overextend or underretreat.
-    Rely on driver to get it lined up for wherever the object is going, arm controller just sets the height.
-    Left, right sticks are as normal for swerve I´m assuming
-    same for dpad for slow movement
-    Leftover inputs if all are on one controller:
-    Left and right bumpers
-    If split for two controllers, one arm and one drive
-    Drive controller only uses sticks and dpad
-    Manip controller uses abxy buttons and triggers
-    Things we could auto outside of auto mode:
-    -lining up with april tag
-    We almost already have this with our follow tag mode - as long as our buffer zone is good.
-    -placing cubes/cones depending on how we do the controls
-    
-All switch statements need to be filled in once we know how to program the arm
-
- 0 is stowed pos
- +angle is around the long way avoiding dead zone
- 340 max
-*/
+import edu.wpi.first.wpilibj.util.Color;
 
 public class Arm {
 
@@ -61,6 +28,8 @@ public class Arm {
     4 human station
     */
     int armLevel = 0;
+
+    ColorSensorV3 colorSensor;
 
     final int longArmID = 16;
     final int intakeArmID = 17;
@@ -87,57 +56,61 @@ public class Arm {
     int encoderBuffer = 0;
     double encoderValue = 0;
 
-    // motor 1 is the big arm and 2 is the smaller arm/wristed intake
-    CANSparkMax longArm;
-    CANSparkMax intakeArm;
+    CANSparkMax armMotor;
+    CANSparkMax intakeArmMotor;
 
-    CANSparkMax leftHand;
-    CANSparkMax rightHand;
+    CANSparkMax leftWheels;
+    CANSparkMax rightWheels;
 
     Solenoid onSolenoid;
     Solenoid offSolenoid;
 
     Compressor compressor;
 
-    AbsoluteEncoder longArmEncoder;
+    AbsoluteEncoder armEncoder;
     AbsoluteEncoder intakeArmEncoder;
 
-    RelativeEncoder leftHandEncoder;
-    RelativeEncoder rightHandEncoder;
+    RelativeEncoder leftWheelsEncoder;
+    RelativeEncoder rightWheelsEncoder;
 
-    double[] longPIDv = {0,0,0};
-    double[] shortPIDv = {0,0,0};
+    double[] armPIDv = {0,0,0};
+    double[] intakeArmPIDv = {0,0,0};
 
-    double leftHandLastValue = 0;
-    double rightHandLastValue = 0;
+    double leftWheelsLastValue = 0;
+    double rightWheelsLastValue = 0;
 
-    PIDController longPID = new PIDController(longPIDv[0], longPIDv[1], longPIDv[2]);
-    PIDController intakePID = new PIDController(shortPIDv[0], shortPIDv[1], shortPIDv[2]);
+    PIDController armPID = new PIDController(armPIDv[0], armPIDv[1], armPIDv[2]);
+    PIDController intakeArmPID = new PIDController(intakeArmPIDv[0], intakeArmPIDv[1], intakeArmPIDv[2]);
 
     Arm() {
 
-        longArm = new CANSparkMax(longArmID, MotorType.kBrushless);
-        intakeArm = new CANSparkMax(intakeArmID, MotorType.kBrushless);
-        leftHand = new CANSparkMax(leftHandID, MotorType.kBrushless);
-        rightHand = new CANSparkMax(rightHandID, MotorType.kBrushless);
+        colorSensor = new ColorSensorV3(Port.kOnboard);
+
+        armMotor = new CANSparkMax(longArmID, MotorType.kBrushless);
+        intakeArmMotor = new CANSparkMax(intakeArmID, MotorType.kBrushless);
+        leftWheels = new CANSparkMax(leftHandID, MotorType.kBrushless);
+        rightWheels = new CANSparkMax(rightHandID, MotorType.kBrushless);
 
         compressor = new Compressor(1, PneumaticsModuleType.CTREPCM);
         onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
         offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 
-        longArmEncoder = longArm.getAbsoluteEncoder(Type.kDutyCycle);
-        intakeArmEncoder = intakeArm.getAbsoluteEncoder(Type.kDutyCycle);
+        armEncoder = armMotor.getAbsoluteEncoder(Type.kDutyCycle);
+        intakeArmEncoder = intakeArmMotor.getAbsoluteEncoder(Type.kDutyCycle);
 
-        leftHandEncoder = leftHand.getEncoder();
-        rightHandEncoder = rightHand.getEncoder();
+        leftWheelsEncoder = leftWheels.getEncoder();
+        rightWheelsEncoder = rightWheels.getEncoder();
 
         SmartDashboard.putNumber("CurrentArmLevel",armLevel);
-        SmartDashboard.putNumberArray("LongArmPID", longPIDv);
-        SmartDashboard.putNumberArray("ShortArmPID", shortPIDv);
+        SmartDashboard.putNumberArray("LongArmPID", armPIDv);
+        SmartDashboard.putNumberArray("ShortArmPID", intakeArmPIDv);
 
     }
 
     void setArmLevel(int level){
+
+        checkColor();
+
         if(armLevel == level){
             return;
         }
@@ -146,21 +119,21 @@ public class Arm {
         switch(armLevel){
             case 0:
                 // dock
-                longPID.setSetpoint(340);
-                intakePID.setSetpoint(45);
+                armPID.setSetpoint(340);
+                intakeArmPID.setSetpoint(45);
                 break;
             case 1:
                 // hybrid
-                longPID.setSetpoint(armGetAngleFromHeight(hybrid));
+                armPID.setSetpoint(armGetAngleFromHeight(hybrid));
                 break;
             case 2:
                 // mid
                 if(holdingCone & !holdingCube){
                     // we have a cone
-                    longPID.setSetpoint(armGetAngleFromHeight(midCone));
+                    armPID.setSetpoint(armGetAngleFromHeight(midCone));
                 } else if(holdingCube & !holdingCone){
                     // we have a cube
-                    longPID.setSetpoint(armGetAngleFromHeight(midCube));
+                    armPID.setSetpoint(armGetAngleFromHeight(midCube));
                 } else {
                     // driver ur an idiot
                     DriverStation.reportError("DRIVERS AN IDIOT LOL", null);
@@ -170,10 +143,10 @@ public class Arm {
                 // high
                 if(holdingCone & !holdingCube){
                     // we have a cone
-                    longPID.setSetpoint(armGetAngleFromHeight(highCone));
+                    armPID.setSetpoint(armGetAngleFromHeight(highCone));
                 } else if(holdingCube & !holdingCone){
                     // we have a cube
-                    longPID.setSetpoint(armGetAngleFromHeight(highCube));
+                    armPID.setSetpoint(armGetAngleFromHeight(highCube));
                 } else {
                     // driver ur an idiot
                     DriverStation.reportError("DRIVERS AN IDIOT LOL", null);
@@ -189,18 +162,14 @@ public class Arm {
     }
 
     void placeObject(boolean cube){
-        
+        checkColor();
         if(cube){
             // holding a cube
-            holdingCone = false;
-            holdingCube = false;
-            leftHand.set(0.07);
-            rightHand.set(0.07);
+            leftWheels.set(0.07);
+            rightWheels.set(0.07);
             
         } else {
             // move the cone bits
-            holdingCone = false;
-            holdingCube = false;
             offSolenoid.set(true);
             onSolenoid.set(false);
         }
@@ -208,21 +177,15 @@ public class Arm {
     }
 
     void closeHands(boolean cube){
-
+        
         if (cube) {
-            //picking up cube
-            holdingCone = false;
-            holdingCube = true;
             
-            leftHand.set(-0.07);
-            rightHand.set(-0.07);
-            leftHandLastValue = leftHandEncoder.getPosition();
-            rightHandLastValue = rightHandEncoder.getPosition();
+            leftWheels.set(-0.07);
+            rightWheels.set(-0.07);
+            leftWheelsLastValue = leftWheelsEncoder.getPosition();
+            rightWheelsLastValue = rightWheelsEncoder.getPosition();
 
         } else {
-            // picking up cone
-            holdingCone = true;
-            holdingCube = false;
             offSolenoid.set(false);
             onSolenoid.set(true);
         }
@@ -230,13 +193,13 @@ public class Arm {
 
     void checkHandMotors() {
 
-        // Cube
+        // For Cube
         // if they have not moved and are moving, stop them to prevent burnout.
-        leftHand.set((leftHand.get() < 0) ? (Math.abs(leftHandEncoder.getPosition()) != Math.abs(leftHandLastValue) + cubeDeadZone) ? -0.07 : 0 : leftHand.get());
-        rightHand.set((rightHand.get() < 0) ? (Math.abs(rightHandEncoder.getPosition()) != Math.abs(rightHandLastValue) + cubeDeadZone) ? -0.07 : 0 : rightHand.get());
+        leftWheels.set((leftWheels.get() < 0) ? (Math.abs(leftWheelsEncoder.getPosition()) != Math.abs(leftWheelsLastValue) + cubeDeadZone) ? -0.07 : 0 : leftWheels.get());
+        rightWheels.set((rightWheels.get() < 0) ? (Math.abs(rightWheelsEncoder.getPosition()) != Math.abs(rightWheelsLastValue) + cubeDeadZone) ? -0.07 : 0 : rightWheels.get());
 
-        leftHandLastValue = leftHandEncoder.getPosition();
-        rightHandLastValue = rightHandEncoder.getPosition();
+        leftWheelsLastValue = leftWheelsEncoder.getPosition();
+        rightWheelsLastValue = rightWheelsEncoder.getPosition();
 
     }
 
@@ -246,15 +209,29 @@ public class Arm {
 
     void softStop() {
 
-        if (leftHand.get() == 0.07 | rightHand.get() == 0.07) {
+        if (leftWheels.get() == 0.07 | rightWheels.get() == 0.07) {
 
-            leftHand.stopMotor();
-            rightHand.stopMotor();
+            leftWheels.stopMotor();
+            rightWheels.stopMotor();
 
-        } else if (leftHand.get() == 0 | rightHand.get() == 0) {
+        } else if (leftWheels.get() == 0 | rightWheels.get() == 0) {
 
-            leftHand.stopMotor();
-            rightHand.stopMotor();
+            leftWheels.stopMotor();
+            rightWheels.stopMotor();
     }
     }
+
+    void checkColor() {
+        if (colorSensor.getColor() == Color.kYellow) {
+            holdingCone = true;
+            holdingCube = false;
+        } else if (colorSensor.getColor() == Color.kPurple) {
+            holdingCube = true;
+            holdingCone = false;
+        } else {
+            holdingCone = false;
+            holdingCube = false;
+        }
+    }
+
 }

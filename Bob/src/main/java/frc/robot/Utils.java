@@ -1,27 +1,28 @@
-// Otter: Nathan Manhardt (3229 Software Captain)
-// Co-Otters: 3229 Software Team
-
 package frc.robot;
 
-
+/**
+ * A utility class for common calculations and conversions.
+ */
 public class Utils {
-    // in meters
-    Utils() {}
     
     /**
-     * Converts from Meters Per Second to RPM (wheel radius already included)
-     * @param input Input m/s
-     * @return Output RPM
+     * Converts from meters per second to revolutions per minute, given the wheel radius.
+     * @param speedMps The speed in meters per second.
+     * @param wheelRadiusM The radius of the wheel in meters.
+     * @return The speed in revolutions per minute.
      */
-    double mpsToRPM(double input) {
-
-        return (60/(2*Math.PI)*0.0508) * input;
-
+    public static double convertMpsToRpm(double speedMps, double wheelRadiusM) {
+        return (60 / (2 * Math.PI) * wheelRadiusM) * speedMps;
     }
 
-    double[] dirPad(int POV) {
+    /**
+     * Gets directional pad values based on the input POV angle.
+     * @param povAngle The angle of the POV (in degrees).
+     * @return An array containing the x, y, and z values of the directional pad.
+     */
+    public double[] getDirectionalPadValues(int povAngle) {
         double[] output = {0, 0, 0};
-        switch (POV) {
+        switch (povAngle) {
             case 0:
                 output[0] = 0; output[1] = -0.5;
                 break;
@@ -45,9 +46,8 @@ public class Utils {
                 break;
             case 315:
                 output[0] = -0.4; output[1] = -0.4;
+                break;
           }
-
           return output;
     }
-
 }

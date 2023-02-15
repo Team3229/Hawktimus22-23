@@ -6,38 +6,63 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class PID {
-    double[] pidValues = {0,0,0};
-    String totalPath = "/home/lvuser/";
-    PID(String path,double[] DefaultValues){
+
+    SwerveKinematics chassis = new SwerveKinematics();
+
+    double[] pidValues = {0.0, 0.0, 0.0};
+    private String totalPath = "/home/lvuser/";
+
+    public PID(String path, double[] defaultValues) {
         totalPath += path;
-        if(DefaultValues != null){
-            pidValues = DefaultValues;
+        if (defaultValues != null) {
+            pidValues = defaultValues;
             writePID();
         } else {
             pidValues = readPID();
         }
     }
-    void writePID(){
-        try{
+
+    void writePID() {
+        try {
             FileWriter writer = new FileWriter(totalPath);
-            writer.write(String.valueOf(pidValues[0])+"\n"+String.valueOf(pidValues[1])+"\n"+String.valueOf(pidValues[2]));
+            writer.write(pidValues[0] + "\n" + pidValues[1] + "\n" + pidValues[2]);
             writer.close();
-        }catch(IOException e){
+        } catch (IOException e) {
             System.out.println(e);
         }
     }
-    double[] readPID(){
-        double[] pid = {0,0,0};
-        try{
+
+    private double[] readPID() {
+        double[] pid = {0.0, 0.0, 0.0};
+        try {
             File file = new File(totalPath);
             Scanner scanner = new Scanner(file);
-            pidValues[0] = Double.parseDouble(scanner.nextLine());
-            pidValues[1] = Double.parseDouble(scanner.nextLine());
-            pidValues[2] = Double.parseDouble(scanner.nextLine());
+            pid[0] = Double.parseDouble(scanner.nextLine());
+            pid[1] = Double.parseDouble(scanner.nextLine());
+            pid[2] = Double.parseDouble(scanner.nextLine());
             scanner.close();
-        } catch(IOException e){
+        } catch (IOException e) {
             System.out.println(e);
         }
         return pid;
     }
+
+    // in order of P I D
+    // up value till it oscillates equally, never stopping or speeding up. Then divide it by two
+    // Repeat for all three in the correct order as said above
+    // when bool on dashboard is on, each tick (20ms) call this. Track its furthest point from the setpoint
+
+    public double[] getPIDValues() {
+        return pidValues;
+    }
+
+    public void setPIDValues(double[] newValues) {
+        pidValues = newValues;
+        writePID();
+    }
+
+    public void trackFurthestPointFromSetpoint() {
+        // TODO: Implement tracking of furthest point from setpoint
+    }
+
 }
