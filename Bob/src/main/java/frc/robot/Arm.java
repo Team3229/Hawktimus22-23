@@ -35,12 +35,14 @@ public class Arm {
     final int intakeArmID = 17;
     final int leftHandID = 14;
     final int rightHandID = 15;
-    final double cubeDeadZone = 0.00000001;
+    final double cubeDeadZone = 0.1;
     final double armLength = 0.8218;
     final double armPivotHeight = 0.9836;
 
     boolean holdingCone = false;
     boolean holdingCube = false;
+
+    private static double cubeSpeed = 0.14;
 
     //50 in
     final double highCone = 11.277;
@@ -90,6 +92,9 @@ public class Arm {
         intakeArmMotor = new CANSparkMax(intakeArmID, MotorType.kBrushless);
         leftWheels = new CANSparkMax(leftHandID, MotorType.kBrushless);
         rightWheels = new CANSparkMax(rightHandID, MotorType.kBrushless);
+
+        leftWheels.setInverted(true);
+        rightWheels.setInverted(false);
 
         compressor = new Compressor(1, PneumaticsModuleType.CTREPCM);
         onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
@@ -165,8 +170,8 @@ public class Arm {
         checkColor();
         if(cube){
             // holding a cube
-            leftWheels.set(0.07);
-            rightWheels.set(0.07);
+            leftWheels.set(cubeSpeed);
+            rightWheels.set(cubeSpeed);
             
         } else {
             // move the cone bits
@@ -180,8 +185,8 @@ public class Arm {
         
         if (cube) {
             
-            leftWheels.set(-0.07);
-            rightWheels.set(-0.07);
+            leftWheels.set(-cubeSpeed);
+            rightWheels.set(-cubeSpeed);
             leftWheelsLastValue = leftWheelsEncoder.getPosition();
             rightWheelsLastValue = rightWheelsEncoder.getPosition();
 
@@ -195,8 +200,8 @@ public class Arm {
 
         // For Cube
         // if they have not moved and are moving, stop them to prevent burnout.
-        leftWheels.set((leftWheels.get() < 0) ? (Math.abs(leftWheelsEncoder.getPosition()) != Math.abs(leftWheelsLastValue) + cubeDeadZone) ? -0.07 : 0 : leftWheels.get());
-        rightWheels.set((rightWheels.get() < 0) ? (Math.abs(rightWheelsEncoder.getPosition()) != Math.abs(rightWheelsLastValue) + cubeDeadZone) ? -0.07 : 0 : rightWheels.get());
+        leftWheels.set((leftWheels.get() < 0) ? (Math.abs(leftWheelsEncoder.getPosition()) != Math.abs(leftWheelsLastValue) + cubeDeadZone) ? -cubeSpeed : 0 : leftWheels.get());
+        rightWheels.set((rightWheels.get() < 0) ? (Math.abs(rightWheelsEncoder.getPosition()) != Math.abs(rightWheelsLastValue) + cubeDeadZone) ? -cubeSpeed : 0 : rightWheels.get());
 
         leftWheelsLastValue = leftWheelsEncoder.getPosition();
         rightWheelsLastValue = rightWheelsEncoder.getPosition();
@@ -209,7 +214,7 @@ public class Arm {
 
     void softStop() {
 
-        if (leftWheels.get() == 0.07 | rightWheels.get() == 0.07) {
+        if (leftWheels.get() == cubeSpeed | rightWheels.get() == cubeSpeed) {
 
             leftWheels.stopMotor();
             rightWheels.stopMotor();

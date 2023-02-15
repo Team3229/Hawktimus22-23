@@ -267,6 +267,7 @@ void ExecuteDriveControls(){
   if (inputs.d_AButton) {
     chassis.navxGyro.zeroYaw();
   }
+  
     
 }
 
@@ -300,10 +301,6 @@ void ExecuteDriveControls(){
       rumbleBuffer = 0;
     }
     rumbleBuffer += 1;
-    
-    if(arm.compressor.getPressure() >= 50){
-      arm.compressor.disable();
-    }
     if(inputs.m_XButton){
       // low
       arm.setArmLevel(1);
@@ -315,17 +312,17 @@ void ExecuteDriveControls(){
       arm.setArmLevel(3);
     }
     // grabbing cube
-    if (inputs.m_LeftBumper) {
+    if (inputs.d_LeftBumper) {
       arm.closeHands(true);
-    } else if (inputs.m_RightBumper){
+    } else if (inputs.d_RightBumper){
       arm.closeHands(false);
     }
 
-    if (inputs.m_LeftTriggerAxis > 0.1){
+    if (inputs.d_LeftTriggerAxis > 0.1){
       arm.placeObject(true);
     } else {
       arm.softStop();
-      if(inputs.m_RightTriggerAxis > 0.1){
+      if(inputs.d_RightTriggerAxis > 0.1){
       arm.placeObject(false);
     }
   }

@@ -7,8 +7,6 @@ import java.util.Scanner;
 
 public class PID {
 
-    SwerveKinematics chassis = new SwerveKinematics();
-
     double[] pidValues = {0.0, 0.0, 0.0};
     private String totalPath = "/home/lvuser/";
 
