@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Limelight {
     private final NetworkTable table;
@@ -18,6 +17,8 @@ public class Limelight {
             {-7.24310, -2.93659}
     };
 
+    Dashboard dash = new Dashboard();
+
     public double x;
     public double y;
     public double area;
@@ -30,12 +31,12 @@ public class Limelight {
     }
 
     public void updateDashboard() {
-        SmartDashboard.putNumber("LimelightX", x);
-        SmartDashboard.putNumber("LimelightY", y);
-        SmartDashboard.putNumber("LimelightArea", area);
-        SmartDashboard.putNumber("LimelightSeenTarget", seenTarget);
-        SmartDashboard.putNumberArray("LimelightPose", botPos);
-        SmartDashboard.putNumber("TagID", id);
+        dash.putNumber("LimelightX", x);
+        dash.putNumber("LimelightY", y);
+        dash.putNumber("LimelightArea", area);
+        dash.putNumber("LimelightSeenTarget", seenTarget);
+        dash.putNumberArray("LimelightPose", botPos);
+        dash.putNumber("TagID", id);
     }
 
     public void getValues() {

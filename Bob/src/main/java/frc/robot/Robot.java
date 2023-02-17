@@ -36,6 +36,7 @@ public class Robot extends TimedRobot {
     Limelight limelight = new Limelight();
     Arm arm = new Arm();
     SwerveOffsets swerveOffsets = new SwerveOffsets();
+    Dashboard dash = new Dashboard();
 
     double bufferZone = 0.1;
     boolean controllerError = false;
@@ -54,15 +55,15 @@ public class Robot extends TimedRobot {
         chassis.navxGyro.zeroYaw();
         chassis.navxGyro.calibrate();
 
-        SmartDashboard.putNumber("driveP", chassis.drivePID.pidValues[0]);
-        SmartDashboard.putNumber("driveI", chassis.drivePID.pidValues[1]);
-        SmartDashboard.putNumber("driveD", chassis.drivePID.pidValues[2]);
+        dash.putNumber("driveP", chassis.drivePID.pidValues[0]);
+        dash.putNumber("driveI", chassis.drivePID.pidValues[1]);
+        dash.putNumber("driveD", chassis.drivePID.pidValues[2]);
 
-        SmartDashboard.putNumber("angleP", chassis.anglePID.pidValues[0]);
-        SmartDashboard.putNumber("angleI", chassis.anglePID.pidValues[1]);
-        SmartDashboard.putNumber("angleD", chassis.anglePID.pidValues[2]);
+        dash.putNumber("angleP", chassis.anglePID.pidValues[0]);
+        dash.putNumber("angleI", chassis.anglePID.pidValues[1]);
+        dash.putNumber("angleD", chassis.anglePID.pidValues[2]);
 
-        SmartDashboard.putNumber("navxGs", 0);
+        dash.putNumber("navxGs", 0);
 
         auto.CloseFile();
 
@@ -81,13 +82,13 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
 
         encVals = chassis.EncoderValues();
-        SmartDashboard.putNumber("frontLeft", encVals[0]);
-        SmartDashboard.putNumber("frontRight", encVals[1]);
-        SmartDashboard.putNumber("backLeft", encVals[2]);
-        SmartDashboard.putNumber("backRight", encVals[3]);
-        SmartDashboard.putNumber("navXGyro", chassis.robotRotation);
+        dash.putNumber("frontLeft", encVals[0]);
+        dash.putNumber("frontRight", encVals[1]);
+        dash.putNumber("backLeft", encVals[2]);
+        dash.putNumber("backRight", encVals[3]);
+        dash.putNumber("navXGyro", chassis.robotRotation);
 
-        SmartDashboard.putNumber("navxGs", chassis.navxGyro.getAccelFullScaleRangeG());
+        dash.putNumber("navxGs", chassis.navxGyro.getAccelFullScaleRangeG());
 
         limelight.getValues();
 
@@ -143,14 +144,14 @@ public class Robot extends TimedRobot {
 
         auto.CloseFile();
 
-        chassis.drivePID.pidValues[0] = SmartDashboard.getNumber("driveP", 0);
-        chassis.drivePID.pidValues[1] = SmartDashboard.getNumber("driveI", 0);
-        chassis.drivePID.pidValues[2] = SmartDashboard.getNumber("driveD", 0);
+        chassis.drivePID.pidValues[0] = dash.readNumber("driveP");
+        chassis.drivePID.pidValues[1] = dash.readNumber("driveI");
+        chassis.drivePID.pidValues[2] = dash.readNumber("driveD");
         chassis.drivePID.writePID();
 
-        chassis.anglePID.pidValues[0] = SmartDashboard.getNumber("angleP", 0);
-        chassis.anglePID.pidValues[1] = SmartDashboard.getNumber("angleI", 0);
-        chassis.anglePID.pidValues[2] = SmartDashboard.getNumber("angleD", 0);
+        chassis.anglePID.pidValues[0] = dash.readNumber("angleP");
+        chassis.anglePID.pidValues[1] = dash.readNumber("angleI");
+        chassis.anglePID.pidValues[2] = dash.readNumber("angleD");
         chassis.anglePID.writePID();
 
 
@@ -162,10 +163,10 @@ public class Robot extends TimedRobot {
 
         inAuto = false;
 
-        if (SmartDashboard.getBoolean("resetAngleOffsets", false)) {
+        if (dash.readBool("resetAngleOffsets")) {
             chassis.fixOffsets();
             System.out.println("Reset Offsets");
-            SmartDashboard.putBoolean("resetAngleOffsets", false);
+            dash.putBool("resetAngleOffsets", false);
         }
 
     }

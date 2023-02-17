@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.I2C.Port;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 
 public class Arm {
@@ -54,6 +53,8 @@ public class Arm {
     final double midCube = -11.223;
     //4 in
     final double hybrid = -34.723;
+
+    Dashboard dash = new Dashboard();
 
     int encoderBuffer = 0;
     double encoderValue = 0;
@@ -106,9 +107,9 @@ public class Arm {
         leftWheelsEncoder = leftWheels.getEncoder();
         rightWheelsEncoder = rightWheels.getEncoder();
 
-        SmartDashboard.putNumber("CurrentArmLevel",armLevel);
-        SmartDashboard.putNumberArray("LongArmPID", armPIDv);
-        SmartDashboard.putNumberArray("ShortArmPID", intakeArmPIDv);
+        dash.putNumber("CurrentArmLevel",armLevel);
+        dash.putNumberArray("LongArmPID", armPIDv);
+        dash.putNumberArray("ShortArmPID", intakeArmPIDv);
 
     }
 
@@ -120,7 +121,7 @@ public class Arm {
             return;
         }
         armLevel = level;
-        SmartDashboard.putNumber("ArmLevel",armLevel);
+        dash.putNumber("ArmLevel",armLevel);
         switch(armLevel){
             case 0:
                 // dock
