@@ -9,7 +9,6 @@ import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.I2C.Port;
@@ -112,7 +111,9 @@ public class Arm {
         dash.putNumberArray("ShortArmPID", intakeArmPIDv);
 
     }
-
+    /*
+    intake needs to stay level at all times. 249.5-relative angle
+    */
     void setArmLevel(int level){
 
         checkColor();
@@ -125,24 +126,25 @@ public class Arm {
         switch(armLevel){
             case 0:
                 // dock
-                armPID.setSetpoint(340);
-                intakeArmPID.setSetpoint(45);
+                armPID.setSetpoint(0);
+                intakeArmPID.setSetpoint(90);
+                intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(hybrid));
                 break;
             case 1:
                 // hybrid
                 armPID.setSetpoint(armGetAngleFromHeight(hybrid));
+                intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(hybrid));
                 break;
             case 2:
                 // mid
                 if(holdingCone & !holdingCube){
                     // we have a cone
                     armPID.setSetpoint(armGetAngleFromHeight(midCone));
+                    intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(midCone));
                 } else if(holdingCube & !holdingCone){
                     // we have a cube
                     armPID.setSetpoint(armGetAngleFromHeight(midCube));
-                } else {
-                    // driver ur an idiot
-                    DriverStation.reportError("DRIVERS AN IDIOT LOL", null);
+                    intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(midCube));
                 }
                 break;
             case 3:
@@ -150,20 +152,17 @@ public class Arm {
                 if(holdingCone & !holdingCube){
                     // we have a cone
                     armPID.setSetpoint(armGetAngleFromHeight(highCone));
+                    intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(highCone));
                 } else if(holdingCube & !holdingCone){
                     // we have a cube
                     armPID.setSetpoint(armGetAngleFromHeight(highCube));
-                } else {
-                    // driver ur an idiot
-                    DriverStation.reportError("DRIVERS AN IDIOT LOL", null);
+                    intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(highCube));
                 }
                 break;
             case 4:
                 // station
                 break;
-            default:
-                // go to docked pos
-                break;
+
         }
     }
 
@@ -210,9 +209,9 @@ public class Arm {
     }
 
     double armGetAngleFromHeight(double height){
-        return Math.acos(height/32);
+        return (Math.acos(height/32));
     }
-
+    
     void softStop() {
 
         if (leftWheels.get() == cubeSpeed | rightWheels.get() == cubeSpeed) {
@@ -226,7 +225,7 @@ public class Arm {
             rightWheels.stopMotor();
     }
     }
-
+    
     void checkColor() {
         if (colorSensor.getColor() == Color.kYellow) {
             holdingCone = true;

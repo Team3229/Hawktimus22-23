@@ -1,7 +1,8 @@
 package frc.robot;
 
 public class PIDTuner {
-    /*u is the control signal
+    /*
+    u is the control signal
     τdead = transportation lag or dead time: the time taken from the moment the disturbance was introduced to the first sign of change in the output signal
     ε is the difference between the current value and the set point
     Kc is the gain for a proportional controller
@@ -43,8 +44,4 @@ public class PIDTuner {
     
     
     */
-
-
-
-
 }

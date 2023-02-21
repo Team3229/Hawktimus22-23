@@ -19,10 +19,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class Robot extends TimedRobot {
     private String selectedAuto;
-    private final SendableChooser < String > m_chooser = new SendableChooser < > ();
+    private final SendableChooser <String> m_chooser = new SendableChooser <> ();
     private double[] encVals = {0,0,0,0};
     private boolean autoLevel = false;
-    private int rumbleBuffer = 0;
 
     Controller controller = new Controller();
     ControllerInputs inputs;
@@ -169,8 +168,11 @@ public class Robot extends TimedRobot {
             dash.putBool("resetAngleOffsets", false);
         }
 
-    }
+        //high -adjustible for other teams?-
+        arm.setArmLevel(3);
 
+    }
+    
     /** This function is called periodically during operator control. */
     @Override
     public void teleopPeriodic() {
@@ -200,6 +202,9 @@ public class Robot extends TimedRobot {
         autoLevel = false;
 
         inAuto = true;
+
+        //high
+        arm.setArmLevel(3);
 
     }
 
@@ -263,12 +268,6 @@ public class Robot extends TimedRobot {
             chassis.Drive(0, Leveling.getBalanced(chassis.navxGyro.getRoll()), 0);
         }
 
-        arm.checkHandMotors();
-
-        if (inputs.d_AButton) {
-            chassis.navxGyro.zeroYaw();
-        }
-
 
     }
 
@@ -278,54 +277,46 @@ public class Robot extends TimedRobot {
 
     void ExecuteManipControls() {
 
+        // dP for controlling arm levels
         switch (inputs.m_POV) {
 
             case 0:
+                // up - High
                 arm.setArmLevel(3);
                 break;
-            case 90:
+            case 90 | 270:
+                // right - Mid
                 arm.setArmLevel(2);
                 break;
             case 180:
+                // down - Hybrid
                 arm.setArmLevel(1);
                 break;
-            case 270:
-                //Important- tell driver their an idiot (Rumble)
-                controller.m_rumble.setRumble(RumbleType.kLeftRumble, 1);
-                rumbleBuffer = 1;
-                break;
+    
+        }
 
-        }
-        //Stops Rumble
-        if (rumbleBuffer == 100) {
-            controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
-            rumbleBuffer = 0;
-        }
-        rumbleBuffer += 1;
-        if (inputs.m_XButton) {
-            // low
-            arm.setArmLevel(1);
-        } else if (inputs.m_AButton) {
-            //mid
-            arm.setArmLevel(2);
-        } else if (inputs.m_BButton) {
-            // high
-            arm.setArmLevel(3);
-        }
         // grabbing cube
-        if (inputs.d_LeftBumper) {
+        if (inputs.m_LeftBumper) {
             arm.closeHands(true);
         } else if (inputs.d_RightBumper) {
             arm.closeHands(false);
         }
 
-        if (inputs.d_LeftTriggerAxis > 0.1) {
+        // cone stuffs
+        if (inputs.m_LeftTriggerAxis > 0.1) {
             arm.placeObject(true);
         } else {
             arm.softStop();
-            if (inputs.d_RightTriggerAxis > 0.1) {
+            if (inputs.m_RightTriggerAxis > 0.1) {
                 arm.placeObject(false);
             }
+        }
+
+        // update motors
+        arm.checkHandMotors();
+
+        if (inputs.d_AButton) {
+            chassis.navxGyro.zeroYaw();
         }
 
     }
