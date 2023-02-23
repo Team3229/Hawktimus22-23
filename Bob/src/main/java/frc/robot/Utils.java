@@ -15,6 +15,10 @@ public class Utils {
         return (60 / (2 * Math.PI) * wheelRadiusM) * speedMps;
     }
 
+    public static double convertDegreesToRadians(double degrees) {
+        return (degrees * Math.PI/180);
+    }
+
     /**
      * Gets directional pad values based on the input POV angle.
      * @param povAngle The angle of the POV (in degrees).

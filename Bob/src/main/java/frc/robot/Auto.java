@@ -48,7 +48,7 @@ class Auto {
     }
   }
 
-  ControllerInputs ReadFile() {
+  ControllerInputs readFile() {
     // System.out.println("Reading auto file...");
     ControllerInputs inputs = controller.nullControls();
     try {
@@ -63,7 +63,7 @@ class Auto {
   }
 
   // Done in Test part of Robot
-  void SetupRecording(String inputFileName) {
+  void setupRecording(String inputFileName) {
     String filePath = basePath + inputFileName + ".aut";
     System.out.println("Reading auto instructions from " + filePath);
     cmdFile = new File(filePath);

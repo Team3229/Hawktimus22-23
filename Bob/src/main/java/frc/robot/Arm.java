@@ -9,7 +9,6 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
@@ -18,30 +17,33 @@ import edu.wpi.first.wpilibj.util.Color;
 
 public class Arm {
 
+
+    Dashboard dash;
+
     /*
-    0 docked
     1 low
     2 mid
     3 high
     4 human station
     */
-    int armLevel = 0;
 
     ColorSensorV3 colorSensor;
 
     final int longArmID = 16;
     final int longArmID2 = 17;
+
     final int intakeArmID = 18;
     final int leftHandID = 14;
     final int rightHandID = 15;
+
     final double cubeDeadZone = 0.1;
     final double armLength = 0.8218;
     final double armPivotHeight = 0.9836;
 
-    boolean holdingCone = false;
-    boolean holdingCube = false;
-
-    private static double cubeSpeed = 0.14;
+    final double cubeSpeed = 0.14;
+    final double armSpeed = 0.01;
+    final double backArmSpeed = 0.001;
+    final double intakeArmSpeed = 0.001;
 
     //50 in
     final double highCone = 11.277;
@@ -54,10 +56,17 @@ public class Arm {
     //4 in
     final double hybrid = -34.723;
 
-    Dashboard dash = new Dashboard();
+    int currentAttemptedLevel = 0;
+    int encoderBuffer1 = 0;
+    double encoderValue1 = 0;
+    int encoderBuffer2 = 0;
+    double encoderValue2 = 0;
 
-    int encoderBuffer = 0;
-    double encoderValue = 0;
+    boolean holdingCone = false;
+    boolean holdingCube = false;
+    
+    double leftWheelsLastValue = 0;
+    double rightWheelsLastValue = 0;
 
     CANSparkMax armMotor;
     CANSparkMax armMotor2;
@@ -77,16 +86,9 @@ public class Arm {
     RelativeEncoder leftWheelsEncoder;
     RelativeEncoder rightWheelsEncoder;
 
-    double[] armPIDv = {0.0001,0,0};
-    double[] intakeArmPIDv = {0,0,0};
-
-    double leftWheelsLastValue = 0;
-    double rightWheelsLastValue = 0;
-
-    PIDController armPID = new PIDController(armPIDv[0], armPIDv[1], armPIDv[2]);
-    PIDController intakeArmPID = new PIDController(intakeArmPIDv[0], intakeArmPIDv[1], intakeArmPIDv[2]);
-
     Arm() {
+
+        dash = new Dashboard();
 
         colorSensor = new ColorSensorV3(Port.kOnboard);
 
@@ -116,63 +118,58 @@ public class Arm {
         leftWheelsEncoder = leftWheels.getEncoder();
         rightWheelsEncoder = rightWheels.getEncoder();
 
-        dash.putNumber("CurrentArmLevel",armLevel);
-        dash.putNumberArray("LongArmPID", armPIDv);
-        dash.putNumberArray("ShortArmPID", intakeArmPIDv);
-
     }
     /*
     intake needs to stay level at all times. 249.5-relative angle
     */
-    void setArmLevel(int level){
+    double[] calculateArmLevel(int level){
 
         checkColor();
-
-        if(armLevel == level){
-            return;
-        }
-        armLevel = level;
-        dash.putNumber("ArmLevel",armLevel);
-        switch(armLevel){
-            case 0:
-                // dock
-                armPID.setSetpoint(0);
-                intakeArmPID.setSetpoint(90);
-                intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(hybrid));
-                break;
+        dash.putNumber("ArmLevel", level);
+        double armAngle = getArmEncoder();
+        double intakeAngle = getIntakeEncoder();
+        switch(level){
             case 1:
                 // hybrid
-                armPID.setSetpoint(armGetAngleFromHeight(hybrid));
-                intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(hybrid));
-                break;
+                return new double[] {
+                    ((armAngle > armGetAngleFromHeight(hybrid)+1) ? -armSpeed : ((armAngle < armGetAngleFromHeight(hybrid)-1) ? armSpeed : 0)),
+                    ((intakeAngle > 249.5-armGetAngleFromHeight(hybrid)+1) ? -intakeArmSpeed : ((intakeAngle < 249.5-armGetAngleFromHeight(hybrid)-1) ? intakeArmSpeed : 0))
+                };
             case 2:
                 // mid
                 if(holdingCone & !holdingCube){
                     // we have a cone
-                    armPID.setSetpoint(armGetAngleFromHeight(midCone));
-                    intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(midCone));
-                } else if(holdingCube & !holdingCone){
+                    return new double[] {
+                        ((armAngle > armGetAngleFromHeight(midCone)+1) ? -armSpeed : ((armAngle < armGetAngleFromHeight(midCone)-1) ? armSpeed : 0)),
+                        ((intakeAngle > 249.5-armGetAngleFromHeight(midCone)+1) ? -intakeArmSpeed : ((intakeAngle < 249.5-armGetAngleFromHeight(midCone)-1) ? intakeArmSpeed : 0))
+                    };
+                } else {
                     // we have a cube
-                    armPID.setSetpoint(armGetAngleFromHeight(midCube));
-                    intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(midCube));
+                    return new double[]{
+                        ((armAngle > armGetAngleFromHeight(midCube)+1) ? -armSpeed : ((armAngle < armGetAngleFromHeight(midCube)-1) ? armSpeed : 0)),
+                        ((intakeAngle > 249.5-armGetAngleFromHeight(midCube)+1) ? -intakeArmSpeed : ((intakeAngle < 249.5-armGetAngleFromHeight(midCube)-1) ? intakeArmSpeed : 0))
+                    };
                 }
-                break;
             case 3:
                 // high
                 if(holdingCone & !holdingCube){
                     // we have a cone
-                    armPID.setSetpoint(armGetAngleFromHeight(highCone));
-                    intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(highCone));
-                } else if(holdingCube & !holdingCone){
+                    return new double[]{
+                        ((armAngle > armGetAngleFromHeight(highCone)+1) ? -armSpeed : ((armAngle < armGetAngleFromHeight(highCone)-1) ? armSpeed : 0)),
+                        ((intakeAngle > 249.5-armGetAngleFromHeight(highCone)+1) ? -intakeArmSpeed : ((intakeAngle < 249.5-armGetAngleFromHeight(highCone)-1) ? intakeArmSpeed : 0))  
+                    };
+                } else {
                     // we have a cube
-                    armPID.setSetpoint(armGetAngleFromHeight(highCube));
-                    intakeArmPID.setSetpoint(249.5-armGetAngleFromHeight(highCube));
-                }
-                break;
+                    return new double[]{
+                        ((armAngle > armGetAngleFromHeight(highCube)+1) ? -armSpeed : ((armAngle < armGetAngleFromHeight(highCube)-1) ? armSpeed : 0)),
+                        ((intakeAngle > 249.5-armGetAngleFromHeight(highCube)+1) ? -intakeArmSpeed : ((intakeAngle < 249.5-armGetAngleFromHeight(highCube)-1) ? intakeArmSpeed : 0))
+                    };
+                 }
             case 4:
                 // station
-                break;
-
+                return new double[] {};
+            default:
+                return new double[] {};
         }
     }
 
@@ -184,7 +181,7 @@ public class Arm {
             rightWheels.set(cubeSpeed);
             
         } else {
-            // move the cone bits
+            // move the pneumatic cone bits
             offSolenoid.set(true);
             onSolenoid.set(false);
         }
@@ -206,18 +203,25 @@ public class Arm {
         }
     }
 
-    void runArm(double input) {
-        armMotor.set(armPID.calculate(getEncoder()));
-    }
+    private double getArmEncoder() {
 
-    double getEncoder() {
-
-        if (encoderBuffer++ > 5) {
-            encoderBuffer = 0;
-            encoderValue = armEncoder.getAbsolutePosition();
+        if (encoderBuffer1++ > 5) {
+            encoderBuffer1 = 0;
+            encoderValue1 = armEncoder.getAbsolutePosition();
         }
 
-        return MathUtil.inputModulus(encoderValue, 0, 360);
+        return MathUtil.inputModulus(encoderValue1, 0, 360);
+
+    }
+
+    private double getIntakeEncoder() {
+
+        if (encoderBuffer2++ > 5) {
+            encoderBuffer2 = 0;
+            encoderValue2 = intakeArmEncoder.getAbsolutePosition();
+        }
+
+        return MathUtil.inputModulus(encoderValue2, 0, 360);
 
     }
 
@@ -248,7 +252,7 @@ public class Arm {
 
             leftWheels.stopMotor();
             rightWheels.stopMotor();
-    }
+        }
     }
     
     void checkColor() {
@@ -262,6 +266,29 @@ public class Arm {
             holdingCone = false;
             holdingCube = false;
         }
+    }
+
+    void setCurrentLevel(int level){
+        currentAttemptedLevel = level;
+    }
+
+    void runArm() {
+        if (currentAttemptedLevel != 0) {
+        double[] armResults = calculateArmLevel(currentAttemptedLevel);
+        if (armResults[0] != 0) {
+            armMotor.set(armResults[0]);
+        } else {
+            armMotor.stopMotor();
+        }
+        if (armResults[1] != 0) {
+            intakeArmMotor.set(armResults[1]);
+        } else {
+            intakeArmMotor.stopMotor();
+        }
+        if(armResults[1] == 0 & armResults[0] == 0){
+            currentAttemptedLevel = 0;
+        }
+    }
     }
 
 }

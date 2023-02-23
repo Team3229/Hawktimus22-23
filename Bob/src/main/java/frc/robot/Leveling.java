@@ -8,8 +8,6 @@ public class Leveling {
 
     public static double getBalanced(double currentAngle) {
 
-        dash.putNumber("navX-roll", currentAngle);
-
         if (currentAngle < -TOTAL_ANGLE) {
             return MOVE_SPEED;
         } else if (currentAngle > TOTAL_ANGLE) {

@@ -86,7 +86,6 @@ public class Robot extends TimedRobot {
         dash.putNumber("backLeft", encVals[2]);
         dash.putNumber("backRight", encVals[3]);
         dash.putNumber("navXGyro", chassis.robotRotation);
-        dash.putNumber("armAngle", arm.getEncoder());
 
         dash.putNumber("navxGs", chassis.navxGyro.getAccelFullScaleRangeG());
 
@@ -132,7 +131,7 @@ public class Robot extends TimedRobot {
             chassis.stop();
             inputs = controller.nullControls();
         } else {
-            inputs = auto.ReadFile();
+            inputs = auto.readFile();
             RunControls();
         }
 
@@ -195,7 +194,7 @@ public class Robot extends TimedRobot {
     public void testInit() {
 
         inputs = controller.nullControls();
-        auto.SetupRecording(m_chooser.getSelected());
+        auto.setupRecording(m_chooser.getSelected());
 
         autoLevel = false;
 
@@ -277,20 +276,18 @@ public class Robot extends TimedRobot {
 
             case 0:
                 // up - High
-                // arm.setArmLevel(3);
+                arm.setCurrentLevel(3);
                 break;
             case 90 | 270:
                 // right - Mid
-                // arm.setArmLevel(2);
+                arm.setCurrentLevel(2);
                 break;
             case 180:
                 // down - Hybrid
-                // arm.setArmLevel(1);
+                arm.setCurrentLevel(1);
                 break;
     
         }
-
-        arm.runArm(inputs.m_leftX);
 
         // grabbing cube
         if (inputs.m_LeftBumper) {
@@ -312,6 +309,8 @@ public class Robot extends TimedRobot {
         // update motors
         arm.checkHandMotors();
 
+        arm.runArm();
+        
         if (inputs.d_AButton) {
             chassis.navxGyro.zeroYaw();
         }
