@@ -2,6 +2,8 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
+//Otters: 3229 Programming Sub-Team
+
 package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -228,11 +230,13 @@ public class Robot extends TimedRobot {
 
     void ExecuteDriveControls() {
 
+        //Warn driver they are going too fast on swerve
         if (RobotController.getBatteryVoltage() < 9) {
             controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.3);
         } else {
             controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
         }
+
 
         // Drive swerve chassis with joystick deadbands
         if (!DriverStation.isJoystickConnected(0)) {
@@ -252,7 +256,8 @@ public class Robot extends TimedRobot {
             }
         }
 
-        // toggle auto level
+
+        // toggle auto level (only for autonomous)
         if (inputs.d_YButton && inAuto) {
             autoLevel = true;
         }
@@ -262,13 +267,15 @@ public class Robot extends TimedRobot {
             chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getRoll()), 0);
         }
 
+        // Reset field orientation
+        if (inputs.d_AButton) {
+            chassis.navxGyro.zeroYaw();
+        }
 
     }
 
 
     //Manip Controls
-
-
     void ExecuteManipControls() {
 
         // dP for controlling arm levels
@@ -296,7 +303,7 @@ public class Robot extends TimedRobot {
             arm.closeHands(false);
         }
 
-        // cone stuffs
+        // Grabbing cone
         if (inputs.m_LeftTriggerAxis > 0.1) {
             arm.placeObject(true);
         } else {
@@ -308,12 +315,7 @@ public class Robot extends TimedRobot {
 
         // update motors
         arm.checkHandMotors();
-
         arm.runArm();
-        
-        if (inputs.d_AButton) {
-            chassis.navxGyro.zeroYaw();
-        }
 
     }
 }

@@ -1,5 +1,4 @@
-// Otter: Nathan Manhardt (3229 Software Captain)
-// Co-Otters: 3229 Software Team
+//Otters: 3229 Programming Sub-Team
 
 package frc.robot;
 

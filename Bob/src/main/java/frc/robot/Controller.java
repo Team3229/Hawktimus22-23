@@ -1,4 +1,4 @@
-// Otter: Tony Simone (3229 Mentor)
+// Author: Tony Simone (3229 Mentor)
 
 // Controller class
 
