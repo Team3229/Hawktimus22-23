@@ -27,7 +27,6 @@ public class SwerveModule {
     RelativeEncoder angleEncoder;
     PIDController anglePIDController;
     PIDController drivePIDController;
-    Utils utils;
     SwerveModuleState moduleState;
 
    
@@ -58,8 +57,6 @@ public class SwerveModule {
         anglePIDController.setTolerance(anglePosTolerance, angleVelTolerance);
         
         location = new Translation2d(X/2, Y/2);
-
-        utils = new Utils();
     
         driveMotor.setInverted(invertMotor);
 
@@ -69,7 +66,7 @@ public class SwerveModule {
 
     }
 
-    void ConfigEncoder(double oofset) {
+    void configEncoder(double oofset) {
 
         encoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         encoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
@@ -78,7 +75,7 @@ public class SwerveModule {
 
     }
     
-    void ConfigPID(double[] anglePID, double[] drivePID) {
+    void configPID(double[] anglePID, double[] drivePID) {
         
         anglePIDController.setPID(anglePID[0],anglePID[1],anglePID[2]);
         // drivePIDController.setP(drivePID[0]);
@@ -90,21 +87,21 @@ public class SwerveModule {
 
     }
 
-    void SetState(SwerveModuleState moduleSta) {
+    void setState(SwerveModuleState moduleSta) {
 
         driveRPM = driveEncoder.getVelocity();
 
-        moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(GetEncoder()));
+        moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(getEncoder()));
         
         // drivePIDController.setReference(utils.mpsToRPM(moduleState.speedMetersPerSecond), ControlType.kVelocity);
         driveMotor.set(moduleState.speedMetersPerSecond);
         // angleMotor.set(anglePIDController.calculate(GetAbsoluteEncoder(), moduleState.angle.getDegrees()));
-        angleMotor.set(anglePIDController.calculate(GetEncoder(), moduleState.angle.getDegrees()));
+        angleMotor.set(anglePIDController.calculate(getEncoder(), moduleState.angle.getDegrees()));
     
             
     }
 
-    double GetEncoder() {
+    double getEncoder() {
 
         if (encoderBuffer++ > 5) {
             encoderBuffer = 0;
@@ -115,7 +112,7 @@ public class SwerveModule {
 
     }
 
-    void Stop() {
+    void stop() {
 
         angleMotor.stopMotor();
         // drivePIDController.setReference(0, ControlType.kVelocity);

@@ -1,12 +1,14 @@
 package frc.robot;
 
-import com.revrobotics.AbsoluteEncoder;
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
+import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
@@ -15,8 +17,6 @@ import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.util.Color;
 
 public class Arm {
-
-    Utils utils = new Utils();
 
     /*
     0 docked
@@ -30,7 +30,8 @@ public class Arm {
     ColorSensorV3 colorSensor;
 
     final int longArmID = 16;
-    final int intakeArmID = 17;
+    final int longArmID2 = 17;
+    final int intakeArmID = 18;
     final int leftHandID = 14;
     final int rightHandID = 15;
     final double cubeDeadZone = 0.1;
@@ -59,6 +60,7 @@ public class Arm {
     double encoderValue = 0;
 
     CANSparkMax armMotor;
+    CANSparkMax armMotor2;
     CANSparkMax intakeArmMotor;
 
     CANSparkMax leftWheels;
@@ -69,13 +71,13 @@ public class Arm {
 
     Compressor compressor;
 
-    AbsoluteEncoder armEncoder;
-    AbsoluteEncoder intakeArmEncoder;
+    CANCoder armEncoder;
+    CANCoder intakeArmEncoder;
 
     RelativeEncoder leftWheelsEncoder;
     RelativeEncoder rightWheelsEncoder;
 
-    double[] armPIDv = {0,0,0};
+    double[] armPIDv = {0.0001,0,0};
     double[] intakeArmPIDv = {0,0,0};
 
     double leftWheelsLastValue = 0;
@@ -89,6 +91,10 @@ public class Arm {
         colorSensor = new ColorSensorV3(Port.kOnboard);
 
         armMotor = new CANSparkMax(longArmID, MotorType.kBrushless);
+        armMotor2 = new CANSparkMax(longArmID2, MotorType.kBrushless);
+        armMotor.setInverted(false);
+        armMotor2.follow(armMotor, true);
+
         intakeArmMotor = new CANSparkMax(intakeArmID, MotorType.kBrushless);
         leftWheels = new CANSparkMax(leftHandID, MotorType.kBrushless);
         rightWheels = new CANSparkMax(rightHandID, MotorType.kBrushless);
@@ -100,8 +106,12 @@ public class Arm {
         onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
         offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
 
-        armEncoder = armMotor.getAbsoluteEncoder(Type.kDutyCycle);
-        intakeArmEncoder = intakeArmMotor.getAbsoluteEncoder(Type.kDutyCycle);
+        armEncoder = new CANCoder(19);
+        armEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
+        armEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
+        armEncoder.configSensorDirection(true);
+        armEncoder.configMagnetOffset(-208.765625);
+        intakeArmEncoder = new CANCoder(20);
 
         leftWheelsEncoder = leftWheels.getEncoder();
         rightWheelsEncoder = rightWheels.getEncoder();
@@ -194,6 +204,21 @@ public class Arm {
             offSolenoid.set(false);
             onSolenoid.set(true);
         }
+    }
+
+    void runArm(double input) {
+        armMotor.set(armPID.calculate(getEncoder()));
+    }
+
+    double getEncoder() {
+
+        if (encoderBuffer++ > 5) {
+            encoderBuffer = 0;
+            encoderValue = armEncoder.getAbsolutePosition();
+        }
+
+        return MathUtil.inputModulus(encoderValue, 0, 360);
+
     }
 
     void checkHandMotors() {

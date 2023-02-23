@@ -66,7 +66,7 @@ public class Robot extends TimedRobot {
 
         auto.CloseFile();
 
-        chassis.ConfigPIDS();
+        chassis.configPIDS();
 
     }
 
@@ -80,12 +80,13 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
 
-        encVals = chassis.EncoderValues();
+        encVals = chassis.encoderValues();
         dash.putNumber("frontLeft", encVals[0]);
         dash.putNumber("frontRight", encVals[1]);
         dash.putNumber("backLeft", encVals[2]);
         dash.putNumber("backRight", encVals[3]);
         dash.putNumber("navXGyro", chassis.robotRotation);
+        dash.putNumber("armAngle", arm.getEncoder());
 
         dash.putNumber("navxGs", chassis.navxGyro.getAccelFullScaleRangeG());
 
@@ -107,7 +108,7 @@ public class Robot extends TimedRobot {
     public void autonomousInit() {
 
         auto.CloseFile();
-        chassis.ConfigPIDS();
+        chassis.configPIDS();
 
         selectedAuto = m_chooser.getSelected();
         System.out.println("Auto selected: " + selectedAuto);
@@ -128,7 +129,7 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
 
         if (auto.autoFinished) {
-            chassis.Stop();
+            chassis.stop();
             inputs = controller.nullControls();
         } else {
             inputs = auto.ReadFile();
@@ -154,7 +155,7 @@ public class Robot extends TimedRobot {
         chassis.anglePID.writePID();
 
 
-        chassis.ConfigPIDS();
+        chassis.configPIDS();
 
         inputs = controller.nullControls();
 
@@ -167,9 +168,6 @@ public class Robot extends TimedRobot {
             System.out.println("Reset Offsets");
             dash.putBool("resetAngleOffsets", false);
         }
-
-        //high -adjustible for other teams?-
-        arm.setArmLevel(3);
 
     }
     
@@ -202,9 +200,6 @@ public class Robot extends TimedRobot {
         autoLevel = false;
 
         inAuto = true;
-
-        //high
-        arm.setArmLevel(3);
 
     }
 
@@ -242,18 +237,18 @@ public class Robot extends TimedRobot {
 
         // Drive swerve chassis with joystick deadbands
         if (!DriverStation.isJoystickConnected(0)) {
-            chassis.Stop();
+            chassis.stop();
         } else {
             if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0 | Math.abs(inputs.d_rightX) > 0) {
-                chassis.Drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+                chassis.drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
             } else {
                 // D-Pad driving slowly
 
                 if (inputs.d_POV != -1) {
                     dp = utils.getDirectionalPadValues(inputs.d_POV);
-                    chassis.Drive(dp[0] / 2, dp[1] / 2, dp[2] / 2);
+                    chassis.drive(dp[0] / 2, dp[1] / 2, dp[2] / 2);
                 } else {
-                    chassis.Stop();
+                    chassis.stop();
                 }
             }
         }
@@ -265,7 +260,7 @@ public class Robot extends TimedRobot {
 
         // if we're auto leveling, move to work
         if (autoLevel) {
-            chassis.Drive(0, Leveling.getBalanced(chassis.navxGyro.getRoll()), 0);
+            chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getRoll()), 0);
         }
 
 
@@ -282,18 +277,20 @@ public class Robot extends TimedRobot {
 
             case 0:
                 // up - High
-                arm.setArmLevel(3);
+                // arm.setArmLevel(3);
                 break;
             case 90 | 270:
                 // right - Mid
-                arm.setArmLevel(2);
+                // arm.setArmLevel(2);
                 break;
             case 180:
                 // down - Hybrid
-                arm.setArmLevel(1);
+                // arm.setArmLevel(1);
                 break;
     
         }
+
+        arm.runArm(inputs.m_leftX);
 
         // grabbing cube
         if (inputs.m_LeftBumper) {

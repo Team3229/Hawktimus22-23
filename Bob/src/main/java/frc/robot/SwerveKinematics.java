@@ -22,7 +22,6 @@ public class SwerveKinematics {
     ChassisSpeeds speeds;
     SwerveModuleState[] states;
     double robotRotation = 0;
-    Utils utils;
     SwerveOffsets offset;
 
     //double[] anglePID = {0.003, 0.0002, 0.00001};
@@ -42,7 +41,6 @@ public class SwerveKinematics {
 
     public SwerveKinematics() {
 
-        utils = new Utils();
         offset = new SwerveOffsets();
 
         frontLeftModule = new SwerveModule(2, 1, 9, anglePID.pidValues, drivePID.pidValues, L, W, false);
@@ -51,10 +49,10 @@ public class SwerveKinematics {
         backRightModule = new SwerveModule(7, 8, 12, anglePID.pidValues, drivePID.pidValues, -L, -W, true);
 
         initialOffsets = offset.readFiles();
-        frontLeftModule.ConfigEncoder(initialOffsets[0]);
-        frontRightModule.ConfigEncoder(initialOffsets[1]);
-        backLeftModule.ConfigEncoder(initialOffsets[2]);
-        backRightModule.ConfigEncoder(initialOffsets[3]);
+        frontLeftModule.configEncoder(initialOffsets[0]);
+        frontRightModule.configEncoder(initialOffsets[1]);
+        backLeftModule.configEncoder(initialOffsets[2]);
+        backRightModule.configEncoder(initialOffsets[3]);
 
         navxGyro = new AHRS(SPI.Port.kMXP);
 
@@ -62,58 +60,58 @@ public class SwerveKinematics {
 
     }
 
-    void Drive(double X, double Y, double Z) {
+    void drive(double X, double Y, double Z) {
 
-        rotating = ((Math.abs(Z) > 0) ? true : false);
+        rotating = Math.abs(Z) > 0;
 
         robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
         speeds = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxRadiansPerSecond, Rotation2d.fromDegrees(robotRotation));
         states = kinematicsObject.toSwerveModuleStates(speeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(states, maxSpeedMetersPerSecond);
 
-        frontLeftModule.SetState(states[0]);
-        frontRightModule.SetState(states[1]);
-        backLeftModule.SetState(states[2]);
-        backRightModule.SetState(states[3]);
+        frontLeftModule.setState(states[0]);
+        frontRightModule.setState(states[1]);
+        backLeftModule.setState(states[2]);
+        backRightModule.setState(states[3]);
 
 
     }
 
-    double[] EncoderValues() {
+    double[] encoderValues() {
 
-        encoderValues[0] = frontLeftModule.GetEncoder();
-        encoderValues[1] = frontRightModule.GetEncoder();
-        encoderValues[2] = backLeftModule.GetEncoder();
-        encoderValues[3] = backRightModule.GetEncoder();
+        encoderValues[0] = frontLeftModule.getEncoder();
+        encoderValues[1] = frontRightModule.getEncoder();
+        encoderValues[2] = backLeftModule.getEncoder();
+        encoderValues[3] = backRightModule.getEncoder();
         robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
         return encoderValues;
 
     }
 
-    void ConfigPIDS() {
+    void configPIDS() {
 
-        frontLeftModule.ConfigPID(anglePID.pidValues, drivePID.pidValues);
-        frontRightModule.ConfigPID(anglePID.pidValues, drivePID.pidValues);
-        backLeftModule.ConfigPID(anglePID.pidValues, drivePID.pidValues);
-        backRightModule.ConfigPID(anglePID.pidValues, drivePID.pidValues);
+        frontLeftModule.configPID(anglePID.pidValues, drivePID.pidValues);
+        frontRightModule.configPID(anglePID.pidValues, drivePID.pidValues);
+        backLeftModule.configPID(anglePID.pidValues, drivePID.pidValues);
+        backRightModule.configPID(anglePID.pidValues, drivePID.pidValues);
     }
 
     void fixOffsets() {
 
-        double[] offsets = offset.calculateOffsets(frontLeftModule.GetEncoder(), frontRightModule.GetEncoder(), backLeftModule.GetEncoder(), backRightModule.GetEncoder());
-        frontLeftModule.ConfigEncoder(offsets[0]);
-        frontRightModule.ConfigEncoder(offsets[1]);
-        backLeftModule.ConfigEncoder(offsets[2]);
-        backRightModule.ConfigEncoder(offsets[3]);
+        double[] offsets = offset.calculateOffsets(frontLeftModule.getEncoder(), frontRightModule.getEncoder(), backLeftModule.getEncoder(), backRightModule.getEncoder());
+        frontLeftModule.configEncoder(offsets[0]);
+        frontRightModule.configEncoder(offsets[1]);
+        backLeftModule.configEncoder(offsets[2]);
+        backRightModule.configEncoder(offsets[3]);
 
     }
 
-    void Stop() {
+    void stop() {
 
-        frontLeftModule.Stop();
-        frontRightModule.Stop();
-        backLeftModule.Stop();
-        backRightModule.Stop();
+        frontLeftModule.stop();
+        frontRightModule.stop();
+        backLeftModule.stop();
+        backRightModule.stop();
 
     }
 
