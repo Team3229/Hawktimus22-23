@@ -10,8 +10,8 @@ import java.io.Serializable;
 
 class Controller {
   //Limits
-  static final double stickDeadband = 0.2;
-  static final double triggerDeadband = 0.1;
+  static final double STICK_DEADBAND = 0.2;
+  static final double TRIGGER_DEADBAND = 0.1;
 
   // Controller
   private XboxController d_controller;
@@ -28,10 +28,10 @@ class Controller {
 
   ControllerInputs getControls() {
     ControllerInputs ci = new ControllerInputs();
-    ci.d_rightY = ((Math.abs(d_controller.getRightY()) < stickDeadband) ? 0 : d_controller.getRightY());
-    ci.d_rightX = ((Math.abs(d_controller.getRightX()) < stickDeadband) ? 0 : d_controller.getRightX());
-    ci.d_leftY = ((Math.abs(d_controller.getLeftY()) < stickDeadband) ? 0 : d_controller.getLeftY());
-    ci.d_leftX = ((Math.abs(d_controller.getLeftX()) < stickDeadband) ? 0 : d_controller.getLeftX());
+    ci.d_rightY = ((Math.abs(d_controller.getRightY()) < STICK_DEADBAND) ? 0 : d_controller.getRightY());
+    ci.d_rightX = ((Math.abs(d_controller.getRightX()) < STICK_DEADBAND) ? 0 : d_controller.getRightX());
+    ci.d_leftY = ((Math.abs(d_controller.getLeftY()) < STICK_DEADBAND) ? 0 : d_controller.getLeftY());
+    ci.d_leftX = ((Math.abs(d_controller.getLeftX()) < STICK_DEADBAND) ? 0 : d_controller.getLeftX());
     ci.d_AButton = d_controller.getAButton();
     ci.d_BButton = d_controller.getBButton();
     ci.d_XButton = d_controller.getXButton();
@@ -39,14 +39,14 @@ class Controller {
     ci.d_StartButton = d_controller.getStartButton();
     ci.d_RightBumper = d_controller.getRightBumper();
     ci.d_LeftBumper = d_controller.getLeftBumper();
-    ci.d_RightTriggerAxis = ((Math.abs(d_controller.getRightTriggerAxis()) < triggerDeadband) ? 0 : d_controller.getRightTriggerAxis());
-    ci.d_LeftTriggerAxis = ((Math.abs(d_controller.getLeftTriggerAxis()) < triggerDeadband) ? 0 : d_controller.getLeftTriggerAxis());
+    ci.d_RightTriggerAxis = ((Math.abs(d_controller.getRightTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : d_controller.getRightTriggerAxis());
+    ci.d_LeftTriggerAxis = ((Math.abs(d_controller.getLeftTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : d_controller.getLeftTriggerAxis());
     ci.d_POV = d_controller.getPOV();
 
-    ci.m_rightY = ((Math.abs(m_controller.getRightY()) < stickDeadband) ? 0 : m_controller.getRightY());
-    ci.m_rightX = ((Math.abs(m_controller.getRightX()) < stickDeadband) ? 0 : m_controller.getRightX());
-    ci.m_leftY = ((Math.abs(m_controller.getLeftY()) < stickDeadband) ? 0 : m_controller.getLeftY());
-    ci.m_leftX = ((Math.abs(m_controller.getLeftX()) < stickDeadband) ? 0 : m_controller.getLeftX());
+    ci.m_rightY = ((Math.abs(m_controller.getRightY()) < STICK_DEADBAND) ? 0 : m_controller.getRightY());
+    ci.m_rightX = ((Math.abs(m_controller.getRightX()) < STICK_DEADBAND) ? 0 : m_controller.getRightX());
+    ci.m_leftY = ((Math.abs(m_controller.getLeftY()) < STICK_DEADBAND) ? 0 : m_controller.getLeftY());
+    ci.m_leftX = ((Math.abs(m_controller.getLeftX()) < STICK_DEADBAND) ? 0 : m_controller.getLeftX());
     ci.m_AButton = m_controller.getAButton();
     ci.m_BButton = m_controller.getBButton();
     ci.m_XButton = m_controller.getXButton();
@@ -54,8 +54,8 @@ class Controller {
     ci.m_StartButton = m_controller.getStartButton();
     ci.m_RightBumper = m_controller.getRightBumper();
     ci.m_LeftBumper = m_controller.getLeftBumper();
-    ci.m_RightTriggerAxis = ((Math.abs(m_controller.getRightTriggerAxis()) < triggerDeadband) ? 0 : m_controller.getRightTriggerAxis());
-    ci.m_LeftTriggerAxis = ((Math.abs(m_controller.getLeftTriggerAxis()) < triggerDeadband) ? 0 : m_controller.getLeftTriggerAxis());
+    ci.m_RightTriggerAxis = ((Math.abs(m_controller.getRightTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : m_controller.getRightTriggerAxis());
+    ci.m_LeftTriggerAxis = ((Math.abs(m_controller.getLeftTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : m_controller.getLeftTriggerAxis());
     ci.m_POV = m_controller.getPOV();
     
     return ci;

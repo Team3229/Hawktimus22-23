@@ -298,9 +298,9 @@ public class Robot extends TimedRobot {
 
         // grabbing cube
         if (inputs.m_LeftBumper) {
-            arm.closeHands(true);
+            arm.grabObject(true);
         } else if (inputs.d_RightBumper) {
-            arm.closeHands(false);
+            arm.grabObject(false);
         }
 
         // Grabbing cone
@@ -314,7 +314,7 @@ public class Robot extends TimedRobot {
         }
 
         // update motors
-        arm.checkHandMotors();
+        arm.checkIntakeMotors();
         arm.runArm();
 
     }
