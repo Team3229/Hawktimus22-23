@@ -1,6 +1,6 @@
 //Otters: 3229 Programming Sub-Team
 
-package frc.robot;
+package frc.robot.drivetrain;
 
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -8,6 +8,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
+import frc.robot.filemanagers.PID;
 import edu.wpi.first.math.MathUtil;
 
 public class SwerveKinematics {
@@ -16,17 +17,17 @@ public class SwerveKinematics {
     SwerveModule frontRightModule;
     SwerveModule backLeftModule;
     SwerveModule backRightModule;
-    AHRS navxGyro;
+    public AHRS navxGyro;
     SwerveDriveKinematics kinematicsObject;
     ChassisSpeeds speeds;
     SwerveModuleState[] states;
-    double robotRotation = 0;
+    public double robotRotation = 0;
     SwerveOffsets offset;
 
     //double[] anglePID = {0.003, 0.0002, 0.00001};
     //double[] drivePID = {0, 0, 0};
-    PID anglePID = new PID("anglePID.txt", new double[] {0.003,0.0002,0.00001});
-    PID drivePID = new PID("drivePID.txt", new double[] {0,0,0});
+    public PID anglePID = new PID("anglePID.txt", new double[] {0.003,0.0002,0.00001});
+    public PID drivePID = new PID("drivePID.txt", new double[] {0,0,0});
 
     final double L = 0.594;
     final double W = 0.594;
@@ -59,7 +60,7 @@ public class SwerveKinematics {
 
     }
 
-    void drive(double X, double Y, double Z) {
+    public void drive(double X, double Y, double Z) {
 
         rotating = Math.abs(Z) > 0;
 
@@ -76,7 +77,7 @@ public class SwerveKinematics {
 
     }
 
-    double[] encoderValues() {
+    public double[] encoderValues() {
 
         encoderValues[0] = frontLeftModule.getEncoder();
         encoderValues[1] = frontRightModule.getEncoder();
@@ -87,7 +88,7 @@ public class SwerveKinematics {
 
     }
 
-    void configPIDS() {
+    public void configPIDS() {
 
         frontLeftModule.configPID(anglePID.pidValues, drivePID.pidValues);
         frontRightModule.configPID(anglePID.pidValues, drivePID.pidValues);
@@ -95,7 +96,7 @@ public class SwerveKinematics {
         backRightModule.configPID(anglePID.pidValues, drivePID.pidValues);
     }
 
-    void fixOffsets() {
+    public void fixOffsets() {
 
         double[] offsets = offset.calculateOffsets(frontLeftModule.getEncoder(), frontRightModule.getEncoder(), backLeftModule.getEncoder(), backRightModule.getEncoder());
         frontLeftModule.configEncoder(offsets[0]);
@@ -105,7 +106,7 @@ public class SwerveKinematics {
 
     }
 
-    void stop() {
+    public void stop() {
 
         frontLeftModule.stop();
         frontRightModule.stop();

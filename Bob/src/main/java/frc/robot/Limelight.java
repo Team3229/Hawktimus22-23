@@ -3,11 +3,14 @@
 package frc.robot;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.NetworkTable;
 
 public class Limelight {
     private final NetworkTable table;
-    private final double[] blankArray = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    PIDController xAlignPIDController;
+    PIDController yAlignPIDController;
+    PIDController zAlignPIDController;
     private final double[][] tagPositions = {
             {7.24310, -2.93659},
             {7.24310, -1.26019},
@@ -18,30 +21,26 @@ public class Limelight {
             {-7.24310, -1.26019},
             {-7.24310, -2.93659}
     };
+    private final double MIN_DISTANCE = 1.2192;
 
-    Dashboard dash = new Dashboard();
+    double x;
+    double y;
+    double area;
+    int id;
+    double seenTarget;
+    double[] botPos;
+    double[] xAlignPID = {0, 0, 0};
+    double[] yAlignPID = {0, 0, 0};
+    double[] zAlignPID = {0, 0, 0};
 
-    public double x;
-    public double y;
-    public double area;
-    public int id;
-    public double seenTarget;
-    public double[] botPos;
-
-    public Limelight() {
+    Limelight() {
         table = NetworkTableInstance.getDefault().getTable("limelight");
+        xAlignPIDController = new PIDController(xAlignPID[0], xAlignPID[1], xAlignPID[2]);
+        yAlignPIDController = new PIDController(yAlignPID[0], yAlignPID[1], yAlignPID[2]);
+        zAlignPIDController = new PIDController(zAlignPID[0], zAlignPID[1], zAlignPID[2]);
     }
 
-    public void updateDashboard() {
-        dash.putNumber("LimelightX", x);
-        dash.putNumber("LimelightY", y);
-        dash.putNumber("LimelightArea", area);
-        dash.putNumber("LimelightSeenTarget", seenTarget);
-        dash.putNumberArray("LimelightPose", botPos);
-        dash.putNumber("TagID", id);
-    }
-
-    public void getValues() {
+    void getValues() {
         // Turn off Limelight LEDs
         table.getEntry("ledMode").setNumber(1);
 
@@ -51,29 +50,21 @@ public class Limelight {
         y = table.getEntry("ty").getDouble(0.0);
         area = table.getEntry("ta").getDouble(0.0);
         seenTarget = table.getEntry("tv").getDouble(0.0);
-        botPos = table.getEntry("botpose").getDoubleArray(blankArray);
-
-        updateDashboard();
+        botPos = table.getEntry("botpose").getDoubleArray(new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0});
     }
 
-    public double[] getDistanceToTag() {
+    double[] getDistanceToTag() {
         // Returns the distance to the closest tag in x, y (meters), z(rotation)
         double[] distances = {tagPositions[id - 1][0] - botPos[0], tagPositions[id - 1][1] - botPos[1], -x, id};
 
         return distances;
     }
 
-    public double[] alignWithTag() {
+    double[] alignWithTag() {
         // 1.2192 meters is the minimum distance to be, that's how far from the tag we want to be.
-        final double MIN_DISTANCE = 1.2192;
-        final double ALIGN_SCALE_FACTOR = 0.05;
 
         double[] distanceToTag = getDistanceToTag();
-        double[] actualMove = {0, distanceToTag[1] * ALIGN_SCALE_FACTOR, distanceToTag[2]};
-        
-        if (Math.abs(distanceToTag[0]) > MIN_DISTANCE) {
-            actualMove[0] = distanceToTag[0] * ALIGN_SCALE_FACTOR;
-        }
+        double[] actualMove = {distanceToTag[2]};
 
         return actualMove;
     }

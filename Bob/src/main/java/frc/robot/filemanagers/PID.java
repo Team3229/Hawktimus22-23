@@ -1,6 +1,6 @@
 //Otters: 3229 Programming SubTeam
 
-package frc.robot;
+package frc.robot.filemanagers;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -9,7 +9,7 @@ import java.util.Scanner;
 
 public class PID {
 
-    double[] pidValues = {0.0, 0.0, 0.0};
+    public double[] pidValues = {0.0, 0.0, 0.0};
     private String totalPath = "/home/lvuser/";
 
     public PID(String path, double[] defaultValues) {
@@ -22,7 +22,7 @@ public class PID {
         }
     }
 
-    void writePID() {
+    public void writePID() {
         try {
             FileWriter writer = new FileWriter(totalPath);
             writer.write(pidValues[0] + "\n" + pidValues[1] + "\n" + pidValues[2]);

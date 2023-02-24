@@ -7,20 +7,23 @@
 //       fairly compact, also.
 //
 
-package frc.robot;
+package frc.robot.filemanagers;
 
 import java.io.*;
 
-class Auto {
+import frc.robot.Controller;
+import frc.robot.ControllerInputs;
+
+public class Auto {
   // Constants
   static final boolean m_recordMode = true; // use this to force disable recording, useful at competitions
   static final boolean WRITE = true;
   static final boolean READ = false;
   static final String basePath = "/home/lvuser/";
-  static final String kTestAuto = "doSomething";
+  public static final String kTestAuto = "doSomething";
   static final String kAutoroutineDefault = kTestAuto;
 
-  boolean autoFinished = false;
+  public boolean autoFinished = false;
 
   // Auto vars
   private File cmdFile;
@@ -32,11 +35,11 @@ class Auto {
   Controller controller = new Controller();
 
 
-  Auto() {
+  public Auto() {
   }
 
   // Done in Auto part of Robot
-  void SetupPlayback(String inputFileName) {
+  public void SetupPlayback(String inputFileName) {
     String filePath = basePath + inputFileName + ".aut";
     System.out.println("Reading auto instructions from " + filePath);
     cmdFile = new File(filePath);
@@ -48,7 +51,7 @@ class Auto {
     }
   }
 
-  ControllerInputs readFile() {
+  public ControllerInputs readFile() {
     // System.out.println("Reading auto file...");
     ControllerInputs inputs = controller.nullControls();
     try {
@@ -63,7 +66,7 @@ class Auto {
   }
 
   // Done in Test part of Robot
-  void setupRecording(String inputFileName) {
+  public void setupRecording(String inputFileName) {
     String filePath = basePath + inputFileName + ".aut";
     System.out.println("Reading auto instructions from " + filePath);
     cmdFile = new File(filePath);
@@ -75,7 +78,7 @@ class Auto {
     }
   }
 
-  void Record(ControllerInputs inputs) {
+  public void Record(ControllerInputs inputs) {
     System.out.println("Writing auto file...");
     try {
       cmdWrite.writeObject(inputs);
@@ -84,7 +87,7 @@ class Auto {
     }
   }
 
-  void CloseFile() {
+  public void CloseFile() {
     System.out.println("Auto file closed.");
     if (fReader != null) {
       try {

@@ -6,9 +6,8 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import java.io.Serializable;
 
-class Controller {
+public class Controller {
   //Limits
   static final double STICK_DEADBAND = 0.2;
   static final double TRIGGER_DEADBAND = 0.1;
@@ -19,7 +18,7 @@ class Controller {
   GenericHID m_rumble;
   GenericHID d_rumble;
 
-  Controller() {
+  public Controller() {
     d_controller = new XboxController(0);
     m_controller = new XboxController(1);
     d_rumble = new GenericHID(0);
@@ -61,7 +60,7 @@ class Controller {
     return ci;
   }
 
-  ControllerInputs nullControls() {
+  public ControllerInputs nullControls() {
     ControllerInputs ci = new ControllerInputs();
     ci.d_rightY = 0;
     ci.d_rightX = 0;
@@ -94,38 +93,4 @@ class Controller {
     ci.m_POV = -1;
     return ci;
   }
-}
-
-class ControllerInputs implements Serializable {
-  // Driver Controls
-  double d_rightY;
-  double d_rightX;
-  double d_leftX;
-  double d_leftY;
-  boolean d_AButton;
-  boolean d_BButton;
-  boolean d_XButton;
-  boolean d_YButton;
-  boolean d_RightBumper;
-  boolean d_LeftBumper;
-  double d_RightTriggerAxis;
-  double d_LeftTriggerAxis;
-  int d_POV;
-  boolean d_StartButton;
-
-  // Manip Controls
-  double m_rightY;
-  double m_rightX;
-  double m_leftX;
-  double m_leftY;
-  boolean m_AButton;
-  boolean m_BButton;
-  boolean m_XButton;
-  boolean m_YButton;
-  boolean m_RightBumper;
-  boolean m_LeftBumper;
-  double m_RightTriggerAxis;
-  double m_LeftTriggerAxis;
-  int m_POV;
-  boolean m_StartButton;
 }

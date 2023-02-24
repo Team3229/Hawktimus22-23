@@ -1,6 +1,6 @@
 //Otters: 3229 Programming SubTeam
 
-package frc.robot;
+package frc.robot.drivetrain;
 
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;

@@ -1,9 +1,11 @@
 //Otters: 3229 Programming SubTeam
 
-package frc.robot;
+package frc.robot.drivetrain;
 
 import java.io.*;
 import java.util.Scanner;
+
+import frc.robot.Dashboard;
 
 
 public class SwerveOffsets {
