@@ -2,6 +2,7 @@
 
 package frc.robot;
 
+import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Dashboard {
@@ -33,5 +34,8 @@ public class Dashboard {
     }
     public boolean readBool(String key){
         return SmartDashboard.getBoolean(key, false);
+    }
+    public void putData(String key, Sendable sendable){
+        SmartDashboard.putData(key, sendable);
     }
 }

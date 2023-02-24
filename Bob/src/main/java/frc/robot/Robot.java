@@ -10,10 +10,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.drivetrain.SwerveKinematics;
-import frc.robot.drivetrain.SwerveOffsets;
+import frc.robot.filemanagers.SwerveOffsets;
 import frc.robot.filemanagers.Auto;
 
 /**
@@ -23,8 +21,7 @@ import frc.robot.filemanagers.Auto;
  * project.
  */
 public class Robot extends TimedRobot {
-    private String selectedAuto;
-    private final SendableChooser <String> m_chooser = new SendableChooser <> ();
+    private String[] selectedAuto = {"","","",""};
     private double[] encVals = {0,0,0,0};
     private boolean autoLevel = false;
 
@@ -53,23 +50,14 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        m_chooser.setDefaultOption("doSomething", Auto.kTestAuto);
-        SmartDashboard.putData("Auto choices", m_chooser);
+        auto.setupDropdowns();
 
         chassis.navxGyro.zeroYaw();
         chassis.navxGyro.calibrate();
 
-        dash.putNumber("driveP", chassis.drivePID.pidValues[0]);
-        dash.putNumber("driveI", chassis.drivePID.pidValues[1]);
-        dash.putNumber("driveD", chassis.drivePID.pidValues[2]);
-
-        dash.putNumber("angleP", chassis.anglePID.pidValues[0]);
-        dash.putNumber("angleI", chassis.anglePID.pidValues[1]);
-        dash.putNumber("angleD", chassis.anglePID.pidValues[2]);
-
         dash.putNumber("navxGs", 0);
 
-        auto.CloseFile();
+        auto.closeFile();
 
         chassis.configPIDS();
 
@@ -111,12 +99,15 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
 
-        auto.CloseFile();
+        auto.closeFile();
         chassis.configPIDS();
 
-        selectedAuto = m_chooser.getSelected();
+        selectedAuto[0] = auto.heightDropdown.getSelected();
+        selectedAuto[1] = auto.startPosDropdown.getSelected();
+        selectedAuto[2] = auto.grabDropdown.getSelected();
+        selectedAuto[3] = String.valueOf(dash.readBool("Charge Station"));
         System.out.println("Auto selected: " + selectedAuto);
-        auto.SetupPlayback(selectedAuto);
+        auto.setupPlayback(selectedAuto);
 
         inputs = controller.nullControls();
 
@@ -146,18 +137,7 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
 
-        auto.CloseFile();
-
-        chassis.drivePID.pidValues[0] = dash.readNumber("driveP");
-        chassis.drivePID.pidValues[1] = dash.readNumber("driveI");
-        chassis.drivePID.pidValues[2] = dash.readNumber("driveD");
-        chassis.drivePID.writePID();
-
-        chassis.anglePID.pidValues[0] = dash.readNumber("angleP");
-        chassis.anglePID.pidValues[1] = dash.readNumber("angleI");
-        chassis.anglePID.pidValues[2] = dash.readNumber("angleD");
-        chassis.anglePID.writePID();
-
+        auto.closeFile();
 
         chassis.configPIDS();
 
@@ -197,9 +177,13 @@ public class Robot extends TimedRobot {
     /** This function is called once when test mode is enabled. */
     @Override
     public void testInit() {
-
+        // record a new auto sequence
+        selectedAuto[0] = auto.heightDropdown.getSelected();
+        selectedAuto[1] = auto.startPosDropdown.getSelected();
+        selectedAuto[2] = auto.grabDropdown.getSelected();
+        selectedAuto[3] = String.valueOf(dash.readBool("Charge Station"));
         inputs = controller.nullControls();
-        auto.setupRecording(m_chooser.getSelected());
+        auto.setupRecording(selectedAuto);
 
         autoLevel = false;
 
@@ -212,7 +196,7 @@ public class Robot extends TimedRobot {
     public void testPeriodic() {
 
         inputs = controller.getControls();
-        auto.Record(inputs);
+        auto.record(inputs);
         RunControls();
 
     }

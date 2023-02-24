@@ -10,6 +10,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
 import frc.robot.filemanagers.PID;
 import edu.wpi.first.math.MathUtil;
+import frc.robot.filemanagers.SwerveOffsets;
 
 public class SwerveKinematics {
 
