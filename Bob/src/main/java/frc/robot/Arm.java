@@ -55,10 +55,10 @@ public class Arm {
     final double INTAKE_ENCODER_OFFSET = 0;
 
     // Constants
-    final double HAND_MOTOR_DEAD_ZONE = 0.1;
+    final double HAND_DEAD_ZONE = 0.1;
     final double ARM_LENGTH = 0.8218;
     final double ARM_PIVOT_HEIGHT = 0.9836;
-    final double HAND_MOTOR_SPEED = 0.14;
+    final double HAND_ROTATIONAL_SPEED = 0.14;
     final double ARM_MOTOR_SPEED = 0.01;
     final double SLOW_ARM_MOTOR_SPEED = 0.001;
     final double INTAKE_ARM_MOTOR_SPEED = 0.001;
@@ -125,7 +125,6 @@ public class Arm {
     double[] calculateArmLevel(int level){
 
         checkColor();
-        dash.putNumber("ArmLevel", level);
         double armAngle = getArmEncoder();
         double intakeAngle = getIntakeEncoder();
 
@@ -169,8 +168,8 @@ public class Arm {
     void grabObject(boolean cube){
         
         if (cube) {
-            leftWheels.set(-HAND_MOTOR_SPEED);
-            rightWheels.set(-HAND_MOTOR_SPEED);
+            leftWheels.set(-HAND_ROTATIONAL_SPEED);
+            rightWheels.set(-HAND_ROTATIONAL_SPEED);
             leftWheelsLastValue = leftWheelsEncoder.getPosition();
             rightWheelsLastValue = rightWheelsEncoder.getPosition();
 
@@ -184,8 +183,8 @@ public class Arm {
         checkColor();
         if(cube){
             // holding a cube
-            leftWheels.set(HAND_MOTOR_SPEED);
-            rightWheels.set(HAND_MOTOR_SPEED);
+            leftWheels.set(HAND_ROTATIONAL_SPEED);
+            rightWheels.set(HAND_ROTATIONAL_SPEED);
             
         } else {
             // move the pneumatic cone bits
@@ -197,10 +196,7 @@ public class Arm {
 
     void checkIntakeMotors() {
 
-        // For Cube
-        // if they have not moved and are moving, stop them to prevent burnout.
-        leftWheels.set((leftWheels.get() < 0) ? (Math.abs(leftWheelsEncoder.getPosition()) != Math.abs(leftWheelsLastValue) + HAND_MOTOR_DEAD_ZONE) ? -HAND_MOTOR_SPEED : 0 : leftWheels.get());
-        rightWheels.set((rightWheels.get() < 0) ? (Math.abs(rightWheelsEncoder.getPosition()) != Math.abs(rightWheelsLastValue) + HAND_MOTOR_DEAD_ZONE) ? -HAND_MOTOR_SPEED : 0 : rightWheels.get());
+        leftWheels.set((leftWheels.get() < 0) ? (Math.abs(leftWheelsEncoder.getPosition()) != Math.abs(leftWheelsLastValue) + HAND_DEAD_ZONE) ? -HAND_ROTATIONAL_SPEED : 0 : leftWheels.get());rightWheels.set((rightWheels.get() < 0) ? (Math.abs(rightWheelsEncoder.getPosition()) != Math.abs(rightWheelsLastValue) + HAND_DEAD_ZONE) ? -HAND_ROTATIONAL_SPEED : 0 : rightWheels.get());
 
         leftWheelsLastValue = leftWheelsEncoder.getPosition();
         rightWheelsLastValue = rightWheelsEncoder.getPosition();
@@ -209,7 +205,7 @@ public class Arm {
 
     void softStop() {
 
-        if (leftWheels.get() == HAND_MOTOR_SPEED | rightWheels.get() == HAND_MOTOR_SPEED) {
+        if (leftWheels.get() == HAND_ROTATIONAL_SPEED | rightWheels.get() == HAND_ROTATIONAL_SPEED) {
 
             leftWheels.stopMotor();
             rightWheels.stopMotor();

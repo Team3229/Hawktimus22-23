@@ -4,10 +4,9 @@ ONCE WE HAVE THE BOT
  - test april tag following
  - test color sensor code
  - tune color sensor colors
+ - test new auto
 
 IF WE HAVE time
- - tune armPID
- - tune intakePID
  - tune drivePID
  
 ONCE WE HAVE TEST PARTS
@@ -15,6 +14,5 @@ ONCE WE HAVE TEST PARTS
  - test auto leveling
 
 AT COMP REMEMBER
-
- - Check cancoder angles
+ - Check all CANCoder angles
  - Check RoboRIO ethernet for green light

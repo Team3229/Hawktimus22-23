@@ -21,26 +21,27 @@ public class Auto {
 	static final boolean m_recordMode = true; // use this to force disable recording, useful at competitions
 	static final boolean WRITE = true;
 	static final boolean READ = false;
-	static final String basePath = "/home/lvuser/";
+	static final String basePath = "/home/lvuser/autoFiles/";
 
 	public final SendableChooser <String> heightDropdown = new SendableChooser <> ();
 	public final SendableChooser <String> startPosDropdown = new SendableChooser <> ();
 	public final SendableChooser <String> grabDropdown = new SendableChooser <> ();
+
 	// height
 	public static final String heightHigh = "high";
 	public static final String heightMid = "mid";
 	public static final String heightLow = "low";
 
+	// 
+
 	// grab
 	public static final String grabTaxi = "taxi";
-	public static final String grabCone1 = "cone1";
-	public static final String grabCone2 = "cone2";
-	public static final String grabCone3 = "cone3";
-	public static final String grabCone4 = "cone4";
-	public static final String grabCube1 = "cube1";
-	public static final String grabCube2 = "cube2";
-	public static final String grabCube3 = "cube3";
-	public static final String grabCube4 = "cube4";
+	public static final String grab1 = "grab1";
+	public static final String grab2 = "grab2";
+	public static final String grab3 = "grab3";
+	public static final String grab4 = "grab4";
+
+	public static final String noSelection = "N/A";
 	
 	public boolean autoFinished = false;
 
@@ -60,25 +61,26 @@ public class Auto {
 	}
 
 	public void setupDropdowns() {
-		heightDropdown.setDefaultOption("High", Auto.heightHigh);
-		heightDropdown.addOption("Mid", Auto.heightMid);
-		heightDropdown.addOption("Low", Auto.heightLow);
-		startPosDropdown.setDefaultOption("SELECT AN OPTION", "NO SELECTION");
-		startPosDropdown.addOption("Dummy option one", "dummyCase1");
-		grabDropdown.setDefaultOption("Only Taxi", Auto.grabTaxi);
-		grabDropdown.addOption("Grab Cone 1", Auto.grabCone1);
-		grabDropdown.addOption("Grab Cone 2", Auto.grabCone2);
-		grabDropdown.addOption("Grab Cone 3", Auto.grabCone3);
-		grabDropdown.addOption("Grab Cone 4", Auto.grabCone4);
-		grabDropdown.addOption("Grab Cube 1", Auto.grabCone1);
-		grabDropdown.addOption("Grab Cube 2", Auto.grabCone2);
-		grabDropdown.addOption("Grab Cube 3", Auto.grabCone3);
-		grabDropdown.addOption("Grab Cube 4", Auto.grabCone4);
+		heightDropdown.setDefaultOption("High", heightHigh);
+		heightDropdown.addOption("Mid", heightMid);
+		heightDropdown.addOption("Low", heightLow);
+		heightDropdown.addOption("NO SELECTION", "N/A");
+
+		startPosDropdown.setDefaultOption("NO SELECTION", "N/A");
+		startPosDropdown.addOption("Dummy option one", "dC1");
+
+		grabDropdown.setDefaultOption("Only Taxi", grabTaxi);
+		grabDropdown.addOption("Grab 1", grab1);
+		grabDropdown.addOption("Grab 2", grab2);
+		grabDropdown.addOption("Grab 3", grab3);
+		grabDropdown.addOption("Grab 4", grab4);
+		grabDropdown.addOption("NO SELECTION", "N/A");
 		
 		dash.putData("Height", heightDropdown);
 		dash.putData("Start Position", startPosDropdown);
 		dash.putData("Grabbing", grabDropdown);
 		dash.putBool("Charge Station", false);
+
 	}
 
 	// Done in Auto part of Robot
@@ -86,40 +88,19 @@ public class Auto {
 		inputFileNames = names;
 		switch(autoStep) {
 			case 1:
-				switch(inputFileNames[1]){
-					// Place starting item switch
-					case "dummyCase1":
-						switch(inputFileNames[0]){
-							case "high":
-								// High and dummycase1 starting pos, setup the according file.
-								String highDummyCasePath = basePath + "hDC1" + ".aut";
-								cmdFile = new File(highDummyCasePath);
-								break;
-							case "mid":
-								String midDummyCasePath = basePath + "mDC1" + ".aut";
-								cmdFile = new File(midDummyCasePath);
-								break;
-							case "low":
-								String lowDummyCasePath = basePath + "lDC1" + ".aut";
-								cmdFile = new File(lowDummyCasePath);
-								break;
-						}
-						break;
-				} 
+				cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[0] + ".aut");
 				break;
 			case 2:
-				switch(inputFileNames[1]) {
-					// Grab next item/taxi switch
-          // switces over starting pos
-				}
+				cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[2] + ".aut");
 				break;
 			case 3:
-				switch(inputFileNames[3]){
-          // charge station switch
-          // switch over charge
+				cmdFile = new File(basePath + inputFileNames[2] + inputFileNames[3] + ".aut");
+			case 4:
+				// we just finished 3, meaning we're done and should end.
+				autoFinished = true;
+				return;
         }
-					
-		}
+
 		try {
 			fReader = new FileInputStream(cmdFile);
 			cmdRead = new ObjectInputStream(fReader);
@@ -136,6 +117,7 @@ public class Auto {
 			inputs = (ControllerInputs) cmdRead.readObject();
 		} catch (IOException err) {
 			// if were finished, check what stage we were in and see if theres another file we need to setup and begin playback for
+			closeFile();
 			++autoStep;
 			setupPlayback(inputFileNames);
 		} catch (ClassNotFoundException cerr) {
@@ -146,25 +128,15 @@ public class Auto {
 
 	// Done in Test part of Robot
 	public void setupRecording(String[] inputFileName) {
-		switch(inputFileName[1]){
-				case "dummyCase1":
-					switch(inputFileName[0]){
-						case "high":
-							// High and dummycase1 starting pos, setup the according file.
-							String highDummyCasePath = basePath + "hDC1" + ".aut";
-							cmdFile = new File(highDummyCasePath);
-							break;
-						case "mid":
-							String midDummyCasePath = basePath + "mDC1" + ".aut";
-							cmdFile = new File(midDummyCasePath);
-							break;
-						case "low":
-							String lowDummyCasePath = basePath + "lDC1" + ".aut";
-							cmdFile = new File(lowDummyCasePath);
-							break;
-					}
-					break;
+
+		if (inputFileName[1] == "N/A") {
+			cmdFile = new File(basePath + inputFileNames[2] + inputFileNames[3] + ".aut");
+		} else if (inputFileName[2] == "N/A"){
+			cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[0] + ".aut");
+		} else {
+			cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[2] + ".aut");
 		}
+		
 		try {
 			fWriter = new FileOutputStream(cmdFile);
 			cmdWrite = new ObjectOutputStream(fWriter);

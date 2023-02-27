@@ -3,14 +3,10 @@
 package frc.robot;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.networktables.NetworkTable;
 
 public class Limelight {
     private final NetworkTable table;
-    PIDController xAlignPIDController;
-    PIDController yAlignPIDController;
-    PIDController zAlignPIDController;
     private final double[][] tagPositions = {
             {7.24310, -2.93659},
             {7.24310, -1.26019},
@@ -22,6 +18,9 @@ public class Limelight {
             {-7.24310, -2.93659}
     };
     private final double MIN_DISTANCE = 1.2192;
+    private final double MOVE_SPEED = 0;
+    private final double CONE_OFFSET = 0.561975;
+    private int targetedGrid = 0;
 
     double x;
     double y;
@@ -29,15 +28,9 @@ public class Limelight {
     int id;
     double seenTarget;
     double[] botPos;
-    double[] xAlignPID = {0, 0, 0};
-    double[] yAlignPID = {0, 0, 0};
-    double[] zAlignPID = {0, 0, 0};
 
     Limelight() {
         table = NetworkTableInstance.getDefault().getTable("limelight");
-        xAlignPIDController = new PIDController(xAlignPID[0], xAlignPID[1], xAlignPID[2]);
-        yAlignPIDController = new PIDController(yAlignPID[0], yAlignPID[1], yAlignPID[2]);
-        zAlignPIDController = new PIDController(zAlignPID[0], zAlignPID[1], zAlignPID[2]);
     }
 
     void getValues() {
@@ -55,17 +48,37 @@ public class Limelight {
 
     double[] getDistanceToTag() {
         // Returns the distance to the closest tag in x, y (meters), z(rotation)
-        double[] distances = {tagPositions[id - 1][0] - botPos[0], tagPositions[id - 1][1] - botPos[1], -x, id};
-
-        return distances;
+        return new double[] {tagPositions[id - 1][0] - botPos[0], tagPositions[id - 1][1] - botPos[1], -x, id};
     }
 
-    double[] alignWithTag() {
+    double[] alignWithTag(boolean cube) {
         // 1.2192 meters is the minimum distance to be, that's how far from the tag we want to be.
 
         double[] distanceToTag = getDistanceToTag();
-        double[] actualMove = {distanceToTag[2]};
+        // offsets for closest 
+        if (targetedGrid == 0 & !cube) {
+            if (distanceToTag[0] > 0 & !cube) {
+                targetedGrid = 1;
+            } else if (distanceToTag[0] < 0 & !cube) {
+                targetedGrid = 3;
+            } else if (!cube) {
+                targetedGrid = 1;
+            }
+        } else if (targetedGrid == 0 & cube){
+            targetedGrid = 2;
+        } else {
+            //do here
+            if (targetedGrid == 1) {
+                distanceToTag[0] -= CONE_OFFSET;
+            }
+            if (targetedGrid == 3) {
+                distanceToTag[0] += CONE_OFFSET;
+            }
 
-        return actualMove;
+            return new double[] {distanceToTag[0]*MOVE_SPEED, (distanceToTag[1]*MOVE_SPEED)-MIN_DISTANCE, distanceToTag[2]*MOVE_SPEED};
+        }
+
+        return new double[] {distanceToTag[0]*MOVE_SPEED, (distanceToTag[1]*MOVE_SPEED)-MIN_DISTANCE, distanceToTag[2]*MOVE_SPEED};
     }
+
 }

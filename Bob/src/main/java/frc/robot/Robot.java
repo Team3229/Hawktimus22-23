@@ -55,8 +55,6 @@ public class Robot extends TimedRobot {
         chassis.navxGyro.zeroYaw();
         chassis.navxGyro.calibrate();
 
-        dash.putNumber("navxGs", 0);
-
         auto.closeFile();
 
         chassis.configPIDS();
@@ -78,9 +76,6 @@ public class Robot extends TimedRobot {
         dash.putNumber("frontRight", encVals[1]);
         dash.putNumber("backLeft", encVals[2]);
         dash.putNumber("backRight", encVals[3]);
-        dash.putNumber("navXGyro", chassis.robotRotation);
-
-        dash.putNumber("navxGs", chassis.navxGyro.getAccelFullScaleRangeG());
 
         limelight.getValues();
 
