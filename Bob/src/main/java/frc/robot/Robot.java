@@ -24,6 +24,7 @@ public class Robot extends TimedRobot {
     private String[] selectedAuto = {"","","",""};
     private double[] encVals = {0,0,0,0};
     private boolean autoLevel = false;
+    private int tick = 0;
 
     Controller controller = new Controller();
     ControllerInputs inputs;
@@ -78,6 +79,13 @@ public class Robot extends TimedRobot {
         dash.putNumber("backRight", encVals[3]);
 
         limelight.getValues();
+
+        dash.putNumber("intakeAngle", arm.getIntakeEncoder());
+        dash.putNumber("armAngle", arm.getArmEncoder());
+
+        dash.putNumber("CAN Utilization", RobotController.getCANStatus().percentBusUtilization);
+        dash.putNumber("Motor", arm.leftWheels.get());
+        dash.putNumber("m", arm.leftWheelsLastValue);
 
     }
 
@@ -148,6 +156,11 @@ public class Robot extends TimedRobot {
             dash.putBool("resetAngleOffsets", false);
         }
 
+        arm.goalLevel = 0;
+
+        tick = 0;
+        arm.pcm.enableCompressorDigital();
+
     }
     
     /** This function is called periodically during operator control. */
@@ -156,6 +169,10 @@ public class Robot extends TimedRobot {
 
         inputs = controller.getControls();
         RunControls();
+
+        if (++tick >= 200) {
+            arm.pcm.disableCompressor();
+        }
 
     }
 
@@ -278,10 +295,14 @@ public class Robot extends TimedRobot {
     
         }
 
+        arm.armMotor.set(inputs.m_leftY*0.2);
+        arm.intakeArmMotor.set(inputs.m_rightY*0.3);
+
+        arm.checkIntakeMotors();
         // grabbing cube
         if (inputs.m_LeftBumper) {
             arm.grabObject(true);
-        } else if (inputs.d_RightBumper) {
+        } else if (inputs.m_RightBumper) {
             arm.grabObject(false);
         }
 
@@ -295,8 +316,7 @@ public class Robot extends TimedRobot {
             }
         }
 
-        // update motors
-        arm.checkIntakeMotors();
+        // update arm
         arm.runArm();
 
     }

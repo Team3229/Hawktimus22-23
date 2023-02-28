@@ -5,6 +5,8 @@ ONCE WE HAVE THE BOT
  - test color sensor code
  - tune color sensor colors
  - test new auto
+ - test/fix arm move to angle code
+ - see if we can fix the arm droopiness
 
 IF WE HAVE time
  - tune drivePID

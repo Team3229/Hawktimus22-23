@@ -4,14 +4,17 @@ package frc.robot;
 
 import com.ctre.phoenix.sensors.AbsoluteSensorRange;
 import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.PneumaticsControlModule;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.I2C.Port;
@@ -35,6 +38,7 @@ public class Arm {
     CANSparkMax rightWheels;
     Solenoid onSolenoid;
     Solenoid offSolenoid;
+    PneumaticsControlModule pcm;
     Compressor compressor;
     CANCoder armEncoder;
     CANCoder intakeArmEncoder;
@@ -52,16 +56,16 @@ public class Arm {
 
     // Encoder Offsets
     final double ARM_ENCODER_OFFSET = -208.765625;
-    final double INTAKE_ENCODER_OFFSET = 0;
+    final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants
-    final double HAND_DEAD_ZONE = 0.1;
+    final double HAND_DEAD_ZONE = 0.001;
     final double ARM_LENGTH = 0.8218;
     final double ARM_PIVOT_HEIGHT = 0.9836;
     final double HAND_ROTATIONAL_SPEED = 0.14;
-    final double ARM_MOTOR_SPEED = 0.01;
-    final double SLOW_ARM_MOTOR_SPEED = 0.001;
-    final double INTAKE_ARM_MOTOR_SPEED = 0.001;
+    final double ARM_MOTOR_SPEED = 0.1;
+    final double SLOW_ARM_MOTOR_SPEED = 0.01;
+    final double INTAKE_ARM_MOTOR_SPEED = 0.01;
     final double HIGH_CONE = 11.277; //50 in
     final double HIGH_CUBE = 0.777; //39.5 in
     final double MID_CONE = -0.723; //38 in
@@ -88,19 +92,25 @@ public class Arm {
         armMotor2 = new CANSparkMax(ARM_2_ID, MotorType.kBrushless);
         armMotor.setInverted(false);
         armMotor2.follow(armMotor, true);
+        armMotor.setIdleMode(IdleMode.kBrake);
+        armMotor2.setIdleMode(IdleMode.kBrake);
 
         // Intake
         colorSensor = new ColorSensorV3(Port.kOnboard);
         intakeArmMotor = new CANSparkMax(INTAKE_ARM_ID, MotorType.kBrushless);
+        intakeArmMotor.setIdleMode(IdleMode.kBrake);
         leftWheels = new CANSparkMax(LEFT_HAND_ID, MotorType.kBrushless);
         rightWheels = new CANSparkMax(RIGHT_HAND_ID, MotorType.kBrushless);
-        leftWheels.setInverted(true);
-        rightWheels.setInverted(false);
+        leftWheels.setInverted(false);
+        rightWheels.setInverted(true);
 
         // Pnuematics
+        pcm = new PneumaticsControlModule();
         compressor = new Compressor(1, PneumaticsModuleType.CTREPCM);
         onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
         offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+
+        pcm.clearAllStickyFaults();
 
         // Encoders
         armEncoder = new CANCoder(ARM_ENCODER_ID);
@@ -108,15 +118,20 @@ public class Arm {
         armEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         armEncoder.configSensorDirection(true);
         armEncoder.configMagnetOffset(ARM_ENCODER_OFFSET);
+        armEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
 
         intakeArmEncoder = new CANCoder(INTAKE_ENCODER_ID);
         intakeArmEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         intakeArmEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         intakeArmEncoder.configSensorDirection(true);
         intakeArmEncoder.configMagnetOffset(INTAKE_ENCODER_OFFSET);
+        intakeArmEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
 
         leftWheelsEncoder = leftWheels.getEncoder();
         rightWheelsEncoder = rightWheels.getEncoder();
+
+        leftWheelsEncoder.setPositionConversionFactor(360);
+        rightWheelsEncoder.setPositionConversionFactor(360);
 
     }
     /*
@@ -158,10 +173,11 @@ public class Arm {
         }
     }
 
+    //fix 180 I put it there to make sure it was working and it isn't
     double[] calculateArmOutputs(double aAngle, double iAngle, double height) {
         return new double[]{
-            ((aAngle > (Math.acos(height/32))+1) ? -ARM_MOTOR_SPEED : ((aAngle < (Math.acos(height/32))-1) ? ARM_MOTOR_SPEED : 0)),
-            ((iAngle > 249.5-(Math.acos(height/32))+1) ? -INTAKE_ARM_MOTOR_SPEED : ((iAngle < 249.5-(Math.acos(height/32))-1) ? INTAKE_ARM_MOTOR_SPEED : 0))
+            ((aAngle > (180)+1) ? -ARM_MOTOR_SPEED : ((aAngle < (180)-1) ? ARM_MOTOR_SPEED : 0)),
+            ((iAngle > 249.5-(180)+1) ? -INTAKE_ARM_MOTOR_SPEED : ((iAngle < 249.5-(180)-1) ? INTAKE_ARM_MOTOR_SPEED : 0))
         };
     }
 
@@ -170,8 +186,8 @@ public class Arm {
         if (cube) {
             leftWheels.set(-HAND_ROTATIONAL_SPEED);
             rightWheels.set(-HAND_ROTATIONAL_SPEED);
-            leftWheelsLastValue = leftWheelsEncoder.getPosition();
-            rightWheelsLastValue = rightWheelsEncoder.getPosition();
+            leftWheelsLastValue = leftWheelsEncoder.getPosition()-1;
+            rightWheelsLastValue = rightWheelsEncoder.getPosition()-1;
 
         } else {
             offSolenoid.set(false);
@@ -196,7 +212,8 @@ public class Arm {
 
     void checkIntakeMotors() {
 
-        leftWheels.set((leftWheels.get() < 0) ? (Math.abs(leftWheelsEncoder.getPosition()) != Math.abs(leftWheelsLastValue) + HAND_DEAD_ZONE) ? -HAND_ROTATIONAL_SPEED : 0 : leftWheels.get());rightWheels.set((rightWheels.get() < 0) ? (Math.abs(rightWheelsEncoder.getPosition()) != Math.abs(rightWheelsLastValue) + HAND_DEAD_ZONE) ? -HAND_ROTATIONAL_SPEED : 0 : rightWheels.get());
+        leftWheels.set((leftWheels.get() < 0) ? (leftWheelsEncoder.getPosition() < leftWheelsLastValue) ? -HAND_ROTATIONAL_SPEED : 0 : leftWheels.get());
+        rightWheels.set((rightWheels.get() < 0) ? (rightWheelsEncoder.getPosition() < rightWheelsLastValue) ? -HAND_ROTATIONAL_SPEED : 0 : rightWheels.get());
 
         leftWheelsLastValue = leftWheelsEncoder.getPosition();
         rightWheelsLastValue = rightWheelsEncoder.getPosition();
@@ -217,7 +234,7 @@ public class Arm {
         }
     }
 
-    private double getArmEncoder() {
+    public double getArmEncoder() {
 
         if (armEncoderBuffer++ > 5) {
             armEncoderBuffer = 0;
@@ -228,7 +245,7 @@ public class Arm {
 
     }
 
-    private double getIntakeEncoder() {
+    public double getIntakeEncoder() {
 
         if (intakeEncoderBuffer++ > 5) {
             intakeEncoderBuffer = 0;
