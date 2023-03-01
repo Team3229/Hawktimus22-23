@@ -55,14 +55,14 @@ public class Arm {
     final int INTAKE_ENCODER_ID = 20;
 
     // Encoder Offsets
-    final double ARM_ENCODER_OFFSET = -208.765625-50.5;
+    final double ARM_ENCODER_OFFSET = 155.390625;
     final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants
-    final double HAND_DEAD_ZONE = 0.001;
+    final double HAND_DEAD_ZONE = 0.01;
     final double ARM_LENGTH = 0.8218;
     final double ARM_PIVOT_HEIGHT = 0.9836;
-    final double HAND_ROTATIONAL_SPEED = 0.14;
+    final double HAND_ROTATIONAL_SPEED = 0.28;
     final double ARM_MOTOR_SPEED = 0.1;
     final double SLOW_ARM_MOTOR_SPEED = 0.01;
     final double INTAKE_ARM_MOTOR_SPEED = 0.05;
@@ -117,7 +117,7 @@ public class Arm {
         armEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         armEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         armEncoder.configSensorDirection(true);
-        armEncoder.configMagnetOffset(ARM_ENCODER_OFFSET);
+        armEncoder.configMagnetOffset(-ARM_ENCODER_OFFSET);
         armEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
 
         intakeArmEncoder = new CANCoder(INTAKE_ENCODER_ID);
@@ -137,33 +137,37 @@ public class Arm {
     /*
     intake needs to stay level at all times except docked. 249.5-relative angle
     */
+    double[] findArmAngle(double th){
+        double ang = (290.5-Math.asin((th-38.723)/32));
+        return new double[] {ang,249.5-ang};
+    }
+    
     double[] calculateArmLevel(int level){
 
         checkColor();
         double armAngle = getArmEncoder();
         double intakeAngle = getIntakeEncoder();
-
         switch(level){
             case 1:
                 // hybrid
-                return calculateArmOutputs(armAngle, intakeAngle, HYBRID);
+                return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(4));
             case 2:
                 // mid
                 if(holdingCone & !holdingCube){
                     // cone
-                    return calculateArmOutputs(armAngle, intakeAngle, MID_CONE);
+                    return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(38));
                 } else {
                     // cube
-                    return calculateArmOutputs(armAngle, intakeAngle, MID_CUBE);
+                    return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(27.5));
                 }
             case 3:
                 // high
                 if(holdingCone & !holdingCube){
                     // cone
-                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CONE);
+                    return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(50));
                 } else {
                     // we have a cube
-                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CUBE);
+                    return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(39.5));
                  }
             case 4:
                 // station
@@ -174,19 +178,19 @@ public class Arm {
     }
 
     //fix 180 I put it there to make sure it was working and it isn't
-    double[] calculateArmOutputs(double aAngle, double iAngle, double degree) {
-
+    double[] calculateArmOutputs(double aAngle, double iAngle, double[] th) {
+// returns the motor speed
         double[] returningVal = {0, 0};
 
-        if (aAngle > (degree)) {
+        if (aAngle > th[0] + 1) {
             returningVal[0] = -ARM_MOTOR_SPEED;
-        } else if (aAngle < (degree)) {
+        } else if (aAngle < th[0]-1) {
             returningVal[0] = ARM_MOTOR_SPEED;
         }
 
-        if (iAngle > 249.5-(degree)) {
+        if (iAngle > th[1] + 1) {
             returningVal[1] = -INTAKE_ARM_MOTOR_SPEED;
-        } else if (iAngle < 249.5-(degree)) {
+        } else if (iAngle < th[1]-1) {
             returningVal[1] = INTAKE_ARM_MOTOR_SPEED;
         }
 
@@ -226,8 +230,8 @@ public class Arm {
 
     void checkIntakeMotors() {
 
-        leftWheels.set((leftWheels.get() < 0) ? (leftWheelsEncoder.getPosition() < leftWheelsLastValue) ? -HAND_ROTATIONAL_SPEED : 0 : leftWheels.get());
-        rightWheels.set((rightWheels.get() < 0) ? (rightWheelsEncoder.getPosition() < rightWheelsLastValue) ? -HAND_ROTATIONAL_SPEED : 0 : rightWheels.get());
+        leftWheels.set((leftWheels.get() < 0) ? (leftWheelsEncoder.getPosition() < leftWheelsLastValue-HAND_DEAD_ZONE) ? -HAND_ROTATIONAL_SPEED : 0 : leftWheels.get());
+        rightWheels.set((rightWheels.get() < 0) ? (rightWheelsEncoder.getPosition() < rightWheelsLastValue-HAND_DEAD_ZONE) ? -HAND_ROTATIONAL_SPEED : 0 : rightWheels.get());
 
         leftWheelsLastValue = leftWheelsEncoder.getPosition();
         rightWheelsLastValue = rightWheelsEncoder.getPosition();
@@ -299,9 +303,9 @@ public class Arm {
 
                 // Intake
                 if (armResults[1] != 0) {
-                    intakeArmMotor.set(armResults[1]);
+                    //intakeArmMotor.set(armResults[1]);
                 } else {
-                    intakeArmMotor.stopMotor();
+                    //intakeArmMotor.stopMotor();
                 }
                 if(armResults[1] == 0 & armResults[0] == 0){
                     goalLevel = 0;

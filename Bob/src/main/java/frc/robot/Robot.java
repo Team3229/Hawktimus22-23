@@ -76,17 +76,13 @@ public class Robot extends TimedRobot {
         dash.putNumber("frontRight", encVals[1]);
         dash.putNumber("backLeft", encVals[2]);
         dash.putNumber("backRight", encVals[3]);
-
+        arm.pcm.enableCompressorDigital();
         limelight.getValues();
 
         dash.putNumber("intakeAngle", arm.getIntakeEncoder());
         dash.putNumber("armAngle", arm.getArmEncoder());
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
-
-        dash.putBool("fixArmthing", hasMovedArmManuallyYet);
-
-        hasMovedArmManuallyYet = dash.readBool("fixArmthing");
 
     }
 
@@ -297,14 +293,16 @@ public class Robot extends TimedRobot {
                 break;
     
         }
-        if (hasMovedArmManuallyYet & inputs.m_leftY == 0 & arm.getArmEncoder() > 170){
-            arm.armMotor.set(-0.05);
-        } else if (Math.abs(inputs.m_leftY) > 0 | Math.abs(inputs.m_rightY) > 0) {
-            hasMovedArmManuallyYet = true;
+        if(!DriverStation.isJoystickConnected(1)){
+            arm.armMotor.stopMotor();
+            arm.intakeArmMotor.stopMotor();
+        } else {
             arm.armMotor.set(inputs.m_leftY*0.2);
             arm.intakeArmMotor.set(inputs.m_rightY*0.3);
-        } else if (inputs.m_POV == -1) {
-            arm.armMotor.stopMotor();
+            if (inputs.m_POV == -1 & inputs.m_leftY == 0 & inputs.m_rightY == 0) {
+                arm.armMotor.stopMotor();
+                arm.intakeArmMotor.stopMotor();
+            }
         }
 
         arm.checkIntakeMotors();
