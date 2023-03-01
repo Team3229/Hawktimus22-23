@@ -55,7 +55,7 @@ public class Arm {
     final int INTAKE_ENCODER_ID = 20;
 
     // Encoder Offsets
-    final double ARM_ENCODER_OFFSET = -208.765625;
+    final double ARM_ENCODER_OFFSET = -208.765625-50.5;
     final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants
@@ -65,12 +65,12 @@ public class Arm {
     final double HAND_ROTATIONAL_SPEED = 0.14;
     final double ARM_MOTOR_SPEED = 0.1;
     final double SLOW_ARM_MOTOR_SPEED = 0.01;
-    final double INTAKE_ARM_MOTOR_SPEED = 0.01;
-    final double HIGH_CONE = 11.277; //50 in
-    final double HIGH_CUBE = 0.777; //39.5 in
-    final double MID_CONE = -0.723; //38 in
-    final double MID_CUBE = -11.223; //27.5 in
-    final double HYBRID = -34.723; //4 in
+    final double INTAKE_ARM_MOTOR_SPEED = 0.05;
+    final double HIGH_CONE = 300;
+    final double HIGH_CUBE = 300;
+    final double MID_CONE = 220;
+    final double MID_CUBE = 220;
+    final double HYBRID = 320;
 
     // Other Variables
     int goalLevel = 0;
@@ -174,11 +174,23 @@ public class Arm {
     }
 
     //fix 180 I put it there to make sure it was working and it isn't
-    double[] calculateArmOutputs(double aAngle, double iAngle, double height) {
-        return new double[]{
-            ((aAngle > (180)+1) ? -ARM_MOTOR_SPEED : ((aAngle < (180)-1) ? ARM_MOTOR_SPEED : 0)),
-            ((iAngle > 249.5-(180)+1) ? -INTAKE_ARM_MOTOR_SPEED : ((iAngle < 249.5-(180)-1) ? INTAKE_ARM_MOTOR_SPEED : 0))
-        };
+    double[] calculateArmOutputs(double aAngle, double iAngle, double degree) {
+
+        double[] returningVal = {0, 0};
+
+        if (aAngle > (degree)) {
+            returningVal[0] = -ARM_MOTOR_SPEED;
+        } else if (aAngle < (degree)) {
+            returningVal[0] = ARM_MOTOR_SPEED;
+        }
+
+        if (iAngle > 249.5-(degree)) {
+            returningVal[1] = -INTAKE_ARM_MOTOR_SPEED;
+        } else if (iAngle < 249.5-(degree)) {
+            returningVal[1] = INTAKE_ARM_MOTOR_SPEED;
+        }
+
+        return returningVal;
     }
 
     void grabObject(boolean cube){
@@ -206,6 +218,8 @@ public class Arm {
             // move the pneumatic cone bits
             offSolenoid.set(true);
             onSolenoid.set(false);
+            leftWheels.set(HAND_ROTATIONAL_SPEED);
+            rightWheels.set(HAND_ROTATIONAL_SPEED);
         }
         
     }
@@ -276,23 +290,23 @@ public class Arm {
     void runArm() {
         // Arm
         if (goalLevel != 0) {
-        double[] armResults = calculateArmLevel(goalLevel);
-        if (armResults[0] != 0) {
-            armMotor.set(armResults[0]);
-        } else {
-            armMotor.stopMotor();
-        }
+            double[] armResults = calculateArmLevel(goalLevel);
+                if (armResults[0] != 0) {
+                    armMotor.set(armResults[0]);
+                } else {
+                    armMotor.stopMotor();
+                }
 
-        // Intake
-        if (armResults[1] != 0) {
-            intakeArmMotor.set(armResults[1]);
-        } else {
-            intakeArmMotor.stopMotor();
+                // Intake
+                if (armResults[1] != 0) {
+                    intakeArmMotor.set(armResults[1]);
+                } else {
+                    intakeArmMotor.stopMotor();
+                }
+                if(armResults[1] == 0 & armResults[0] == 0){
+                    goalLevel = 0;
+                }
         }
-        if(armResults[1] == 0 & armResults[0] == 0){
-            goalLevel = 0;
-        }
-    }
     }
 
 }

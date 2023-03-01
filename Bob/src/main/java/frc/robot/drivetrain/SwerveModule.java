@@ -82,7 +82,7 @@ public class SwerveModule {
         // drivePIDController.setD(drivePID[2]);
         //drivePIDController.setPID(drivePID[0],drivePID[1],drivePID[2])
         anglePIDController.enableContinuousInput(0, 360);
-        //anglePIDController.setIntegratorRange(angleVelTolerance, anglePosTolerance);
+        anglePIDController.setTolerance(anglePosTolerance, angleVelTolerance);
 
     }
 

@@ -24,7 +24,6 @@ public class Robot extends TimedRobot {
     private String[] selectedAuto = {"","","",""};
     private double[] encVals = {0,0,0,0};
     private boolean autoLevel = false;
-    private int tick = 0;
 
     Controller controller = new Controller();
     ControllerInputs inputs;
@@ -42,7 +41,7 @@ public class Robot extends TimedRobot {
 
     double bufferZone = 0.1;
     boolean controllerError = false;
-
+    boolean hasMovedArmManuallyYet = false;
     boolean inAuto = false;
 
     /**
@@ -83,9 +82,11 @@ public class Robot extends TimedRobot {
         dash.putNumber("intakeAngle", arm.getIntakeEncoder());
         dash.putNumber("armAngle", arm.getArmEncoder());
 
-        dash.putNumber("CAN Utilization", RobotController.getCANStatus().percentBusUtilization);
-        dash.putNumber("Motor", arm.leftWheels.get());
-        dash.putNumber("m", arm.leftWheelsLastValue);
+        dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
+
+        dash.putBool("fixArmthing", hasMovedArmManuallyYet);
+
+        hasMovedArmManuallyYet = dash.readBool("fixArmthing");
 
     }
 
@@ -158,8 +159,9 @@ public class Robot extends TimedRobot {
 
         arm.goalLevel = 0;
 
-        tick = 0;
         arm.pcm.enableCompressorDigital();
+
+        hasMovedArmManuallyYet = false;
 
     }
     
@@ -169,10 +171,6 @@ public class Robot extends TimedRobot {
 
         inputs = controller.getControls();
         RunControls();
-
-        if (++tick >= 200) {
-            arm.pcm.disableCompressor();
-        }
 
     }
 
@@ -241,14 +239,16 @@ public class Robot extends TimedRobot {
         if (!DriverStation.isJoystickConnected(0)) {
             chassis.stop();
         } else {
-            if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0 | Math.abs(inputs.d_rightX) > 0) {
+            if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0) {
                 chassis.drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
             } else {
                 // D-Pad driving slowly
 
                 if (inputs.d_POV != -1) {
                     dp = utils.getDirectionalPadValues(inputs.d_POV);
-                    chassis.drive(dp[0] / 2, dp[1] / 2, dp[2] / 2);
+                    chassis.drive(dp[0] / 2, dp[1] / 2, inputs.d_rightX);
+                } else if (Math.abs(inputs.d_rightX) > 0){
+                    chassis.drive(0, 0, inputs.d_rightX);
                 } else {
                     chassis.stop();
                 }
@@ -283,27 +283,36 @@ public class Robot extends TimedRobot {
             case 0:
                 // up - High
                 arm.setCurrentLevel(3);
+                hasMovedArmManuallyYet = false;
                 break;
             case 90 | 270:
                 // right - Mid
+                hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(2);
                 break;
             case 180:
                 // down - Hybrid
+                hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(1);
                 break;
     
         }
-
-        arm.armMotor.set(inputs.m_leftY*0.2);
-        arm.intakeArmMotor.set(inputs.m_rightY*0.3);
+        if (hasMovedArmManuallyYet & inputs.m_leftY == 0 & arm.getArmEncoder() > 170){
+            arm.armMotor.set(-0.05);
+        } else if (Math.abs(inputs.m_leftY) > 0 | Math.abs(inputs.m_rightY) > 0) {
+            hasMovedArmManuallyYet = true;
+            arm.armMotor.set(inputs.m_leftY*0.2);
+            arm.intakeArmMotor.set(inputs.m_rightY*0.3);
+        } else if (inputs.m_POV == -1) {
+            arm.armMotor.stopMotor();
+        }
 
         arm.checkIntakeMotors();
         // grabbing cube
         if (inputs.m_LeftBumper) {
             arm.grabObject(true);
         } else if (inputs.m_RightBumper) {
-            arm.grabObject(false);
+            arm.placeObject(false);
         }
 
         // Grabbing cone
@@ -312,7 +321,7 @@ public class Robot extends TimedRobot {
         } else {
             arm.softStop();
             if (inputs.m_RightTriggerAxis > 0.1) {
-                arm.placeObject(false);
+                arm.grabObject(false);
             }
         }
 
