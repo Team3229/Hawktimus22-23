@@ -25,6 +25,7 @@ public class Robot extends TimedRobot {
     private double[] encVals = {0,0,0,0};
     private boolean autoLevel = false;
 
+    boolean hold = false;
     Controller controller = new Controller();
     ControllerInputs inputs;
     double[] dp = {0,0,0};
@@ -114,7 +115,7 @@ public class Robot extends TimedRobot {
         autoLevel = false;
 
         auto.autoFinished = false;
-
+        hold = false;
         inAuto = true;
 
     }
@@ -144,7 +145,7 @@ public class Robot extends TimedRobot {
         inputs = controller.nullControls();
 
         autoLevel = false;
-
+        hold = false;
         inAuto = false;
 
         if (dash.readBool("resetAngleOffsets")) {
@@ -192,7 +193,7 @@ public class Robot extends TimedRobot {
         auto.setupRecording(selectedAuto);
 
         autoLevel = false;
-
+        hold = false;
         inAuto = true;
 
     }
@@ -280,32 +281,47 @@ public class Robot extends TimedRobot {
                 // up - High
                 arm.setCurrentLevel(3);
                 hasMovedArmManuallyYet = false;
+                hold = false;
                 break;
             case 90 | 270:
                 // right - Mid
                 hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(2);
+                hold = false;
                 break;
             case 180:
                 // down - Hybrid
                 hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(1);
+                hold = false;
                 break;
     
         }
+        
         if(!DriverStation.isJoystickConnected(1)){
             arm.armMotor.stopMotor();
             arm.intakeArmMotor.stopMotor();
+        } else if (inputs.m_POV == -1 & inputs.m_leftY == 0 & inputs.m_rightY == 0){
+            arm.armMotor.stopMotor();
+            arm.intakeArmMotor.stopMotor();
+            if(!hold && arm.goalLevel == 0){
+                arm.holdAng[0] = arm.getArmEncoder();
+                arm.holdAng[1] = arm.getIntakeEncoder();
+                hold = true;
+            }
+            //no input, hold
         } else {
+            // manual arming
+            // moving, no hold.
+            hold = false;
             arm.armMotor.set(inputs.m_leftY*0.2);
-            arm.intakeArmMotor.set(inputs.m_rightY*0.3);
-            if (inputs.m_POV == -1 & inputs.m_leftY == 0 & inputs.m_rightY == 0) {
-                arm.armMotor.stopMotor();
+
+            if (arm.getIntakeEncoder() <= 78 & inputs.m_rightY < 0) {
                 arm.intakeArmMotor.stopMotor();
+            } else {
+                arm.intakeArmMotor.set(inputs.m_rightY*0.3);
             }
         }
-
-        arm.checkIntakeMotors();
         // grabbing cube
         if (inputs.m_LeftBumper) {
             arm.grabObject(true);
@@ -317,14 +333,15 @@ public class Robot extends TimedRobot {
         if (inputs.m_LeftTriggerAxis > 0.1) {
             arm.placeObject(true);
         } else {
-            arm.softStop();
             if (inputs.m_RightTriggerAxis > 0.1) {
                 arm.grabObject(false);
+            } else {
+                arm.softStop();
             }
         }
 
         // update arm
-        arm.runArm();
+        arm.runArm(hold);
 
     }
 }

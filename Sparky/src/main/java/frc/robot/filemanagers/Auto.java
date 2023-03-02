@@ -138,8 +138,12 @@ public class Auto {
 		}
 		
 		try {
+			if (!cmdFile.exists()) {
+				cmdFile.createNewFile();
+			}
 			fWriter = new FileOutputStream(cmdFile);
 			cmdWrite = new ObjectOutputStream(fWriter);
+			System.out.println("it is nbeing run");
 		} catch(IOException err) {
 			System.out.println("Error opening auto file for write: " + err.toString());
 		}

@@ -66,12 +66,17 @@ public class Arm {
     final double ARM_MOTOR_SPEED = 0.1;
     final double SLOW_ARM_MOTOR_SPEED = 0.01;
     final double INTAKE_ARM_MOTOR_SPEED = 0.05;
-    final double HIGH_CONE = 300;
-    final double HIGH_CUBE = 300;
+    final double HIGH_CONE = 219.19921875;
+    final double HIGH_CUBE = 180;
     final double MID_CONE = 220;
     final double MID_CUBE = 220;
     final double HYBRID = 320;
-
+    final double IHIGH_CONE = 223.154296875;
+    final double IHIGH_CUBE = 180;
+    final double IMID_CONE = 220;
+    final double IMID_CUBE = 220;
+    final double IHYBRID = 320;
+    public double[] holdAng = {0,0};
     // Other Variables
     int goalLevel = 0;
     int armEncoderBuffer = 0;
@@ -134,13 +139,6 @@ public class Arm {
         rightWheelsEncoder.setPositionConversionFactor(360);
 
     }
-    /*
-    intake needs to stay level at all times except docked. 249.5-relative angle
-    */
-    double[] findArmAngle(double th){
-        double ang = (290.5-Math.asin((th-38.723)/32));
-        return new double[] {ang,249.5-ang};
-    }
     
     double[] calculateArmLevel(int level){
 
@@ -150,24 +148,24 @@ public class Arm {
         switch(level){
             case 1:
                 // hybrid
-                return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(4));
+                return calculateArmOutputs(armAngle, intakeAngle, HYBRID, IHYBRID);
             case 2:
                 // mid
                 if(holdingCone & !holdingCube){
                     // cone
-                    return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(38));
+                    return calculateArmOutputs(armAngle, intakeAngle, MID_CONE, IMID_CONE);
                 } else {
                     // cube
-                    return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(27.5));
+                    return calculateArmOutputs(armAngle, intakeAngle, MID_CUBE, IMID_CUBE);
                 }
             case 3:
                 // high
                 if(holdingCone & !holdingCube){
                     // cone
-                    return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(50));
+                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CONE, IHIGH_CONE);
                 } else {
                     // we have a cube
-                    return calculateArmOutputs(armAngle, intakeAngle, findArmAngle(39.5));
+                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CUBE, IHIGH_CUBE);
                  }
             case 4:
                 // station
@@ -178,20 +176,20 @@ public class Arm {
     }
 
     //fix 180 I put it there to make sure it was working and it isn't
-    double[] calculateArmOutputs(double aAngle, double iAngle, double[] th) {
+    double[] calculateArmOutputs(double aAngle, double iAngle, double th, double ih) {
 // returns the motor speed
         double[] returningVal = {0, 0};
 
-        if (aAngle > th[0] + 1) {
-            returningVal[0] = -ARM_MOTOR_SPEED;
-        } else if (aAngle < th[0]-1) {
+        if (aAngle < th - 1) {
             returningVal[0] = ARM_MOTOR_SPEED;
+        } else if (aAngle > th+1) {
+            returningVal[0] = -ARM_MOTOR_SPEED;
         }
 
-        if (iAngle > th[1] + 1) {
-            returningVal[1] = -INTAKE_ARM_MOTOR_SPEED;
-        } else if (iAngle < th[1]-1) {
+        if (iAngle < ih-1) {
             returningVal[1] = INTAKE_ARM_MOTOR_SPEED;
+        } else if (iAngle > ih+1) {
+            returningVal[1] = -INTAKE_ARM_MOTOR_SPEED;
         }
 
         return returningVal;
@@ -226,16 +224,6 @@ public class Arm {
             rightWheels.set(HAND_ROTATIONAL_SPEED);
         }
         
-    }
-
-    void checkIntakeMotors() {
-
-        leftWheels.set((leftWheels.get() < 0) ? (leftWheelsEncoder.getPosition() < leftWheelsLastValue-HAND_DEAD_ZONE) ? -HAND_ROTATIONAL_SPEED : 0 : leftWheels.get());
-        rightWheels.set((rightWheels.get() < 0) ? (rightWheelsEncoder.getPosition() < rightWheelsLastValue-HAND_DEAD_ZONE) ? -HAND_ROTATIONAL_SPEED : 0 : rightWheels.get());
-
-        leftWheelsLastValue = leftWheelsEncoder.getPosition();
-        rightWheelsLastValue = rightWheelsEncoder.getPosition();
-
     }
 
     void softStop() {
@@ -291,10 +279,14 @@ public class Arm {
         goalLevel = level;
     }
 
-    void runArm() {
-        // Arm
-        if (goalLevel != 0) {
-            double[] armResults = calculateArmLevel(goalLevel);
+    void runArm(boolean hold) {
+        if(!hold){
+            // not holding
+            // Arm
+            if (goalLevel != 0) {
+                double[] armResults = calculateArmLevel(goalLevel);
+                System.out.println(armResults[0]);
+                System.out.println(armResults[1]);
                 if (armResults[0] != 0) {
                     armMotor.set(armResults[0]);
                 } else {
@@ -303,14 +295,24 @@ public class Arm {
 
                 // Intake
                 if (armResults[1] != 0) {
-                    //intakeArmMotor.set(armResults[1]);
+                    intakeArmMotor.set(armResults[1]);
                 } else {
-                    //intakeArmMotor.stopMotor();
+                    intakeArmMotor.stopMotor();
                 }
                 if(armResults[1] == 0 & armResults[0] == 0){
                     goalLevel = 0;
                 }
+            }
+        } else {
+            // hold pos
+            if(getArmEncoder() > holdAng[0]){
+                armMotor.set(-0.05);
+            }
+            if(getIntakeEncoder() > holdAng[1]){
+                intakeArmMotor.set(-0.05);
+            }
         }
+        
     }
 
 }
