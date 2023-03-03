@@ -273,10 +273,9 @@ public class Robot extends TimedRobot {
 
     //Manip Controls
     void ExecuteManipControls() {
-
+        dash.putNumber("m_inputsPOV", inputs.m_POV);
         // dP for controlling arm levels
         switch (inputs.m_POV) {
-
             case 0:
                 // up - High
                 arm.setCurrentLevel(3);
@@ -302,20 +301,25 @@ public class Robot extends TimedRobot {
             arm.armMotor.stopMotor();
             arm.intakeArmMotor.stopMotor();
         } else if (inputs.m_POV == -1 & inputs.m_leftY == 0 & inputs.m_rightY == 0){
+            // if we have no input, stop the motors.
             arm.armMotor.stopMotor();
             arm.intakeArmMotor.stopMotor();
             if(!hold && arm.goalLevel == 0){
+                // if we have no input, not already holding, and are not using dp to go somewhere, start holding
                 arm.holdAng[0] = arm.getArmEncoder();
                 arm.holdAng[1] = arm.getIntakeEncoder();
                 hold = true;
             }
             //no input, hold
-        } else {
+        } else if(inputs.m_leftY != 0 | inputs.m_rightY != 0){
+            // if we have a controller, have input on the sticks, we are manually moving. This should automatically override dp movement.
+            arm.goalLevel = 0;
             // manual arming
             // moving, no hold.
+            // if we are using sticks we need to stop the dp movement, manual should ovverride it.
             hold = false;
             arm.armMotor.set(inputs.m_leftY*0.2);
-
+            // tolderance so we dont kill the intake:
             if (arm.getIntakeEncoder() <= 78 & inputs.m_rightY < 0) {
                 arm.intakeArmMotor.stopMotor();
             } else {

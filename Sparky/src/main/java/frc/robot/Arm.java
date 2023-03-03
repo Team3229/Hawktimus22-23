@@ -141,10 +141,14 @@ public class Arm {
     }
     
     double[] calculateArmLevel(int level){
-
+        // check color
         checkColor();
+        // get angles
         double armAngle = getArmEncoder();
         double intakeAngle = getIntakeEncoder();
+        // switch over the level, 0 meaning we have no level and should not be moving and 1,2,3 for heights.
+        // all handle cone/cube movement, returning the right values for each, returns the result of calcArmOutputs.
+        // returns a double[] of values, arm then intake, 0 if were at the zone and a value otherwise to go in the right direction.
         switch(level){
             case 1:
                 // hybrid
@@ -178,14 +182,17 @@ public class Arm {
     //fix 180 I put it there to make sure it was working and it isn't
     double[] calculateArmOutputs(double aAngle, double iAngle, double th, double ih) {
 // returns the motor speed
+        dash.putNumber("Arm target angle", th);
+        dash.putNumber("intake target angle", ih);
+        // taking the current angles, and the goal angles for intake and arm, calc what dir we need to move.
         double[] returningVal = {0, 0};
-
+        // if the arm is lower than the lower bounds of the target, move it up, else down, if in tolerance do nothing.
         if (aAngle < th - 1) {
             returningVal[0] = ARM_MOTOR_SPEED;
         } else if (aAngle > th+1) {
             returningVal[0] = -ARM_MOTOR_SPEED;
         }
-
+        // same here
         if (iAngle < ih-1) {
             returningVal[1] = INTAKE_ARM_MOTOR_SPEED;
         } else if (iAngle > ih+1) {
@@ -281,24 +288,34 @@ public class Arm {
 
     void runArm(boolean hold) {
         if(!hold){
-            // not holding
+            // not holding, meaining we have dp movement or stick movement, so handle movement
             // Arm
+            // if we have a goal level, meaning we have pressed the dp and want to be going somewhere,
             if (goalLevel != 0) {
+                // calculate what dir we have to move the arm
                 double[] armResults = calculateArmLevel(goalLevel);
+
+                // debugging logs, angles are already on dash. 
+                dash.putNumber("Arm goal level", goalLevel);
+                dash.putNumber("Arm height auto move val", armResults[0]);
+                dash.putNumber("Intake height auto move val", armResults[1]);
                 System.out.println(armResults[0]);
                 System.out.println(armResults[1]);
+
+                // if we have a direction to move the arm, move it. else stop it.
                 if (armResults[0] != 0) {
                     armMotor.set(armResults[0]);
                 } else {
                     armMotor.stopMotor();
                 }
 
-                // Intake
+                // If we have somewhere to move the intake, move it else stop it
                 if (armResults[1] != 0) {
                     intakeArmMotor.set(armResults[1]);
                 } else {
                     intakeArmMotor.stopMotor();
                 }
+                // if both are zero, reset goal level because were at the right location.
                 if(armResults[1] == 0 & armResults[0] == 0){
                     goalLevel = 0;
                 }
