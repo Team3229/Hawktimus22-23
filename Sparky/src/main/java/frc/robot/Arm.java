@@ -67,12 +67,12 @@ public class Arm {
     final double SLOW_ARM_MOTOR_SPEED = 0.01;
     final double INTAKE_ARM_MOTOR_SPEED = 0.05;
     final double HIGH_CONE = 219.19921875;
-    final double HIGH_CUBE = 180;
+    final double HIGH_CUBE = 219.19921875;
     final double MID_CONE = 220;
     final double MID_CUBE = 220;
     final double HYBRID = 320;
     final double IHIGH_CONE = 223.154296875;
-    final double IHIGH_CUBE = 180;
+    final double IHIGH_CUBE = 223.154296875;
     final double IMID_CONE = 220;
     final double IMID_CUBE = 220;
     final double IHYBRID = 320;
@@ -113,7 +113,7 @@ public class Arm {
         pcm = new PneumaticsControlModule();
         compressor = new Compressor(1, PneumaticsModuleType.CTREPCM);
         onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
-        offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 1);
+        offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 4);
 
         pcm.clearAllStickyFaults();
 

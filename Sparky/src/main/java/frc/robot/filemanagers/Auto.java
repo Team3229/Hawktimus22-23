@@ -52,7 +52,7 @@ public class Auto {
 	private FileOutputStream fWriter;
 	private ObjectOutputStream cmdWrite;
 
-	private String[] inputFileNames = {null,null,null,null};
+	private String[] inputFileNames = {"","","",""};
 	private int autoStep = 1;
 	Controller controller = new Controller();
 	Dashboard dash = new Dashboard();
@@ -94,9 +94,11 @@ public class Auto {
 				cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[2] + ".aut");
 				break;
 			case 3:
+			System.out.println("Attempting 3");
 				cmdFile = new File(basePath + inputFileNames[2] + inputFileNames[3] + ".aut");
 			case 4:
 				// we just finished 3, meaning we're done and should end.
+				System.out.println("Ending");
 				autoFinished = true;
 				return;
         }
@@ -127,15 +129,16 @@ public class Auto {
 	}
 
 	// Done in Test part of Robot
-	public void setupRecording(String[] inputFileName) {
-
-		if (inputFileName[1] == "N/A") {
+	public void setupRecording(String[] names) {
+		inputFileNames = names;
+		if (inputFileNames[1] == "N/A") {
 			cmdFile = new File(basePath + inputFileNames[2] + inputFileNames[3] + ".aut");
-		} else if (inputFileName[2] == "N/A"){
+		} else if (inputFileNames[2] == "N/A"){
 			cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[0] + ".aut");
 		} else {
 			cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[2] + ".aut");
 		}
+
 		
 		try {
 			if (!cmdFile.exists()) {
@@ -143,7 +146,6 @@ public class Auto {
 			}
 			fWriter = new FileOutputStream(cmdFile);
 			cmdWrite = new ObjectOutputStream(fWriter);
-			System.out.println("it is nbeing run");
 		} catch(IOException err) {
 			System.out.println("Error opening auto file for write: " + err.toString());
 		}

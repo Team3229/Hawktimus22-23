@@ -57,8 +57,10 @@ public class Robot extends TimedRobot {
         chassis.navxGyro.calibrate();
 
         auto.closeFile();
+        auto.setupDropdowns();
 
         chassis.configPIDS();
+
 
     }
 
