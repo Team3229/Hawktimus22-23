@@ -25,8 +25,6 @@ public class SwerveKinematics {
     public double robotRotation = 0;
     SwerveOffsets offset;
 
-    //double[] anglePID = {0.003, 0.0002, 0.00001};
-    //double[] drivePID = {0, 0, 0};
     public PID anglePID = new PID("anglePID.txt", new double[] {0.003,0.0002,0.00001});
     public PID drivePID = new PID("drivePID.txt", new double[] {0,0,0});
 
@@ -37,7 +35,6 @@ public class SwerveKinematics {
 
     double[] encoderValues = {0, 0, 0, 0};
 
-    boolean rotating = false;
     double[] initialOffsets;
 
     public SwerveKinematics() {
@@ -62,8 +59,6 @@ public class SwerveKinematics {
     }
 
     public void drive(double X, double Y, double Z) {
-
-        rotating = Math.abs(Z) > 0;
 
         robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
         speeds = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxRadiansPerSecond, Rotation2d.fromDegrees(robotRotation));
@@ -95,6 +90,7 @@ public class SwerveKinematics {
         frontRightModule.configPID(anglePID.pidValues, drivePID.pidValues);
         backLeftModule.configPID(anglePID.pidValues, drivePID.pidValues);
         backRightModule.configPID(anglePID.pidValues, drivePID.pidValues);
+        
     }
 
     public void fixOffsets() {
