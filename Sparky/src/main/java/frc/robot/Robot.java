@@ -45,6 +45,8 @@ public class Robot extends TimedRobot {
     boolean hasMovedArmManuallyYet = false;
     boolean inAuto = false;
 
+    String robotState = "";
+
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
@@ -60,7 +62,6 @@ public class Robot extends TimedRobot {
         auto.setupDropdowns();
 
         chassis.configPIDS();
-
 
     }
 
@@ -102,6 +103,8 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
 
+        robotState = "autonomous";
+
         auto.closeFile();
         chassis.configPIDS();
 
@@ -117,6 +120,7 @@ public class Robot extends TimedRobot {
         autoLevel = false;
 
         auto.autoFinished = false;
+        auto.autoStep = 1;
         hold = false;
         inAuto = true;
 
@@ -139,6 +143,8 @@ public class Robot extends TimedRobot {
     /** This function is called once when teleop is enabled. */
     @Override
     public void teleopInit() {
+
+        robotState = "teleop";
 
         auto.closeFile();
 
@@ -177,6 +183,11 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
+
+        if (robotState == "test") {
+
+        }
+
     }
 
     /** This function is called periodically when disabled. */
@@ -186,6 +197,9 @@ public class Robot extends TimedRobot {
     /** This function is called once when test mode is enabled. */
     @Override
     public void testInit() {
+
+        robotState = "test";
+
         // record a new auto sequence
         selectedAuto[0] = auto.heightDropdown.getSelected();
         selectedAuto[1] = auto.startPosDropdown.getSelected();
@@ -270,22 +284,27 @@ public class Robot extends TimedRobot {
             chassis.navxGyro.zeroYaw();
         }
 
+        // Line up with nearest cube grid
+        if (inputs.d_XButton) {
+            double[] speeds = limelight.alignWithTag(true);
+            chassis.drive(speeds[0], speeds[1], speeds[2]);
+        }
+
     }
 
 
     //Manip Controls
     void ExecuteManipControls() {
-        dash.putNumber("m_inputsPOV", inputs.m_POV);
         // dP for controlling arm levels
         switch (inputs.m_POV) {
             case 0:
                 // up - High
-                arm.setCurrentLevel(3);
                 hasMovedArmManuallyYet = false;
+                arm.setCurrentLevel(3);
                 hold = false;
                 break;
-            case 90 | 270:
-                // right - Mid
+            case 270:
+                // left - Mid
                 hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(2);
                 hold = false;
@@ -296,7 +315,20 @@ public class Robot extends TimedRobot {
                 arm.setCurrentLevel(1);
                 hold = false;
                 break;
+            case 90:
+                // right - Dock
+                hasMovedArmManuallyYet = false;
+                arm.setCurrentLevel(4);
+                hold = false;
+                break;
     
+        }
+
+        if (inputs.m_BackButton) {
+            // back - HP Station
+            hasMovedArmManuallyYet = false;
+            arm.setCurrentLevel(4);
+            hold = false;
         }
         
         if(!DriverStation.isJoystickConnected(1)){
@@ -320,12 +352,18 @@ public class Robot extends TimedRobot {
             // moving, no hold.
             // if we are using sticks we need to stop the dp movement, manual should ovverride it.
             hold = false;
-            arm.armMotor.set(inputs.m_leftY*0.2);
-            // tolderance so we dont kill the intake:
-            if (arm.getIntakeEncoder() <= 78 & inputs.m_rightY < 0) {
+            // tolerances so we don't kill the intake:
+            if ((arm.getIntakeEncoder() <= 78 & inputs.m_rightY < 0) | (arm.getIntakeEncoder() >= 330 & inputs.m_rightY > 0)) {
                 arm.intakeArmMotor.stopMotor();
             } else {
                 arm.intakeArmMotor.set(inputs.m_rightY*0.3);
+            }
+
+            // tolerances so we don't kill the arm:
+            if ((arm.getArmEncoder() >= 320 & arm.getArmEncoder() < 350 & inputs.m_leftY > 0) | (arm.getArmEncoder() <= 5 & inputs.m_leftY < 0)) {
+                arm.armMotor.stopMotor();
+            } else {
+                arm.armMotor.set(inputs.m_leftY*0.2);
             }
         }
         // grabbing cube
@@ -333,6 +371,9 @@ public class Robot extends TimedRobot {
             arm.grabObject(true);
         } else if (inputs.m_RightBumper) {
             arm.placeObject(false);
+        } else {
+            arm.leftWheels.stopMotor();
+            arm.rightWheels.stopMotor();
         }
 
         // Grabbing cone
@@ -341,8 +382,6 @@ public class Robot extends TimedRobot {
         } else {
             if (inputs.m_RightTriggerAxis > 0.1) {
                 arm.grabObject(false);
-            } else {
-                arm.softStop();
             }
         }
 

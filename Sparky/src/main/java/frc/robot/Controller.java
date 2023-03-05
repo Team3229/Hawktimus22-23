@@ -36,6 +36,7 @@ public class Controller {
     ci.d_XButton = d_controller.getXButton();
     ci.d_YButton = d_controller.getYButton();
     ci.d_StartButton = d_controller.getStartButton();
+    ci.d_BackButton = d_controller.getBackButton();
     ci.d_RightBumper = d_controller.getRightBumper();
     ci.d_LeftBumper = d_controller.getLeftBumper();
     ci.d_RightTriggerAxis = ((Math.abs(d_controller.getRightTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : d_controller.getRightTriggerAxis());
@@ -51,6 +52,7 @@ public class Controller {
     ci.m_XButton = m_controller.getXButton();
     ci.m_YButton = m_controller.getYButton();
     ci.m_StartButton = m_controller.getStartButton();
+    ci.m_BackButton = m_controller.getBackButton();
     ci.m_RightBumper = m_controller.getRightBumper();
     ci.m_LeftBumper = m_controller.getLeftBumper();
     ci.m_RightTriggerAxis = ((Math.abs(m_controller.getRightTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : m_controller.getRightTriggerAxis());
@@ -71,6 +73,7 @@ public class Controller {
     ci.d_XButton = false;
     ci.d_YButton = false;
     ci.d_StartButton = false;
+    ci.d_BackButton = false;
     ci.d_RightBumper = false;
     ci.d_LeftBumper = false;
     ci.d_RightTriggerAxis = 0;
@@ -86,6 +89,7 @@ public class Controller {
     ci.m_XButton = false;
     ci.m_YButton = false;
     ci.m_StartButton = false;
+    ci.m_BackButton = false;
     ci.m_RightBumper = false;
     ci.m_LeftBumper = false;
     ci.m_RightTriggerAxis = 0;

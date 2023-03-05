@@ -59,23 +59,28 @@ public class Arm {
     final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants
-    final double HAND_DEAD_ZONE = 0.01;
     final double ARM_LENGTH = 0.8218;
     final double ARM_PIVOT_HEIGHT = 0.9836;
     final double HAND_ROTATIONAL_SPEED = 0.28;
-    final double ARM_MOTOR_SPEED = 0.1;
-    final double SLOW_ARM_MOTOR_SPEED = 0.01;
-    final double INTAKE_ARM_MOTOR_SPEED = 0.05;
-    final double HIGH_CONE = 219.19921875;
+    final double ARM_MOTOR_SPEED = 0.3;
+    final double INTAKE_ARM_MOTOR_SPEED = 0.3;
+    final double INTAKE_ARM_SLOW_SPEED = 0.05;
+    final double ARM_DEPLOY_SPEED = 1;
+    final double ARM_SLOW_SPEED = 0.08;
+
+    final double HIGH_CONE = 219.19921875; //DONE
     final double HIGH_CUBE = 219.19921875;
     final double MID_CONE = 220;
     final double MID_CUBE = 220;
-    final double HYBRID = 320;
-    final double IHIGH_CONE = 223.154296875;
+    final double HYBRID = 325; //DONE
+    final double DOCK = 10; //DONE
+    final double IHIGH_CONE = 223.154296875; //DONE
     final double IHIGH_CUBE = 223.154296875;
     final double IMID_CONE = 220;
     final double IMID_CUBE = 220;
-    final double IHYBRID = 320;
+    final double IHYBRID = 113;
+    final double IDOCK = 330; //DONE
+
     public double[] holdAng = {0,0};
     // Other Variables
     int goalLevel = 0;
@@ -85,8 +90,6 @@ public class Arm {
     double intakeEncoderValue = 0;
     boolean holdingCone = false;
     boolean holdingCube = false;
-    double leftWheelsLastValue = 0;
-    double rightWheelsLastValue = 0;
 
     Arm() {
 
@@ -172,8 +175,8 @@ public class Arm {
                     return calculateArmOutputs(armAngle, intakeAngle, HIGH_CUBE, IHIGH_CUBE);
                  }
             case 4:
-                // station
-                return new double[] {};
+                 //dock
+                 return calculateArmOutputs(armAngle, intakeAngle, DOCK, IDOCK);
             default:
                 return new double[] {};
         }
@@ -181,22 +184,48 @@ public class Arm {
 
     //fix 180 I put it there to make sure it was working and it isn't
     double[] calculateArmOutputs(double aAngle, double iAngle, double th, double ih) {
-// returns the motor speed
-        dash.putNumber("Arm target angle", th);
-        dash.putNumber("intake target angle", ih);
+        // returns the motor speed
         // taking the current angles, and the goal angles for intake and arm, calc what dir we need to move.
         double[] returningVal = {0, 0};
         // if the arm is lower than the lower bounds of the target, move it up, else down, if in tolerance do nothing.
-        if (aAngle < th - 1) {
-            returningVal[0] = ARM_MOTOR_SPEED;
-        } else if (aAngle > th+1) {
-            returningVal[0] = -ARM_MOTOR_SPEED;
-        }
-        // same here
         if (iAngle < ih-1) {
-            returningVal[1] = INTAKE_ARM_MOTOR_SPEED;
+            returningVal[1] = INTAKE_ARM_SLOW_SPEED;
         } else if (iAngle > ih+1) {
+            returningVal[1] = -INTAKE_ARM_SLOW_SPEED;
+        }
+        //slow intake
+        if (iAngle < ih-10) {
+            returningVal[1] = INTAKE_ARM_MOTOR_SPEED;
+        } else if (iAngle > ih+10) {
             returningVal[1] = -INTAKE_ARM_MOTOR_SPEED;
+        }
+
+        // same here
+        //fast deploy
+        if (aAngle < 150 & !(goalLevel == 4)) {
+            if (aAngle < th - 1) {
+                returningVal[0] = ARM_DEPLOY_SPEED;
+            } else if (aAngle > th+1) {
+                returningVal[0] = -ARM_DEPLOY_SPEED;
+            }
+            returningVal[1] = 0;
+        } else {
+            if (aAngle < th - 1) {
+                returningVal[0] = ARM_SLOW_SPEED;
+            } else if (aAngle > th+1) {
+                returningVal[0] = -ARM_SLOW_SPEED;
+            }
+            if (aAngle < th - 5) {
+                returningVal[0] = ARM_MOTOR_SPEED;
+            } else if (aAngle > th+5) {
+                returningVal[0] = -ARM_MOTOR_SPEED;
+            }
+
+            
+        }
+        // no break intake from hybrid/ pickup position
+        if (aAngle > 290 & !(goalLevel == 1)) {
+            returningVal[1] = 0;
         }
 
         return returningVal;
@@ -207,12 +236,12 @@ public class Arm {
         if (cube) {
             leftWheels.set(-HAND_ROTATIONAL_SPEED);
             rightWheels.set(-HAND_ROTATIONAL_SPEED);
-            leftWheelsLastValue = leftWheelsEncoder.getPosition()-1;
-            rightWheelsLastValue = rightWheelsEncoder.getPosition()-1;
 
         } else {
             offSolenoid.set(false);
             onSolenoid.set(true);
+            leftWheels.set(-HAND_ROTATIONAL_SPEED);
+            rightWheels.set(-HAND_ROTATIONAL_SPEED);
         }
     }
 
@@ -227,24 +256,8 @@ public class Arm {
             // move the pneumatic cone bits
             offSolenoid.set(true);
             onSolenoid.set(false);
-            leftWheels.set(HAND_ROTATIONAL_SPEED);
-            rightWheels.set(HAND_ROTATIONAL_SPEED);
         }
         
-    }
-
-    void softStop() {
-
-        if (leftWheels.get() == HAND_ROTATIONAL_SPEED | rightWheels.get() == HAND_ROTATIONAL_SPEED) {
-
-            leftWheels.stopMotor();
-            rightWheels.stopMotor();
-
-        } else if (leftWheels.get() == 0 | rightWheels.get() == 0) {
-
-            leftWheels.stopMotor();
-            rightWheels.stopMotor();
-        }
     }
 
     public double getArmEncoder() {
@@ -282,9 +295,7 @@ public class Arm {
         }
     }
 
-    void setCurrentLevel(int level){
-        goalLevel = level;
-    }
+    void setCurrentLevel(int level){goalLevel = level;}
 
     void runArm(boolean hold) {
         if(!hold){
@@ -294,13 +305,6 @@ public class Arm {
             if (goalLevel != 0) {
                 // calculate what dir we have to move the arm
                 double[] armResults = calculateArmLevel(goalLevel);
-
-                // debugging logs, angles are already on dash. 
-                dash.putNumber("Arm goal level", goalLevel);
-                dash.putNumber("Arm height auto move val", armResults[0]);
-                dash.putNumber("Intake height auto move val", armResults[1]);
-                System.out.println(armResults[0]);
-                System.out.println(armResults[1]);
 
                 // if we have a direction to move the arm, move it. else stop it.
                 if (armResults[0] != 0) {
@@ -315,21 +319,27 @@ public class Arm {
                 } else {
                     intakeArmMotor.stopMotor();
                 }
-                // if both are zero, reset goal level because were at the right location.
+
+                // if both are zero, reset goal level because we're at the right location.
                 if(armResults[1] == 0 & armResults[0] == 0){
                     goalLevel = 0;
+                    hold = true;
+                    holdPos();
                 }
             }
         } else {
-            // hold pos
-            if(getArmEncoder() > holdAng[0]){
-                armMotor.set(-0.05);
-            }
-            if(getIntakeEncoder() > holdAng[1]){
-                intakeArmMotor.set(-0.05);
-            }
+            holdPos();
         }
         
+    }
+
+    void holdPos() {
+        if(getArmEncoder() > holdAng[0] & getArmEncoder() > 10){
+            armMotor.set(-0.03);
+        }
+        if(getIntakeEncoder() > holdAng[1]){
+            intakeArmMotor.set(-0.04);
+        }
     }
 
 }

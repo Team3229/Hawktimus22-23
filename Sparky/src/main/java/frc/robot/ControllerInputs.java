@@ -18,6 +18,7 @@ public class ControllerInputs implements Serializable {
     double d_LeftTriggerAxis;
     int d_POV;
     boolean d_StartButton;
+    boolean d_BackButton;
   
     // Manip Controls
     double m_rightY;
@@ -34,4 +35,5 @@ public class ControllerInputs implements Serializable {
     double m_LeftTriggerAxis;
     int m_POV;
     boolean m_StartButton;
+    boolean m_BackButton;
   }

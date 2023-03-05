@@ -53,7 +53,7 @@ public class Auto {
 	private ObjectOutputStream cmdWrite;
 
 	private String[] inputFileNames = {"","","",""};
-	private int autoStep = 1;
+	public int autoStep = 1;
 	Controller controller = new Controller();
 	Dashboard dash = new Dashboard();
 
@@ -94,11 +94,11 @@ public class Auto {
 				cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[2] + ".aut");
 				break;
 			case 3:
-			System.out.println("Attempting 3");
 				cmdFile = new File(basePath + inputFileNames[2] + inputFileNames[3] + ".aut");
+				break;
 			case 4:
 				// we just finished 3, meaning we're done and should end.
-				System.out.println("Ending");
+				System.out.println("End of auto sequence");
 				autoFinished = true;
 				return;
         }
