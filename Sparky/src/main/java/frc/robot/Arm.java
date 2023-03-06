@@ -237,12 +237,11 @@ public class Arm {
         return returningVal;
     }
 
-    void grabObject(boolean cube){
-        
-        if (cube) {
+    void grabObject(){
+        checkColor();
+        if (holdingCube) {
             leftWheels.set(-HAND_ROTATIONAL_SPEED);
             rightWheels.set(-HAND_ROTATIONAL_SPEED);
-
         } else {
             offSolenoid.set(false);
             onSolenoid.set(true);
@@ -251,17 +250,19 @@ public class Arm {
         }
     }
 
-    void placeObject(boolean cube){
+    void placeObject(){
         checkColor();
-        if(cube){
+        if(holdingCube){
             // holding a cube
             leftWheels.set(HAND_ROTATIONAL_SPEED);
             rightWheels.set(HAND_ROTATIONAL_SPEED);
             
         } else {
-            // move the pneumatic cone bits
+            // move the pneumatic cone bits and spit it out
             offSolenoid.set(true);
             onSolenoid.set(false);
+            leftWheels.set(HAND_ROTATIONAL_SPEED);
+            rightWheels.set(HAND_ROTATIONAL_SPEED);
         }
         
     }

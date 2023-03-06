@@ -308,7 +308,6 @@ public class Robot extends TimedRobot {
          * 
          * Home button: Dock
          * 
-         * // Need to be implemented!!!!!!!!!!!!
          * Right Bumper: Place object // based on what we have held
          * Left Bumper: Grab Object //Based on color sensor
          * 
@@ -385,13 +384,13 @@ public class Robot extends TimedRobot {
             }
         }
         
-        // grabbing cube
+        // grab something
         if (inputs.m_LeftBumper) {
-            // grab based on color sensor NEED TO BE IMPLEMENTED
-            arm.grabObject(true);
+            // grab based on color sensor
+            arm.grabObject();
         } else if (inputs.m_RightBumper) {
             // Place based on what we are holding, if no cube we do cone, etc.
-            arm.placeObject(arm.holdingCube);
+            arm.placeObject();
         } else {
             arm.leftWheels.stopMotor();
             arm.rightWheels.stopMotor();

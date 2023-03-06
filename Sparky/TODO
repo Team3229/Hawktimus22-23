@@ -1,19 +1,15 @@
 TODO list for programming
 
 ONCE WE HAVE THE BOT
- - test april tag following
+ - Finish nolans control sceme so he can easily get to where we need to be
+ - Driver Practice practice practice!
+ - finish april tag following
  - test color sensor code
  - tune color sensor colors
- - test new auto
- - test/fix arm move to angle code
- - see if we can fix the arm droopiness
+ - Test auto level code
 
 IF WE HAVE time
  - tune drivePID
- 
-ONCE WE HAVE TEST PARTS
- - test going to different heights
- - test auto leveling
 
 AT COMP REMEMBER
  - Check all CANCoder angles
