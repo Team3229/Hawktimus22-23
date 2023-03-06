@@ -30,7 +30,7 @@ public class Robot extends TimedRobot {
     ControllerInputs inputs;
     double[] dp = {0,0,0};
     double[] limelightDist = {0,0};
-    boolean manualIntakeToggle = false;
+
     SwerveKinematics chassis = new SwerveKinematics();
     Auto auto = new Auto();
     Utils utils = new Utils();
@@ -383,33 +383,17 @@ public class Robot extends TimedRobot {
                 arm.armMotor.set(inputs.m_leftY*0.2);
             }
         }
-        if(inputs.m_AButton){
-            // toggle to manual intake controls just in case
-            manualIntakeToggle = !manualIntakeToggle;
-        }
-
+        
         // grab something
-        if (inputs.m_LeftBumper & !manualIntakeToggle) {
+        if (inputs.m_LeftBumper) {
             // grab based on color sensor
             arm.grabObject();
-        } else if (inputs.m_RightBumper & !manualIntakeToggle) {
+        } else if (inputs.m_RightBumper) {
             // Place based on what we are holding, if no cube we do cone, etc.
             arm.placeObject();
-        } else if (inputs.m_LeftBumper) {
-            arm.grabObject(true);
-        } else if (inputs.m_RightBumper) {
-            arm.placeObject(false);
         } else {
             arm.leftWheels.stopMotor();
             arm.rightWheels.stopMotor();
-        }
-        // Grabbing cone
-        if (inputs.m_LeftTriggerAxis > 0.1 & manualIntakeToggle) {
-            arm.placeObject(true);
-        } else {
-            if (inputs.m_RightTriggerAxis > 0.1 & manualIntakeToggle) {
-                arm.grabObject(false);
-            }
         }
 
         // update arm
