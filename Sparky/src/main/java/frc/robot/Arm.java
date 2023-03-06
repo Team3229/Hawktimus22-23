@@ -249,10 +249,37 @@ public class Arm {
             rightWheels.set(-HAND_ROTATIONAL_SPEED);
         }
     }
+    void grabObject(boolean cube){
+        if (cube) {
+            leftWheels.set(-HAND_ROTATIONAL_SPEED);
+            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+        } else {
+            offSolenoid.set(false);
+            onSolenoid.set(true);
+            leftWheels.set(-HAND_ROTATIONAL_SPEED);
+            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+        }
+    }
 
     void placeObject(){
         checkColor();
         if(holdingCube){
+            // holding a cube
+            leftWheels.set(HAND_ROTATIONAL_SPEED);
+            rightWheels.set(HAND_ROTATIONAL_SPEED);
+            
+        } else {
+            // move the pneumatic cone bits and spit it out
+            offSolenoid.set(true);
+            onSolenoid.set(false);
+            leftWheels.set(HAND_ROTATIONAL_SPEED);
+            rightWheels.set(HAND_ROTATIONAL_SPEED);
+        }
+        
+    }
+
+    void placeObject(boolean cube){
+        if(cube){
             // holding a cube
             leftWheels.set(HAND_ROTATIONAL_SPEED);
             rightWheels.set(HAND_ROTATIONAL_SPEED);
