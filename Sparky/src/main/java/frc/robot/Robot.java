@@ -311,6 +311,8 @@ public class Robot extends TimedRobot {
          * Right Bumper: Place object // based on what we have held
          * Left Bumper: Grab Object //Based on color sensor
          * 
+         * A: toggle manual input where bumpers grab, triggers drop, left is cube and right is cone.
+         * 
          */
         // dP for controlling arm levels
         switch (inputs.m_POV) {
@@ -398,7 +400,7 @@ public class Robot extends TimedRobot {
         } else if (inputs.m_LeftBumper) {
             arm.grabObject(true);
         } else if (inputs.m_RightBumper) {
-            arm.placeObject(false);
+            arm.grabObject(false);
         } else {
             arm.leftWheels.stopMotor();
             arm.rightWheels.stopMotor();
@@ -408,7 +410,7 @@ public class Robot extends TimedRobot {
             arm.placeObject(true);
         } else {
             if (inputs.m_RightTriggerAxis > 0.1 & manualIntakeToggle) {
-                arm.grabObject(false);
+                arm.placeObject(false);
             }
         }
 
