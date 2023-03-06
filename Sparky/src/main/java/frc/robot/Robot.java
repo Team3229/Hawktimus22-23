@@ -295,24 +295,6 @@ public class Robot extends TimedRobot {
 
     //Manip Controls
     void ExecuteManipControls() {
-
-        // manip control sceme:
-        /*
-         * Dp:
-         *  up-high
-         *  left-Mid
-         *  right-HPStation
-         *  down-hybrid
-         * 
-         * Left/right stick: manual inputs (Arm/intake)
-         * 
-         * Home button: Dock
-         * 
-         * // Need to be implemented!!!!!!!!!!!!
-         * Right Bumper: Place object // based on what we have held
-         * Left Bumper: Grab Object //Based on color sensor
-         * 
-         */
         // dP for controlling arm levels
         switch (inputs.m_POV) {
             case 0:
@@ -334,16 +316,16 @@ public class Robot extends TimedRobot {
                 hold = false;
                 break;
             case 90:
-                // right - HP Station once we have its measurments.
+                // right - Dock
                 hasMovedArmManuallyYet = false;
-                arm.setCurrentLevel(5);
+                arm.setCurrentLevel(4);
                 hold = false;
                 break;
     
         }
 
         if (inputs.m_BackButton) {
-            // back - Dock.
+            // back - HP Station
             hasMovedArmManuallyYet = false;
             arm.setCurrentLevel(4);
             hold = false;
@@ -384,17 +366,23 @@ public class Robot extends TimedRobot {
                 arm.armMotor.set(inputs.m_leftY*0.2);
             }
         }
-        
         // grabbing cube
         if (inputs.m_LeftBumper) {
-            // grab based on color sensor NEED TO BE IMPLEMENTED
             arm.grabObject(true);
         } else if (inputs.m_RightBumper) {
-            // Place based on what we are holding, if no cube we do cone, etc.
-            arm.placeObject(arm.holdingCube);
+            arm.placeObject(false);
         } else {
             arm.leftWheels.stopMotor();
             arm.rightWheels.stopMotor();
+        }
+
+        // Grabbing cone
+        if (inputs.m_LeftTriggerAxis > 0.1) {
+            arm.placeObject(true);
+        } else {
+            if (inputs.m_RightTriggerAxis > 0.1) {
+                arm.grabObject(false);
+            }
         }
 
         // update arm
