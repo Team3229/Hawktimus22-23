@@ -69,15 +69,15 @@ public class Arm {
     final double ARM_SLOW_SPEED = 0.08;
 
     final double HIGH_CONE = 219.19921875; //DONE
-    final double HIGH_CUBE = 219.19921875;
+    final double HIGH_CUBE = 216.771484375;
     final double MID_CONE = 220;
-    final double MID_CUBE = 220;
+    final double MID_CUBE = 229.833984375;
     final double HYBRID = 325; //DONE
     final double DOCK = 10; //DONE
     final double IHIGH_CONE = 223.154296875; //DONE
-    final double IHIGH_CUBE = 223.154296875;
+    final double IHIGH_CUBE = 251.3671875;
     final double IMID_CONE = 220;
-    final double IMID_CUBE = 220;
+    final double IMID_CUBE = 287.2265625;
     final double IHYBRID = 113;
     final double IDOCK = 330; //DONE
 
