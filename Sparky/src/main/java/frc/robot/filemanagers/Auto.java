@@ -27,12 +27,14 @@ public class Auto {
 	public final SendableChooser <String> startPosDropdown = new SendableChooser <> ();
 	public final SendableChooser <String> grabDropdown = new SendableChooser <> ();
 
-	// height filenames
+	// height
 	public static final String heightHigh = "high";
 	public static final String heightMid = "mid";
 	public static final String heightLow = "low";
 
-	// grab filenames
+	// 
+
+	// grab
 	public static final String grabTaxi = "taxi";
 	public static final String grab1 = "grab1";
 	public static final String grab2 = "grab2";

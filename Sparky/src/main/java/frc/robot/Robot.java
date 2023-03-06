@@ -21,15 +21,15 @@ import frc.robot.filemanagers.Auto;
  * project.
  */
 public class Robot extends TimedRobot {
+    private String[] selectedAuto = {"","","",""};
+    private double[] encVals = {0,0,0,0};
+    private boolean autoLevel = false;
 
-    private String[] selectedAutoSequence = {"","","",""};
-    private double[] swerveEncoderVals = {0,0,0,0};
-    private boolean autoLeveling = false;
-
-    boolean holdArmPos = false;
+    boolean hold = false;
     Controller controller = new Controller();
     ControllerInputs inputs;
     double[] dp = {0,0,0};
+    double[] limelightDist = {0,0};
 
     SwerveKinematics chassis = new SwerveKinematics();
     Auto auto = new Auto();
@@ -40,7 +40,12 @@ public class Robot extends TimedRobot {
     SwerveOffsets swerveOffsets = new SwerveOffsets();
     Dashboard dash = new Dashboard();
 
+    double bufferZone = 0.1;
+    boolean controllerError = false;
     boolean hasMovedArmManuallyYet = false;
+    boolean inAuto = false;
+
+    String robotState = "";
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -48,6 +53,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
+        auto.setupDropdowns();
 
         chassis.navxGyro.zeroYaw();
         chassis.navxGyro.calibrate();
@@ -69,22 +75,18 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
 
-        swerveEncoderVals = chassis.encoderValues();
-        // TODO
-        dash.putNumber("frontLeft", swerveEncoderVals[0]);
-        dash.putNumber("frontRight", swerveEncoderVals[1]);
-        dash.putNumber("backLeft", swerveEncoderVals[2]);
-        dash.putNumber("backRight", swerveEncoderVals[3]);
+        encVals = chassis.encoderValues();
+        dash.putNumber("frontLeft", encVals[0]);
+        dash.putNumber("frontRight", encVals[1]);
+        dash.putNumber("backLeft", encVals[2]);
+        dash.putNumber("backRight", encVals[3]);
+        arm.pcm.enableCompressorDigital();
+        limelight.getValues();
 
-        // TODO
         dash.putNumber("intakeAngle", arm.getIntakeEncoder());
         dash.putNumber("armAngle", arm.getArmEncoder());
 
-        // TODO
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
-
-        arm.pcm.enableCompressorDigital();
-        limelight.getValues();
 
     }
 
@@ -101,23 +103,26 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
 
-        inputs = controller.nullControls();
+        robotState = "autonomous";
 
         auto.closeFile();
         chassis.configPIDS();
 
-        selectedAutoSequence[0] = auto.heightDropdown.getSelected();
-        selectedAutoSequence[1] = auto.startPosDropdown.getSelected();
-        selectedAutoSequence[2] = auto.grabDropdown.getSelected();
-        selectedAutoSequence[3] = String.valueOf(dash.readBool("Charge Station"));
-        System.out.println("Auto selected: " + selectedAutoSequence);
-        auto.setupPlayback(selectedAutoSequence);
+        selectedAuto[0] = auto.heightDropdown.getSelected();
+        selectedAuto[1] = auto.startPosDropdown.getSelected();
+        selectedAuto[2] = auto.grabDropdown.getSelected();
+        selectedAuto[3] = String.valueOf(dash.readBool("Charge Station"));
+        System.out.println("Auto selected: " + selectedAuto);
+        auto.setupPlayback(selectedAuto);
 
-        autoLeveling = false;
+        inputs = controller.nullControls();
+
+        autoLevel = false;
 
         auto.autoFinished = false;
         auto.autoStep = 1;
-        holdArmPos = false;
+        hold = false;
+        inAuto = true;
 
     }
 
@@ -139,14 +144,17 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
 
-        inputs = controller.nullControls();
+        robotState = "teleop";
 
         auto.closeFile();
 
         chassis.configPIDS();
 
-        autoLeveling = false;
-        holdArmPos = false;
+        inputs = controller.nullControls();
+
+        autoLevel = false;
+        hold = false;
+        inAuto = false;
 
         if (dash.readBool("resetAngleOffsets")) {
             chassis.fixOffsets();
@@ -176,6 +184,10 @@ public class Robot extends TimedRobot {
     public void disabledInit() {
         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
 
+        if (robotState == "test") {
+
+        }
+
     }
 
     /** This function is called periodically when disabled. */
@@ -186,18 +198,19 @@ public class Robot extends TimedRobot {
     @Override
     public void testInit() {
 
-        inputs = controller.nullControls();
+        robotState = "test";
 
         // record a new auto sequence
-        selectedAutoSequence[0] = auto.heightDropdown.getSelected();
-        selectedAutoSequence[1] = auto.startPosDropdown.getSelected();
-        selectedAutoSequence[2] = auto.grabDropdown.getSelected();
-        selectedAutoSequence[3] = String.valueOf(dash.readBool("Charge Station"));
+        selectedAuto[0] = auto.heightDropdown.getSelected();
+        selectedAuto[1] = auto.startPosDropdown.getSelected();
+        selectedAuto[2] = auto.grabDropdown.getSelected();
+        selectedAuto[3] = String.valueOf(dash.readBool("Charge Station"));
+        inputs = controller.nullControls();
+        auto.setupRecording(selectedAuto);
 
-        auto.setupRecording(selectedAutoSequence);
-
-        autoLeveling = false;
-        holdArmPos = false;
+        autoLevel = false;
+        hold = false;
+        inAuto = true;
 
     }
 
@@ -227,12 +240,13 @@ public class Robot extends TimedRobot {
 
     void ExecuteDriveControls() {
 
-        //Warn driver they are drawing too much power out of battery (usually because driving too fast)
+        //Warn driver they are going too fast on swerve
         if (RobotController.getBatteryVoltage() < 9) {
             controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.3);
         } else {
             controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
         }
+
 
         // Drive swerve chassis with joystick deadbands
         if (!DriverStation.isJoystickConnected(0)) {
@@ -241,11 +255,11 @@ public class Robot extends TimedRobot {
             if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0) {
                 chassis.drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
             } else {
-                // D-Pad slow driving
+                // D-Pad driving slowly
 
                 if (inputs.d_POV != -1) {
                     dp = utils.getDirectionalPadValues(inputs.d_POV);
-                    chassis.drive(dp[0] / 3, dp[1] / 3, inputs.d_rightX);
+                    chassis.drive(dp[0] / 2, dp[1] / 2, inputs.d_rightX);
                 } else if (Math.abs(inputs.d_rightX) > 0){
                     chassis.drive(0, 0, inputs.d_rightX);
                 } else {
@@ -256,12 +270,12 @@ public class Robot extends TimedRobot {
 
 
         // toggle auto level (only for autonomous)
-        if (inputs.d_YButton && DriverStation.isAutonomousEnabled()) {
-            autoLeveling = true;
+        if (inputs.d_YButton && inAuto) {
+            autoLevel = true;
         }
 
         // if we're auto leveling, move to work
-        if (autoLeveling) {
+        if (autoLevel) {
             chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getRoll()), 0);
         }
 
@@ -272,10 +286,8 @@ public class Robot extends TimedRobot {
 
         // Line up with nearest cube grid
         if (inputs.d_XButton) {
-            if (!arm.holdingCone & !arm.holdingCube) {
-                double[] speeds = limelight.alignWithTag(arm.holdingCube);
-                chassis.drive(speeds[0], speeds[1], speeds[2]);
-            }
+            double[] speeds = limelight.alignWithTag(true);
+            chassis.drive(speeds[0], speeds[1], speeds[2]);
         }
 
     }
@@ -288,66 +300,72 @@ public class Robot extends TimedRobot {
             case 0:
                 // up - High
                 hasMovedArmManuallyYet = false;
-                arm.goalLevel = 3;
-                holdArmPos = false;
+                arm.setCurrentLevel(3);
+                hold = false;
                 break;
-            case 90|270:
-                // left/right - Mid
+            case 270:
+                // left - Mid
                 hasMovedArmManuallyYet = false;
-                arm.goalLevel = 2;
-                holdArmPos = false;
+                arm.setCurrentLevel(2);
+                hold = false;
                 break;
             case 180:
                 // down - Hybrid
                 hasMovedArmManuallyYet = false;
-                arm.goalLevel = 1;
-                holdArmPos = false;
+                arm.setCurrentLevel(1);
+                hold = false;
+                break;
+            case 90:
+                // right - Dock
+                hasMovedArmManuallyYet = false;
+                arm.setCurrentLevel(4);
+                hold = false;
                 break;
     
         }
 
         if (inputs.m_BackButton) {
-            // back - Dock
+            // back - HP Station
             hasMovedArmManuallyYet = false;
-            arm.goalLevel = 4;
-            holdArmPos = false;
+            arm.setCurrentLevel(4);
+            hold = false;
         }
         
-        // if the manip controller isn't connected, don't run the arm (cause safety)
         if(!DriverStation.isJoystickConnected(1)){
-            arm.stopArm(true, true);
+            arm.armMotor.stopMotor();
+            arm.intakeArmMotor.stopMotor();
         } else if (inputs.m_POV == -1 & inputs.m_leftY == 0 & inputs.m_rightY == 0){
             // if we have no input, stop the motors.
-            arm.stopArm(true, true);
-            if(!holdArmPos && arm.goalLevel == 0){
-                // if we have no input, not already holding, and are not using dp to go somewhere, start holding arm up
+            arm.armMotor.stopMotor();
+            arm.intakeArmMotor.stopMotor();
+            if(!hold && arm.goalLevel == 0){
+                // if we have no input, not already holding, and are not using dp to go somewhere, start holding
                 arm.holdAng[0] = arm.getArmEncoder();
                 arm.holdAng[1] = arm.getIntakeEncoder();
-                holdArmPos = true;
+                hold = true;
             }
+            //no input, hold
         } else if(inputs.m_leftY != 0 | inputs.m_rightY != 0){
             // if we have a controller, have input on the sticks, we are manually moving. This should automatically override dp movement.
             arm.goalLevel = 0;
             // manual arming
             // moving, no hold.
             // if we are using sticks we need to stop the dp movement, manual should ovverride it.
-            holdArmPos = false;
-            
+            hold = false;
             // tolerances so we don't kill the intake:
             if ((arm.getIntakeEncoder() <= 78 & inputs.m_rightY < 0) | (arm.getIntakeEncoder() >= 330 & inputs.m_rightY > 0)) {
-                arm.stopArm(false, true);
+                arm.intakeArmMotor.stopMotor();
             } else {
                 arm.intakeArmMotor.set(inputs.m_rightY*0.3);
             }
 
             // tolerances so we don't kill the arm:
             if ((arm.getArmEncoder() >= 320 & arm.getArmEncoder() < 350 & inputs.m_leftY > 0) | (arm.getArmEncoder() <= 5 & inputs.m_leftY < 0)) {
-                arm.stopArm(true, false);
+                arm.armMotor.stopMotor();
             } else {
                 arm.armMotor.set(inputs.m_leftY*0.2);
             }
         }
-
         // grabbing cube
         if (inputs.m_LeftBumper) {
             arm.grabObject(true);
@@ -368,7 +386,7 @@ public class Robot extends TimedRobot {
         }
 
         // update arm
-        arm.runArm(holdArmPos);
+        arm.runArm(hold);
 
     }
 }

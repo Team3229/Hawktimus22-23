@@ -9,6 +9,7 @@ import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.MathUtil;
@@ -20,12 +21,11 @@ import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.util.Color;
 
 public class Arm {
-
     /*
-    1 low/pick up
+    1 low
     2 mid
     3 high
-    4 dock
+    4 human station
     */
 
     // Objects
@@ -42,13 +42,15 @@ public class Arm {
     Compressor compressor;
     CANCoder armEncoder;
     CANCoder intakeArmEncoder;
+    RelativeEncoder leftWheelsEncoder;
+    RelativeEncoder rightWheelsEncoder;
 
     // CAN IDs
-    final int LEFT_HAND_ID = 14;
-    final int RIGHT_HAND_ID = 15;
     final int ARM_ID = 16;
     final int ARM_2_ID = 17;
     final int INTAKE_ARM_ID = 18;
+    final int LEFT_HAND_ID = 14;
+    final int RIGHT_HAND_ID = 15;
     final int ARM_ENCODER_ID = 19;
     final int INTAKE_ENCODER_ID = 20;
 
@@ -66,7 +68,6 @@ public class Arm {
     final double ARM_DEPLOY_SPEED = 1;
     final double ARM_SLOW_SPEED = 0.08;
 
-    // Arm Heights
     final double HIGH_CONE = 219.19921875; //DONE
     final double HIGH_CUBE = 219.19921875;
     final double MID_CONE = 220;
@@ -81,7 +82,6 @@ public class Arm {
     final double IDOCK = 330; //DONE
 
     public double[] holdAng = {0,0};
-
     // Other Variables
     int goalLevel = 0;
     int armEncoderBuffer = 0;
@@ -97,21 +97,19 @@ public class Arm {
         
         // Arm
         armMotor = new CANSparkMax(ARM_ID, MotorType.kBrushless);
-        armMotor.setInverted(false);
-        armMotor.setIdleMode(IdleMode.kBrake);
-
         armMotor2 = new CANSparkMax(ARM_2_ID, MotorType.kBrushless);
+        armMotor.setInverted(false);
         armMotor2.follow(armMotor, true);
+        armMotor.setIdleMode(IdleMode.kBrake);
         armMotor2.setIdleMode(IdleMode.kBrake);
 
         // Intake
         colorSensor = new ColorSensorV3(Port.kOnboard);
         intakeArmMotor = new CANSparkMax(INTAKE_ARM_ID, MotorType.kBrushless);
         intakeArmMotor.setIdleMode(IdleMode.kBrake);
-
         leftWheels = new CANSparkMax(LEFT_HAND_ID, MotorType.kBrushless);
-        leftWheels.setInverted(false);
         rightWheels = new CANSparkMax(RIGHT_HAND_ID, MotorType.kBrushless);
+        leftWheels.setInverted(false);
         rightWheels.setInverted(true);
 
         // Pnuematics
@@ -136,6 +134,12 @@ public class Arm {
         intakeArmEncoder.configSensorDirection(true);
         intakeArmEncoder.configMagnetOffset(INTAKE_ENCODER_OFFSET);
         intakeArmEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
+
+        leftWheelsEncoder = leftWheels.getEncoder();
+        rightWheelsEncoder = rightWheels.getEncoder();
+
+        leftWheelsEncoder.setPositionConversionFactor(360);
+        rightWheelsEncoder.setPositionConversionFactor(360);
 
     }
     
@@ -178,6 +182,7 @@ public class Arm {
         }
     }
 
+    //fix 180 I put it there to make sure it was working and it isn't
     double[] calculateArmOutputs(double aAngle, double iAngle, double th, double ih) {
         // returns the motor speed
         // taking the current angles, and the goal angles for intake and arm, calc what dir we need to move.
@@ -215,9 +220,10 @@ public class Arm {
             } else if (aAngle > th+5) {
                 returningVal[0] = -ARM_MOTOR_SPEED;
             }
+
             
         }
-        // no break intake when moving from hybrid/ pickup position
+        // no break intake from hybrid/ pickup position
         if (aAngle > 290 & !(goalLevel == 1)) {
             returningVal[1] = 0;
         }
@@ -289,6 +295,8 @@ public class Arm {
         }
     }
 
+    void setCurrentLevel(int level){goalLevel = level;}
+
     void runArm(boolean hold) {
         if(!hold){
             // not holding, meaining we have dp movement or stick movement, so handle movement
@@ -302,14 +310,14 @@ public class Arm {
                 if (armResults[0] != 0) {
                     armMotor.set(armResults[0]);
                 } else {
-                    stopArm(true, false);
+                    armMotor.stopMotor();
                 }
 
                 // If we have somewhere to move the intake, move it else stop it
                 if (armResults[1] != 0) {
                     intakeArmMotor.set(armResults[1]);
                 } else {
-                    stopArm(false, true);
+                    intakeArmMotor.stopMotor();
                 }
 
                 // if both are zero, reset goal level because we're at the right location.
@@ -328,22 +336,9 @@ public class Arm {
     void holdPos() {
         if(getArmEncoder() > holdAng[0] & getArmEncoder() > 10){
             armMotor.set(-0.03);
-        } else if(getArmEncoder() < holdAng[0] & getArmEncoder() > 10) {
-            armMotor.set(0.03);
         }
         if(getIntakeEncoder() > holdAng[1]){
             intakeArmMotor.set(-0.04);
-        } else if(getIntakeEncoder() < holdAng[1]){
-            intakeArmMotor.set(0.04);
-        }
-    }
-    
-    void stopArm(boolean stopArm, boolean stopIntake) {
-        if (stopArm) {
-            armMotor.stopMotor();
-        }
-        if (stopIntake) {
-            intakeArmMotor.stopMotor();
         }
     }
 
