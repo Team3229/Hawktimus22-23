@@ -74,12 +74,15 @@ public class Arm {
     final double MID_CUBE = 220;
     final double HYBRID = 325; //DONE
     final double DOCK = 10; //DONE
+    final double HPSTATION = 219.19921875;
     final double IHIGH_CONE = 223.154296875; //DONE
     final double IHIGH_CUBE = 223.154296875;
     final double IMID_CONE = 220;
     final double IMID_CUBE = 220;
     final double IHYBRID = 113;
     final double IDOCK = 330; //DONE
+    final double IHPSTATION = 223.154296875;
+
 
     public double[] holdAng = {0,0};
     // Other Variables
@@ -177,6 +180,9 @@ public class Arm {
             case 4:
                  //dock
                  return calculateArmOutputs(armAngle, intakeAngle, DOCK, IDOCK);
+            case 5:
+                 // HP Station
+                 return calculateArmOutputs(armAngle, intakeAngle, HPSTATION, IHPSTATION);
             default:
                 return new double[] {};
         }
