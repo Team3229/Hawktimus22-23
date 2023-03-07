@@ -62,7 +62,7 @@ public class Controller {
     return ci;
   }
 
-  public ControllerInputs nullControls() {
+  public static ControllerInputs nullControls() {
     ControllerInputs ci = new ControllerInputs();
     ci.d_rightY = 0;
     ci.d_rightX = 0;

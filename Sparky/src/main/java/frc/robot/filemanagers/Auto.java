@@ -32,8 +32,6 @@ public class Auto {
 	public static final String heightMid = "mid";
 	public static final String heightLow = "low";
 
-	// 
-
 	// grab
 	public static final String grabTaxi = "taxi";
 	public static final String grab1 = "grab1";
@@ -44,6 +42,8 @@ public class Auto {
 	public static final String noSelection = "N/A";
 	
 	public boolean autoFinished = false;
+	public boolean inputsStarted = false;
+	public int cachedNulls = 0;
 
 	// Auto vars
 	private File cmdFile;
@@ -114,7 +114,7 @@ public class Auto {
 
 	public ControllerInputs readFile() {
 		// System.out.println("Reading auto file...");
-		ControllerInputs inputs = controller.nullControls();
+		ControllerInputs inputs = Controller.nullControls();
 		try {
 			inputs = (ControllerInputs) cmdRead.readObject();
 		} catch (IOException err) {
@@ -130,6 +130,9 @@ public class Auto {
 
 	// Done in Test part of Robot
 	public void setupRecording(String[] names) {
+
+		inputsStarted = false;
+
 		inputFileNames = names;
 		if (inputFileNames[1] == "N/A") {
 			cmdFile = new File(basePath + inputFileNames[2] + inputFileNames[3] + ".aut");
@@ -138,7 +141,6 @@ public class Auto {
 		} else {
 			cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[2] + ".aut");
 		}
-
 		
 		try {
 			if (!cmdFile.exists()) {
@@ -152,8 +154,47 @@ public class Auto {
 	}
 
 	public void record(ControllerInputs inputs) {
-		System.out.println("Writing auto file...");
+		if (inputsStarted) {
+			// Recording input
+			if (inputs == Controller.nullControls()) {
+				// cache a zeroed controller input
+				++cachedNulls;
+			} else if (cachedNulls > 0) {
+				// if we have controller input and cached null frames, record those frames
+				for (int x = 0; x <= cachedNulls; ++x) {
+					try {
+						System.out.println("Writing null frame...");
+						cmdWrite.writeObject(Controller.nullControls());
+					} catch(IOException err) {
+						System.out.println("Error writing null frame: " + err.toString());
+					}
+				}
+				cachedNulls = 0;
+			} else {
+				// Write as normal
+				try {
+					System.out.println("Writing auto file...");
+					cmdWrite.writeObject(inputs);
+				} catch(IOException err) {
+					System.out.println("Error writing auto file: " + err.toString());
+				}
+			}
+		} else if (inputs == Controller.nullControls()) {
+			// Waiting for not null input to start recording
+			System.out.println("Waiting for controller input...");
+		} else {
+			// Start recording input
+			System.out.println("Started recording");
+			inputsStarted = true;
+			try {
+				System.out.println("Writing auto file...");
+				cmdWrite.writeObject(inputs);
+			} catch(IOException err) {
+				System.out.println("Error writing auto file: " + err.toString());
+			}
+		}
 		try {
+			System.out.println("Writing auto file...");
 			cmdWrite.writeObject(inputs);
 		} catch(IOException err) {
 			System.out.println("Error writing auto file: " + err.toString());

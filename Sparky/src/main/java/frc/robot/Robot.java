@@ -115,7 +115,7 @@ public class Robot extends TimedRobot {
         System.out.println("Auto selected: " + selectedAuto);
         auto.setupPlayback(selectedAuto);
 
-        inputs = controller.nullControls();
+        inputs = Controller.nullControls();
 
         autoLevel = false;
 
@@ -132,7 +132,7 @@ public class Robot extends TimedRobot {
 
         if (auto.autoFinished) {
             chassis.stop();
-            inputs = controller.nullControls();
+            inputs = Controller.nullControls();
         } else {
             inputs = auto.readFile();
             RunControls();
@@ -150,7 +150,7 @@ public class Robot extends TimedRobot {
 
         chassis.configPIDS();
 
-        inputs = controller.nullControls();
+        inputs = Controller.nullControls();
 
         autoLevel = false;
         hold = false;
@@ -184,8 +184,9 @@ public class Robot extends TimedRobot {
     public void disabledInit() {
         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
 
-        if (robotState == "test") {
-
+        if (auto.cachedNulls > 0) {
+            System.out.println("Stripped " + auto.cachedNulls + " frames from recorded sequence");
+            auto.cachedNulls = 0;
         }
 
     }
@@ -205,7 +206,7 @@ public class Robot extends TimedRobot {
         selectedAuto[1] = auto.startPosDropdown.getSelected();
         selectedAuto[2] = auto.grabDropdown.getSelected();
         selectedAuto[3] = String.valueOf(dash.readBool("Charge Station"));
-        inputs = controller.nullControls();
+        inputs = Controller.nullControls();
         auto.setupRecording(selectedAuto);
 
         autoLevel = false;
