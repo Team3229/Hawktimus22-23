@@ -75,7 +75,6 @@ public class SwerveKinematics {
         backLeftModule.setState(states[2]);
         backRightModule.setState(states[3]);
 
-
     }
 
     public double[] encoderValues() {

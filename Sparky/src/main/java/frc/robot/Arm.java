@@ -7,6 +7,8 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.ColorMatch;
+import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.RelativeEncoder;
@@ -29,7 +31,6 @@ public class Arm {
     */
 
     // Objects
-    Dashboard dash;
     ColorSensorV3 colorSensor;
     CANSparkMax armMotor;
     CANSparkMax armMotor2;
@@ -63,7 +64,7 @@ public class Arm {
     final double ARM_PIVOT_HEIGHT = 0.9836;
     final double HAND_ROTATIONAL_SPEED = 0.28;
     final double ARM_MOTOR_SPEED = 0.3;
-    final double INTAKE_ARM_MOTOR_SPEED = 0.3;
+    final double INTAKE_ARM_MOTOR_SPEED = 0.25;
     final double INTAKE_ARM_SLOW_SPEED = 0.05;
     final double ARM_DEPLOY_SPEED = 1;
     final double ARM_SLOW_SPEED = 0.08;
@@ -81,6 +82,17 @@ public class Arm {
     final double IHYBRID = 113; //DONE
     final double IDOCK = 330; //DONE
 
+    final double CLOSED_COLOR_CONFIDENCE_THRESHOLD = 0.991;
+    final double OPEN_COLOR_CONFIDENCE_THRESHOLD = 0.9925;
+
+    // Colors
+    Color closedCubeColor = new Color(63, 126, 64);
+    Color closedConeColor = new Color(69, 127, 58);
+    Color openCubeColor = new Color(71, 121, 62);
+    Color openConeColor = new Color(75, 121, 57);
+    ColorMatch openColorMatcher = new ColorMatch();
+    ColorMatch closedColorMatcher = new ColorMatch();
+
     public double[] holdAng = {0,0};
     // Other Variables
     int goalLevel = 0;
@@ -93,7 +105,10 @@ public class Arm {
 
     Arm() {
 
-        dash = new Dashboard();
+        openColorMatcher.addColorMatch(openCubeColor);
+        openColorMatcher.addColorMatch(openConeColor);
+        closedColorMatcher.addColorMatch(openCubeColor);
+        closedColorMatcher.addColorMatch(openConeColor);
         
         // Arm
         armMotor = new CANSparkMax(ARM_ID, MotorType.kBrushless);
@@ -233,27 +248,64 @@ public class Arm {
 
     void grabObject(boolean cube){
         
-        if (cube) {
-            leftWheels.set(-HAND_ROTATIONAL_SPEED);
-            rightWheels.set(-HAND_ROTATIONAL_SPEED);
-
-        } else {
+        if (!cube) {
             offSolenoid.set(false);
             onSolenoid.set(true);
+            leftWheels.set(-HAND_ROTATIONAL_SPEED);
+            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+        } else {
+            offSolenoid.set(true);
+            onSolenoid.set(false);
+            leftWheels.set(-HAND_ROTATIONAL_SPEED);
+            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+        }
+    }
+
+    void grabObject(){
+
+        checkColor();
+        if (holdingCone) {
+            offSolenoid.set(false);
+            onSolenoid.set(true);
+            leftWheels.set(-HAND_ROTATIONAL_SPEED);
+            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+        } else {
+            offSolenoid.set(true);
+            onSolenoid.set(false);
             leftWheels.set(-HAND_ROTATIONAL_SPEED);
             rightWheels.set(-HAND_ROTATIONAL_SPEED);
         }
     }
 
     void placeObject(boolean cube){
-        checkColor();
-        if(cube){
+
+        if(!cube){
+            // move the pneumatic cone bits
+            leftWheels.set(HAND_ROTATIONAL_SPEED);
+            rightWheels.set(HAND_ROTATIONAL_SPEED);
+            offSolenoid.set(false);
+            onSolenoid.set(true);
+        } else {
             // holding a cube
             leftWheels.set(HAND_ROTATIONAL_SPEED);
             rightWheels.set(HAND_ROTATIONAL_SPEED);
-            
-        } else {
+            offSolenoid.set(true);
+            onSolenoid.set(false);  
+        }
+        
+    }
+    void placeObject(){
+        checkColor();
+        if(holdingCone){
             // move the pneumatic cone bits
+            leftWheels.set(HAND_ROTATIONAL_SPEED);
+            rightWheels.set(HAND_ROTATIONAL_SPEED);
+            offSolenoid.set(true);
+            onSolenoid.set(false);
+        } else {
+            // holding a cube
+            leftWheels.set(HAND_ROTATIONAL_SPEED);
+            rightWheels.set(HAND_ROTATIONAL_SPEED);
             offSolenoid.set(true);
             onSolenoid.set(false);
         }
@@ -283,15 +335,32 @@ public class Arm {
     }
     
     void checkColor() {
-        if (colorSensor.getColor() == Color.kYellow) {
-            holdingCone = true;
-            holdingCube = false;
-        } else if (colorSensor.getColor() == Color.kPurple) {
-            holdingCube = true;
-            holdingCone = false;
+        if (onSolenoid.get()) {
+            ColorMatchResult result = closedColorMatcher.matchClosestColor(colorSensor.getColor());
+            // SmartDashboard.putNumber("colorConfidence", result.confidence);
+            if (result.color == closedConeColor & result.confidence > CLOSED_COLOR_CONFIDENCE_THRESHOLD) {
+                holdingCone = true;
+                holdingCube = false;
+            } else if (result.color == closedCubeColor & result.confidence > CLOSED_COLOR_CONFIDENCE_THRESHOLD) {
+                holdingCube = true;
+                holdingCone = false;
+            } else {
+                holdingCone = false;
+                holdingCube = false;
+            }
         } else {
-            holdingCone = false;
-            holdingCube = false;
+            ColorMatchResult result = openColorMatcher.matchClosestColor(colorSensor.getColor());
+            // SmartDashboard.putNumber("colorConfidence", result.confidence);
+            if (result.color == openConeColor & result.confidence > OPEN_COLOR_CONFIDENCE_THRESHOLD) {
+                holdingCone = true;
+                holdingCube = false;
+            } else if (result.color == openCubeColor & result.confidence > OPEN_COLOR_CONFIDENCE_THRESHOLD) {
+                holdingCube = true;
+                holdingCone = false;
+            } else {
+                holdingCone = false;
+                holdingCube = false;
+            }
         }
     }
 

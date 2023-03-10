@@ -20,8 +20,8 @@ public class Limelight {
             {-7.24310+MIN_DISTANCE, -1.26019},
             {-7.24310+MIN_DISTANCE, -2.93659}
     };
-    private final double MOVE_SPEED = 0.3;
-    private final double ROTATE_SPEED = 0.02;
+    private final double MOVE_SPEED = -0.3;
+    private final double ROTATE_SPEED = -0.02;
     private final double MOVE_TOLERANCE = 0.03;
     private final double ROTATE_TOLERANCE = 0.015;
 
@@ -64,16 +64,12 @@ public class Limelight {
 
         double[] distanceToTag = getDistanceToTag();
 
-        if (id > 4) {
-            distanceToTag[2] = rotation.minus(Rotation2d.fromDegrees(180)).getDegrees();
-        } else {
-            distanceToTag[2] = rotation.getDegrees();
-        }
+        distanceToTag[2] = rotation.minus(Rotation2d.fromDegrees(180)).getDegrees();
 
         //Move tolerances
-        distanceToTag[0] = (Math.abs(distanceToTag[0]*MOVE_SPEED) < MOVE_TOLERANCE) ? 0 : distanceToTag[0];
-        distanceToTag[1] = (Math.abs(distanceToTag[1]*MOVE_SPEED) < MOVE_TOLERANCE) ? 0 : distanceToTag[1];
-        distanceToTag[2] = (Math.abs(distanceToTag[2]*ROTATE_SPEED) < ROTATE_TOLERANCE) ? 0 : distanceToTag[2];
+        distanceToTag[0] = (Math.abs(distanceToTag[0]*MOVE_SPEED) > MOVE_TOLERANCE) ? 0 : distanceToTag[0];
+        distanceToTag[1] = (Math.abs(distanceToTag[1]*MOVE_SPEED) > MOVE_TOLERANCE) ? 0 : distanceToTag[1];
+        distanceToTag[2] = (Math.abs(distanceToTag[2]*ROTATE_SPEED) > ROTATE_TOLERANCE) ? 0 : distanceToTag[2];
 
         return new double[] {distanceToTag[1]*MOVE_SPEED, distanceToTag[0]*MOVE_SPEED, distanceToTag[2]*ROTATE_SPEED};
     }

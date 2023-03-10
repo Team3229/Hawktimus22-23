@@ -10,6 +10,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.drivetrain.SwerveKinematics;
 import frc.robot.filemanagers.SwerveOffsets;
 import frc.robot.filemanagers.Auto;
@@ -21,7 +23,7 @@ import frc.robot.filemanagers.Auto;
  * project.
  */
 public class Robot extends TimedRobot {
-    private String[] selectedAuto = {"","","",""};
+    private String selectedAuto = "";
     private double[] encVals = {0,0,0,0};
     private boolean autoLevel = false;
 
@@ -40,12 +42,15 @@ public class Robot extends TimedRobot {
     SwerveOffsets swerveOffsets = new SwerveOffsets();
     Dashboard dash = new Dashboard();
 
+    public final SendableChooser <String> autoDropdown = new SendableChooser <> ();
+
     double bufferZone = 0.1;
     boolean controllerError = false;
     boolean hasMovedArmManuallyYet = false;
     boolean inAuto = false;
 
-    String robotState = "";
+    boolean manualIntakeToggle = true;
+    boolean lastPressedA = false;
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -53,15 +58,18 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        auto.setupDropdowns();
 
         chassis.navxGyro.zeroYaw();
         chassis.navxGyro.calibrate();
 
         auto.closeFile();
-        auto.setupDropdowns();
 
         chassis.configPIDS();
+
+        arm.pcm.enableCompressorDigital();
+
+        autoDropdown.setDefaultOption("Rolesville Auto", auto.kTestAuto);
+        SmartDashboard.putData("Auto Sequence", autoDropdown);
 
     }
 
@@ -75,18 +83,9 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
 
-        encVals = chassis.encoderValues();
-        dash.putNumber("frontLeft", encVals[0]);
-        dash.putNumber("frontRight", encVals[1]);
-        dash.putNumber("backLeft", encVals[2]);
-        dash.putNumber("backRight", encVals[3]);
-        arm.pcm.enableCompressorDigital();
+        updateDashboard();
+
         limelight.getValues();
-
-        dash.putNumber("intakeAngle", arm.getIntakeEncoder());
-        dash.putNumber("armAngle", arm.getArmEncoder());
-
-        dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
 
     }
 
@@ -103,16 +102,10 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
 
-        robotState = "autonomous";
-
         auto.closeFile();
         chassis.configPIDS();
 
-        selectedAuto[0] = auto.heightDropdown.getSelected();
-        selectedAuto[1] = auto.startPosDropdown.getSelected();
-        selectedAuto[2] = auto.grabDropdown.getSelected();
-        selectedAuto[3] = String.valueOf(dash.readBool("Charge Station"));
-        System.out.println("Auto selected: " + selectedAuto);
+        selectedAuto = autoDropdown.getSelected();
         auto.setupPlayback(selectedAuto);
 
         inputs = Controller.nullControls();
@@ -120,7 +113,6 @@ public class Robot extends TimedRobot {
         autoLevel = false;
 
         auto.autoFinished = false;
-        auto.autoStep = 1;
         hold = false;
         inAuto = true;
 
@@ -131,7 +123,6 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
 
         if (auto.autoFinished) {
-            chassis.stop();
             inputs = Controller.nullControls();
         } else {
             inputs = auto.readFile();
@@ -143,8 +134,6 @@ public class Robot extends TimedRobot {
     /** This function is called once when teleop is enabled. */
     @Override
     public void teleopInit() {
-
-        robotState = "teleop";
 
         auto.closeFile();
 
@@ -184,11 +173,6 @@ public class Robot extends TimedRobot {
     public void disabledInit() {
         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
 
-        if (auto.cachedNulls > 0) {
-            System.out.println("Stripped " + auto.cachedNulls + " frames from recorded sequence");
-            auto.cachedNulls = 0;
-        }
-
     }
 
     /** This function is called periodically when disabled. */
@@ -199,13 +183,8 @@ public class Robot extends TimedRobot {
     @Override
     public void testInit() {
 
-        robotState = "test";
-
         // record a new auto sequence
-        selectedAuto[0] = auto.heightDropdown.getSelected();
-        selectedAuto[1] = auto.startPosDropdown.getSelected();
-        selectedAuto[2] = auto.grabDropdown.getSelected();
-        selectedAuto[3] = String.valueOf(dash.readBool("Charge Station"));
+        selectedAuto = autoDropdown.getSelected();
         inputs = Controller.nullControls();
         auto.setupRecording(selectedAuto);
 
@@ -271,7 +250,7 @@ public class Robot extends TimedRobot {
 
 
         // toggle auto level (only for autonomous)
-        if (inputs.d_YButton && inAuto) {
+        if (inputs.d_YButton & inAuto) {
             autoLevel = true;
         }
 
@@ -339,7 +318,7 @@ public class Robot extends TimedRobot {
             // if we have no input, stop the motors.
             arm.armMotor.stopMotor();
             arm.intakeArmMotor.stopMotor();
-            if(!hold && arm.goalLevel == 0){
+            if(!hold & arm.goalLevel == 0){
                 // if we have no input, not already holding, and are not using dp to go somewhere, start holding
                 arm.holdAng[0] = arm.getArmEncoder();
                 arm.holdAng[1] = arm.getIntakeEncoder();
@@ -367,27 +346,56 @@ public class Robot extends TimedRobot {
                 arm.armMotor.set(inputs.m_leftY*0.2);
             }
         }
-        // grabbing cube
-        if (inputs.m_LeftBumper) {
+        
+        // grab something
+        if (inputs.m_LeftBumper & !manualIntakeToggle) {
+            // grab based on color sensor
+            arm.grabObject();
+        } else if (inputs.m_RightBumper & !manualIntakeToggle) {
+            // Place based on what we are holding, if no cube we do cone, etc.
+            arm.placeObject();
+        } else if (inputs.m_LeftBumper) {
             arm.grabObject(true);
         } else if (inputs.m_RightBumper) {
             arm.placeObject(false);
+            arm.grabObject(false);
         } else {
             arm.leftWheels.stopMotor();
             arm.rightWheels.stopMotor();
         }
 
+        // turn on manual mode
+        // if (inputs.m_AButton & !lastPressedA) {
+        //     manualIntakeToggle = !manualIntakeToggle;
+        //     lastPressedA = true;
+        // } else {
+        //     lastPressedA = false;
+        // }
+
         // Grabbing cone
-        if (inputs.m_LeftTriggerAxis > 0.1) {
+        if (inputs.m_LeftTriggerAxis > 0.1 & manualIntakeToggle) {
             arm.placeObject(true);
         } else {
-            if (inputs.m_RightTriggerAxis > 0.1) {
+            if (inputs.m_RightTriggerAxis > 0.1 & manualIntakeToggle) {
                 arm.grabObject(false);
+                arm.placeObject(false);
             }
         }
 
         // update arm
         arm.runArm(hold);
 
+    }
+
+    void updateDashboard() {
+        if (!DriverStation.isFMSAttached()) {
+            encVals = chassis.encoderValues();
+            dash.putNumber("frontLeft", encVals[0]);
+            dash.putNumber("frontRight", encVals[1]);
+            dash.putNumber("backLeft", encVals[2]);
+            dash.putNumber("backRight", encVals[3]);
+        }
+
+        dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
     }
 }
