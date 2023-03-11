@@ -26,6 +26,8 @@ public class Auto {
   static final boolean READ = false;
   static final String basePath = "/home/lvuser/";
   public final String kTestAuto = "rolesvilleAuto";
+  public final String kMidAuto = "midAuto";
+  public final String kLeftAuto = "leftAuto";
   final String kAutoroutineDefault = kTestAuto;
 
   public boolean autoFinished = false;

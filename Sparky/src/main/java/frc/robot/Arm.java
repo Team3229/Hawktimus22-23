@@ -119,7 +119,7 @@ public class Arm {
         armMotor2.setIdleMode(IdleMode.kBrake);
 
         // Intake
-        colorSensor = new ColorSensorV3(Port.kOnboard);
+        colorSensor = new ColorSensorV3(Port.kMXP);
         intakeArmMotor = new CANSparkMax(INTAKE_ARM_ID, MotorType.kBrushless);
         intakeArmMotor.setIdleMode(IdleMode.kBrake);
         leftWheels = new CANSparkMax(LEFT_HAND_ID, MotorType.kBrushless);
@@ -314,7 +314,7 @@ public class Arm {
 
     public double getArmEncoder() {
 
-        if (armEncoderBuffer++ > 5) {
+        if (armEncoderBuffer++ > 7) {
             armEncoderBuffer = 0;
             armEncoderValue = armEncoder.getAbsolutePosition();
         }
@@ -325,7 +325,7 @@ public class Arm {
 
     public double getIntakeEncoder() {
 
-        if (intakeEncoderBuffer++ > 5) {
+        if (intakeEncoderBuffer++ > 7) {
             intakeEncoderBuffer = 0;
             intakeEncoderValue = intakeArmEncoder.getAbsolutePosition();
         }

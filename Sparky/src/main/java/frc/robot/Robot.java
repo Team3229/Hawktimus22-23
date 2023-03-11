@@ -68,7 +68,9 @@ public class Robot extends TimedRobot {
 
         arm.pcm.enableCompressorDigital();
 
-        autoDropdown.setDefaultOption("Rolesville Auto", auto.kTestAuto);
+        autoDropdown.setDefaultOption("Right - High Cube - Taxi", auto.kTestAuto);
+        autoDropdown.addOption("Mid - High Cube - Engage", auto.kMidAuto);
+        autoDropdown.addOption("Left - High Cube - Taxi", auto.kLeftAuto);
         SmartDashboard.putData("Auto Sequence", autoDropdown);
 
     }

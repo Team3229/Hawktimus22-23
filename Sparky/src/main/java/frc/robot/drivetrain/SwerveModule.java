@@ -73,7 +73,7 @@ public class SwerveModule {
         encoder.configMagnetOffset(oofset);
 
     }
-    
+
     void configPID(double[] anglePID, double[] drivePID) {
         
         anglePIDController.setPID(anglePID[0],anglePID[1],anglePID[2]);
