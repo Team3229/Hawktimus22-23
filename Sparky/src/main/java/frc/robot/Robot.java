@@ -396,6 +396,7 @@ public class Robot extends TimedRobot {
             dash.putNumber("frontRight", encVals[1]);
             dash.putNumber("backLeft", encVals[2]);
             dash.putNumber("backRight", encVals[3]);
+            dash.putNumber("armAngle", arm.getArmEncoder());
         }
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));

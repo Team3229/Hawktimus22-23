@@ -56,13 +56,14 @@ public class Arm {
     final int INTAKE_ENCODER_ID = 20;
 
     // Encoder Offsets
-    final double ARM_ENCODER_OFFSET = 155.390625;
+    final double ARM_ENCODER_OFFSET = 195.29296875;
     final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants
     final double ARM_LENGTH = 0.8218;
     final double ARM_PIVOT_HEIGHT = 0.9836;
-    final double HAND_ROTATIONAL_SPEED = 0.28;
+    final double IN_HAND_ROTATIONAL_SPEED = -0.34;
+    final double OUT_HAND_ROTATIONAL_SPEED = 0.28;
     final double ARM_MOTOR_SPEED = 0.3;
     final double INTAKE_ARM_MOTOR_SPEED = 0.25;
     final double INTAKE_ARM_SLOW_SPEED = 0.05;
@@ -251,13 +252,13 @@ public class Arm {
         if (!cube) {
             offSolenoid.set(false);
             onSolenoid.set(true);
-            leftWheels.set(-HAND_ROTATIONAL_SPEED);
-            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+            leftWheels.set(IN_HAND_ROTATIONAL_SPEED);
+            rightWheels.set(IN_HAND_ROTATIONAL_SPEED);
         } else {
             offSolenoid.set(true);
             onSolenoid.set(false);
-            leftWheels.set(-HAND_ROTATIONAL_SPEED);
-            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+            leftWheels.set(IN_HAND_ROTATIONAL_SPEED);
+            rightWheels.set(IN_HAND_ROTATIONAL_SPEED);
         }
     }
 
@@ -267,13 +268,13 @@ public class Arm {
         if (holdingCone) {
             offSolenoid.set(false);
             onSolenoid.set(true);
-            leftWheels.set(-HAND_ROTATIONAL_SPEED);
-            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+            leftWheels.set(IN_HAND_ROTATIONAL_SPEED);
+            rightWheels.set(IN_HAND_ROTATIONAL_SPEED);
         } else {
             offSolenoid.set(true);
             onSolenoid.set(false);
-            leftWheels.set(-HAND_ROTATIONAL_SPEED);
-            rightWheels.set(-HAND_ROTATIONAL_SPEED);
+            leftWheels.set(IN_HAND_ROTATIONAL_SPEED);
+            rightWheels.set(IN_HAND_ROTATIONAL_SPEED);
         }
     }
 
@@ -281,14 +282,14 @@ public class Arm {
 
         if(!cube){
             // move the pneumatic cone bits
-            leftWheels.set(HAND_ROTATIONAL_SPEED);
-            rightWheels.set(HAND_ROTATIONAL_SPEED);
+            leftWheels.set(OUT_HAND_ROTATIONAL_SPEED);
+            rightWheels.set(OUT_HAND_ROTATIONAL_SPEED);
             offSolenoid.set(false);
             onSolenoid.set(true);
         } else {
             // holding a cube
-            leftWheels.set(HAND_ROTATIONAL_SPEED);
-            rightWheels.set(HAND_ROTATIONAL_SPEED);
+            leftWheels.set(OUT_HAND_ROTATIONAL_SPEED);
+            rightWheels.set(OUT_HAND_ROTATIONAL_SPEED);
             offSolenoid.set(true);
             onSolenoid.set(false);  
         }
@@ -298,14 +299,14 @@ public class Arm {
         checkColor();
         if(holdingCone){
             // move the pneumatic cone bits
-            leftWheels.set(HAND_ROTATIONAL_SPEED);
-            rightWheels.set(HAND_ROTATIONAL_SPEED);
+            leftWheels.set(OUT_HAND_ROTATIONAL_SPEED);
+            rightWheels.set(OUT_HAND_ROTATIONAL_SPEED);
             offSolenoid.set(true);
             onSolenoid.set(false);
         } else {
             // holding a cube
-            leftWheels.set(HAND_ROTATIONAL_SPEED);
-            rightWheels.set(HAND_ROTATIONAL_SPEED);
+            leftWheels.set(OUT_HAND_ROTATIONAL_SPEED);
+            rightWheels.set(OUT_HAND_ROTATIONAL_SPEED);
             offSolenoid.set(true);
             onSolenoid.set(false);
         }
