@@ -3,6 +3,7 @@
 package frc.robot;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTable;
@@ -51,7 +52,7 @@ public class Limelight {
     }
 
     double[] getDistanceToTag() {
-        // Returns the distance to the closest tag in x, y (meters), z(rotation)
+        // Returns the distance to the targeted tag in x, y (meters), z(rotation)
         if (id != -1) {
             return new double[] {(tagPositions[id-1][0] - location.getX()), tagPositions[id-1][1] - location.getY(), 0};
         } else {
@@ -59,12 +60,17 @@ public class Limelight {
         }
     }
 
-    double[] alignWithTag(boolean cube) {
+    double[] alignWithTag(double currentChassisAngle, Alliance alliance) {
         // MIN_DISTANCE meters is the minimum distance to be, that's how far from the tag we want to be.
 
         double[] distanceToTag = getDistanceToTag();
 
-        distanceToTag[2] = rotation.minus(Rotation2d.fromDegrees(180)).getDegrees();
+        if (alliance == Alliance.Red) {
+            distanceToTag[0] = -distanceToTag[0];
+            distanceToTag[1] = -distanceToTag[1];
+        }
+        
+        distanceToTag[2] = rotation.minus(Rotation2d.fromDegrees(currentChassisAngle)).getDegrees();
 
         //Move tolerances
         distanceToTag[0] = (Math.abs(distanceToTag[0]*MOVE_SPEED) > MOVE_TOLERANCE) ? 0 : distanceToTag[0];

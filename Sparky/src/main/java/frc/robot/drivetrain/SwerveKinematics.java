@@ -24,10 +24,8 @@ public class SwerveKinematics {
     public double robotRotation = 0;
     SwerveOffsets offset;
 
-    //double[] anglePID = {0.003, 0.0002, 0.00001};
-    //double[] drivePID = {0, 0, 0};
-    double[] anglePID = {0.003,0.0002,0.00001};
-    double[] drivePID = {0,0,0};
+    double[] anglePID = {0.003, 0.0002, 0.00001};
+    double[] drivePIDFF = {0, 0, 0, 0};
 
     final double L = 0.594;
     final double W = 0.594;
@@ -36,17 +34,16 @@ public class SwerveKinematics {
 
     double[] encoderValues = {0, 0, 0, 0};
 
-    boolean rotating = false;
     double[] initialOffsets;
 
     public SwerveKinematics() {
 
         offset = new SwerveOffsets();
 
-        frontLeftModule = new SwerveModule(2, 1, 9, anglePID, drivePID, L, W, false);
-        frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePID, L, -W, false);
-        backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePID, -L, W, false);
-        backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePID, -L, -W, true);
+        frontLeftModule = new SwerveModule(2, 1, 9, anglePID, drivePIDFF, L, W, false);
+        frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePIDFF, L, -W, false);
+        backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePIDFF, -L, W, false);
+        backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePIDFF, -L, -W, true);
 
         initialOffsets = offset.readFiles();
         frontLeftModule.configEncoder(initialOffsets[0]);
@@ -62,8 +59,6 @@ public class SwerveKinematics {
 
     public void drive(double X, double Y, double Z) {
 
-        rotating = Math.abs(Z) > 0;
-
         robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
         speeds = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxRadiansPerSecond, Rotation2d.fromDegrees(robotRotation));
         states = kinematicsObject.toSwerveModuleStates(speeds);
@@ -78,10 +73,10 @@ public class SwerveKinematics {
 
     public double[] encoderValues() {
 
-        encoderValues[0] = frontLeftModule.getEncoder();
-        encoderValues[1] = frontRightModule.getEncoder();
-        encoderValues[2] = backLeftModule.getEncoder();
-        encoderValues[3] = backRightModule.getEncoder();
+        encoderValues[0] = frontLeftModule.getCANCoder();
+        encoderValues[1] = frontRightModule.getCANCoder();
+        encoderValues[2] = backLeftModule.getCANCoder();
+        encoderValues[3] = backRightModule.getCANCoder();
         robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
         return encoderValues;
 
@@ -89,15 +84,15 @@ public class SwerveKinematics {
 
     public void configPIDS() {
 
-        frontLeftModule.configPID(anglePID, drivePID);
-        frontRightModule.configPID(anglePID, drivePID);
-        backLeftModule.configPID(anglePID, drivePID);
-        backRightModule.configPID(anglePID, drivePID);
+        frontLeftModule.configPID(anglePID, drivePIDFF);
+        frontRightModule.configPID(anglePID, drivePIDFF);
+        backLeftModule.configPID(anglePID, drivePIDFF);
+        backRightModule.configPID(anglePID, drivePIDFF);
     }
 
     public void fixOffsets() {
 
-        double[] offsets = offset.calculateOffsets(frontLeftModule.getEncoder(), frontRightModule.getEncoder(), backLeftModule.getEncoder(), backRightModule.getEncoder());
+        double[] offsets = offset.calculateOffsets(frontLeftModule.getCANCoder(), frontRightModule.getCANCoder(), backLeftModule.getCANCoder(), backRightModule.getCANCoder());
         frontLeftModule.configEncoder(offsets[0]);
         frontRightModule.configEncoder(offsets[1]);
         backLeftModule.configEncoder(offsets[2]);

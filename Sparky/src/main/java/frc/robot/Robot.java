@@ -268,7 +268,7 @@ public class Robot extends TimedRobot {
 
         // Line up with nearest cube grid
         if (inputs.d_XButton) {
-            double[] speeds = limelight.alignWithTag(true);
+            double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), DriverStation.getAlliance());
             chassis.drive(speeds[0], speeds[1], speeds[2]);
         }
 
