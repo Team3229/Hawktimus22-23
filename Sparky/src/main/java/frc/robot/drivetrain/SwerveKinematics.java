@@ -24,9 +24,9 @@ public class SwerveKinematics {
     public double robotRotation = 0;
     SwerveOffsets offset;
     // double[] anglePID = {0.003, 0.0002, 0.00001};
-    
-    double[] anglePID = {0.003, 0.0002, 0.00001};
-    double[] drivePIDFF = {0, 0, 0, 0};
+
+    public double[] anglePID = {0.06, 0, 0};
+    public double[] drivePIDFF = {0, 0, 0, 0};
 
     final double L = 0.594;
     final double W = 0.594;

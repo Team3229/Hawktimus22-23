@@ -75,6 +75,11 @@ public class Robot extends TimedRobot {
 
         chassis.configEncoders();
 
+        SmartDashboard.putNumber("kP", 0);
+        SmartDashboard.putNumber("kI", 0);
+        SmartDashboard.putNumber("kD", 0);
+        SmartDashboard.putNumber("kFF", 0);
+
     }
 
     /**
@@ -141,6 +146,10 @@ public class Robot extends TimedRobot {
 
         auto.closeFile();
 
+        chassis.drivePIDFF[0] = SmartDashboard.getNumber("kP", 0);
+        chassis.drivePIDFF[1] = SmartDashboard.getNumber("kI", 0);
+        chassis.drivePIDFF[2] = SmartDashboard.getNumber("kD", 0);
+        chassis.drivePIDFF[3] = SmartDashboard.getNumber("kFF", 0);
         chassis.configPIDS();
 
         inputs = Controller.nullControls();
@@ -245,7 +254,7 @@ public class Robot extends TimedRobot {
 
                 if (inputs.d_POV != -1) {
                     dp = utils.getDirectionalPadValues(inputs.d_POV);
-                    chassis.drive(dp[0] / 2, dp[1] / 2, inputs.d_rightX);
+                    chassis.drive(dp[0] / 3, dp[1] / 3, inputs.d_rightX);
                 } else if (Math.abs(inputs.d_rightX) > 0){
                     chassis.drive(0, 0, inputs.d_rightX);
                 } else {
@@ -405,6 +414,5 @@ public class Robot extends TimedRobot {
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
 
-        
     }
 }

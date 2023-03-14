@@ -60,6 +60,8 @@ public class SwerveModule {
         angleMotor.setInverted(false);
         angleEncoder = angleMotor.getEncoder();
 
+        driveEncoder.setVelocityConversionFactor(1/8.14);
+
         anglePIDController = angleMotor.getPIDController();
         drivePIDController = driveMotor.getPIDController();
         anglePIDController.setSmartMotionAccelStrategy(AccelStrategy.kTrapezoidal, 0);
@@ -100,12 +102,10 @@ public class SwerveModule {
 
     void setState(SwerveModuleState moduleSta) {
 
-        driveRPM = driveEncoder.getVelocity();
-
         moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(MathUtil.inputModulus(angleEncoder.getPosition(), 0, 360)));
         
-        drivePIDController.setReference(Utils.convertMpsToRpm(moduleState.speedMetersPerSecond, wheelRadius), ControlType.kVelocity);
-        // driveMotor.set(moduleState.speedMetersPerSecond);
+        // drivePIDController.setReference(Utils.convertMpsToRpm(moduleState.speedMetersPerSecond, wheelRadius), ControlType.kVelocity);
+        driveMotor.set(moduleState.speedMetersPerSecond);
         anglePIDController.setReference(moduleState.angle.getDegrees(), ControlType.kPosition);
 
     }
@@ -124,7 +124,7 @@ public class SwerveModule {
     void stop() {
 
         angleMotor.stopMotor();
-        drivePIDController.setReference(0, ControlType.kVelocity);
+        driveMotor.stopMotor();
 
     }
     
