@@ -66,12 +66,14 @@ public class Robot extends TimedRobot {
 
         chassis.configPIDS();
 
-        arm.pcm.enableCompressorDigital();
+        arm.pcm.disableCompressor();
 
         autoDropdown.setDefaultOption("Right - High Cube - Taxi", auto.kTestAuto);
         autoDropdown.addOption("Mid - High Cube - Engage", auto.kMidAuto);
         autoDropdown.addOption("Left - High Cube - Taxi", auto.kLeftAuto);
         SmartDashboard.putData("Auto Sequence", autoDropdown);
+
+        chassis.configEncoders();
 
     }
 
@@ -155,9 +157,11 @@ public class Robot extends TimedRobot {
 
         arm.goalLevel = 0;
 
-        arm.pcm.enableCompressorDigital();
+        arm.pcm.disableCompressor();
 
         hasMovedArmManuallyYet = false;
+
+        chassis.configEncoders();
 
     }
     
@@ -400,5 +404,7 @@ public class Robot extends TimedRobot {
         }
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
+
+        
     }
 }

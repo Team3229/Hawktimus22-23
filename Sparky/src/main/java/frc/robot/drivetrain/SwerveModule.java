@@ -43,9 +43,9 @@ public class SwerveModule {
     double encoderOffset = 0;
     
     // RPM/sec
-    final double angleMaxAccel = 1;
+    final double angleMaxAccel = 99999;
     // RPM
-    final double angleMaxVel = 1;
+    final double angleMaxVel = 99999;
 
     final double wheelRadius = 0.0508;
 
@@ -58,8 +58,10 @@ public class SwerveModule {
         canCoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
         driveEncoder = driveMotor.getEncoder();
         angleMotor.setInverted(false);
+        angleEncoder = angleMotor.getEncoder();
 
         anglePIDController = angleMotor.getPIDController();
+        drivePIDController = driveMotor.getPIDController();
         anglePIDController.setSmartMotionAccelStrategy(AccelStrategy.kTrapezoidal, 0);
         anglePIDController.setSmartMotionMaxAccel(angleMaxAccel, 0);
         anglePIDController.setSmartMotionMaxVelocity(angleMaxVel, 0);
@@ -78,7 +80,7 @@ public class SwerveModule {
         canCoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         canCoder.configMagnetOffset(oofset);
 
-        angleEncoder.setPositionConversionFactor(360);
+        angleEncoder.setPositionConversionFactor(360/12.8);
         angleEncoder.setPosition(getCANCoder());
 
     }
@@ -94,14 +96,13 @@ public class SwerveModule {
         anglePIDController.setPositionPIDWrappingMinInput(0);
         anglePIDController.setPositionPIDWrappingMaxInput(360);
         anglePIDController.setPositionPIDWrappingEnabled(true);
-
     }
 
     void setState(SwerveModuleState moduleSta) {
 
         driveRPM = driveEncoder.getVelocity();
 
-        moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(getCANCoder()));
+        moduleState = SwerveModuleState.optimize(moduleSta, Rotation2d.fromDegrees(MathUtil.inputModulus(angleEncoder.getPosition(), 0, 360)));
         
         drivePIDController.setReference(Utils.convertMpsToRpm(moduleState.speedMetersPerSecond, wheelRadius), ControlType.kVelocity);
         // driveMotor.set(moduleState.speedMetersPerSecond);

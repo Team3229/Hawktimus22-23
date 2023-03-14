@@ -23,13 +23,14 @@ public class SwerveKinematics {
     SwerveModuleState[] states;
     public double robotRotation = 0;
     SwerveOffsets offset;
-
+    // double[] anglePID = {0.003, 0.0002, 0.00001};
+    
     double[] anglePID = {0.003, 0.0002, 0.00001};
     double[] drivePIDFF = {0, 0, 0, 0};
 
     final double L = 0.594;
     final double W = 0.594;
-    final double maxSpeedMetersPerSecond = 7;
+    final double maxSpeedMetersPerSecond = 10.5;
     double maxRadiansPerSecond = 0.75;
 
     double[] encoderValues = {0, 0, 0, 0};
@@ -98,6 +99,14 @@ public class SwerveKinematics {
         backLeftModule.configEncoder(offsets[2]);
         backRightModule.configEncoder(offsets[3]);
 
+    }
+
+    public void configEncoders() {
+        double[] offsets = offset.readFiles();
+        frontLeftModule.configEncoder(offsets[0]);
+        frontRightModule.configEncoder(offsets[1]);
+        backLeftModule.configEncoder(offsets[2]);
+        backRightModule.configEncoder(offsets[3]);
     }
 
     public void stop() {
