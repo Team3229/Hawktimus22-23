@@ -8,7 +8,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
-import frc.robot.filemanagers.PID;
 import edu.wpi.first.math.MathUtil;
 import frc.robot.filemanagers.SwerveOffsets;
 
@@ -27,8 +26,8 @@ public class SwerveKinematics {
 
     //double[] anglePID = {0.003, 0.0002, 0.00001};
     //double[] drivePID = {0, 0, 0};
-    public PID anglePID = new PID("anglePID.txt", new double[] {0.003,0.0002,0.00001});
-    public PID drivePID = new PID("drivePID.txt", new double[] {0,0,0});
+    double[] anglePID = {0.003,0.0002,0.00001};
+    double[] drivePID = {0,0,0};
 
     final double L = 0.594;
     final double W = 0.594;
@@ -44,10 +43,10 @@ public class SwerveKinematics {
 
         offset = new SwerveOffsets();
 
-        frontLeftModule = new SwerveModule(2, 1, 9, anglePID.pidValues, drivePID.pidValues, L, W, false);
-        frontRightModule = new SwerveModule(5, 6, 10, anglePID.pidValues, drivePID.pidValues,L, -W, false);
-        backLeftModule = new SwerveModule(3, 4, 11, anglePID.pidValues, drivePID.pidValues, -L, W, false);
-        backRightModule = new SwerveModule(7, 8, 12, anglePID.pidValues, drivePID.pidValues, -L, -W, true);
+        frontLeftModule = new SwerveModule(2, 1, 9, anglePID, drivePID, L, W, false);
+        frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePID, L, -W, false);
+        backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePID, -L, W, false);
+        backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePID, -L, -W, true);
 
         initialOffsets = offset.readFiles();
         frontLeftModule.configEncoder(initialOffsets[0]);
@@ -90,10 +89,10 @@ public class SwerveKinematics {
 
     public void configPIDS() {
 
-        frontLeftModule.configPID(anglePID.pidValues, drivePID.pidValues);
-        frontRightModule.configPID(anglePID.pidValues, drivePID.pidValues);
-        backLeftModule.configPID(anglePID.pidValues, drivePID.pidValues);
-        backRightModule.configPID(anglePID.pidValues, drivePID.pidValues);
+        frontLeftModule.configPID(anglePID, drivePID);
+        frontRightModule.configPID(anglePID, drivePID);
+        backLeftModule.configPID(anglePID, drivePID);
+        backRightModule.configPID(anglePID, drivePID);
     }
 
     public void fixOffsets() {
