@@ -62,8 +62,8 @@ public class Arm {
     // Constants
     final double ARM_LENGTH = 0.8218;
     final double ARM_PIVOT_HEIGHT = 0.9836;
-    final double IN_HAND_ROTATIONAL_SPEED = -0.34;
-    final double OUT_HAND_ROTATIONAL_SPEED = 0.28;
+    final double IN_HAND_ROTATIONAL_SPEED = -0.2;
+    final double OUT_HAND_ROTATIONAL_SPEED = 0.2;
     final double ARM_MOTOR_SPEED = 0.3;
     final double INTAKE_ARM_MOTOR_SPEED = 0.25;
     final double INTAKE_ARM_SLOW_SPEED = 0.05;

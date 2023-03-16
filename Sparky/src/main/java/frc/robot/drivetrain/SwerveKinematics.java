@@ -24,14 +24,17 @@ public class SwerveKinematics {
     public double robotRotation = 0;
     SwerveOffsets offset;
     // double[] anglePID = {0.003, 0.0002, 0.00001};
+    // kP = 0.06
 
-    public double[] anglePID = {0.06, 0, 0};
+    public double[] anglePID = {0.01, 0, 0};
     public double[] drivePIDFF = {0, 0, 0, 0};
 
     final double L = 0.594;
     final double W = 0.594;
-    final double maxSpeedMetersPerSecond = 10.5;
+    final double maxSpeedMetersPerSecond = 1;
     double maxRadiansPerSecond = 0.75;
+
+    public boolean relativeMode = false;
 
     double[] encoderValues = {0, 0, 0, 0};
 
@@ -60,7 +63,11 @@ public class SwerveKinematics {
 
     public void drive(double X, double Y, double Z) {
 
-        robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
+        if (relativeMode) {
+            robotRotation = 180;
+        } else {
+            robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
+        }
         speeds = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxRadiansPerSecond, Rotation2d.fromDegrees(robotRotation));
         states = kinematicsObject.toSwerveModuleStates(speeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(states, maxSpeedMetersPerSecond);

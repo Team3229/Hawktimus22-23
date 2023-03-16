@@ -24,7 +24,7 @@ import frc.robot.filemanagers.Auto;
  */
 public class Robot extends TimedRobot {
     private String selectedAuto = "";
-    private double[] encVals = {0,0,0,0};
+    // private double[] encVals = {0,0,0,0};
     private boolean autoLevel = false;
 
     boolean hold = false;
@@ -66,8 +66,6 @@ public class Robot extends TimedRobot {
 
         chassis.configPIDS();
 
-        arm.pcm.disableCompressor();
-
         autoDropdown.setDefaultOption("Right - High Cube - Taxi", auto.kTestAuto);
         autoDropdown.addOption("Mid - High Cube - Engage", auto.kMidAuto);
         autoDropdown.addOption("Left - High Cube - Taxi", auto.kLeftAuto);
@@ -75,10 +73,9 @@ public class Robot extends TimedRobot {
 
         chassis.configEncoders();
 
-        SmartDashboard.putNumber("kP", 0);
-        SmartDashboard.putNumber("kI", 0);
-        SmartDashboard.putNumber("kD", 0);
-        SmartDashboard.putNumber("kFF", 0);
+        SmartDashboard.putNumber("kP", chassis.anglePID[0]);
+        SmartDashboard.putNumber("kI", chassis.anglePID[1]);
+        SmartDashboard.putNumber("kD", chassis.anglePID[2]);
 
     }
 
@@ -146,12 +143,6 @@ public class Robot extends TimedRobot {
 
         auto.closeFile();
 
-        chassis.drivePIDFF[0] = SmartDashboard.getNumber("kP", 0);
-        chassis.drivePIDFF[1] = SmartDashboard.getNumber("kI", 0);
-        chassis.drivePIDFF[2] = SmartDashboard.getNumber("kD", 0);
-        chassis.drivePIDFF[3] = SmartDashboard.getNumber("kFF", 0);
-        chassis.configPIDS();
-
         inputs = Controller.nullControls();
 
         autoLevel = false;
@@ -166,9 +157,13 @@ public class Robot extends TimedRobot {
 
         arm.goalLevel = 0;
 
-        arm.pcm.disableCompressor();
-
         hasMovedArmManuallyYet = false;
+
+        chassis.anglePID[0] = SmartDashboard.getNumber("kP", 0);
+        chassis.anglePID[1] = SmartDashboard.getNumber("kI", 0);
+        chassis.anglePID[2] = SmartDashboard.getNumber("kD", 0);
+
+        chassis.configPIDS();
 
         chassis.configEncoders();
 
@@ -248,7 +243,13 @@ public class Robot extends TimedRobot {
             chassis.stop();
         } else {
             if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0) {
-                chassis.drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+                if (inputs.d_LeftTriggerAxis > 0 & inputs.d_RightTriggerAxis > 0) {
+                    chassis.drive(inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2);
+                } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
+                    chassis.drive(inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4);
+                } else {
+                    chassis.drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+                }
             } else {
                 // D-Pad driving slowly
 
@@ -261,6 +262,9 @@ public class Robot extends TimedRobot {
                     chassis.stop();
                 }
             }
+
+            chassis.relativeMode = inputs.d_LeftBumper;
+
         }
 
 
@@ -403,14 +407,15 @@ public class Robot extends TimedRobot {
     }
 
     void updateDashboard() {
-        if (!DriverStation.isFMSAttached()) {
-            encVals = chassis.encoderValues();
-            dash.putNumber("frontLeft", encVals[0]);
-            dash.putNumber("frontRight", encVals[1]);
-            dash.putNumber("backLeft", encVals[2]);
-            dash.putNumber("backRight", encVals[3]);
-            dash.putNumber("armAngle", arm.getArmEncoder());
-        }
+
+        // if (!DriverStation.isFMSAttached()) {
+        //     encVals = chassis.encoderValues();
+        //     dash.putNumber("frontLeft", encVals[0]);
+        //     dash.putNumber("frontRight", encVals[1]);
+        //     dash.putNumber("backLeft", encVals[2]);
+        //     dash.putNumber("backRight", encVals[3]);
+        //     dash.putNumber("armAngle", arm.getArmEncoder());
+        // }
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
 

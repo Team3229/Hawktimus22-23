@@ -18,7 +18,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import frc.robot.Utils;
+// import frc.robot.Utils;
 
 public class SwerveModule {
 
@@ -43,7 +43,7 @@ public class SwerveModule {
     double encoderOffset = 0;
     
     // RPM/sec
-    final double angleMaxAccel = 99999;
+    final double angleMaxAccel = 1;
     // RPM
     final double angleMaxVel = 99999;
 
@@ -60,8 +60,6 @@ public class SwerveModule {
         angleMotor.setInverted(false);
         angleEncoder = angleMotor.getEncoder();
 
-        driveEncoder.setVelocityConversionFactor(1/8.14);
-
         anglePIDController = angleMotor.getPIDController();
         drivePIDController = driveMotor.getPIDController();
         anglePIDController.setSmartMotionAccelStrategy(AccelStrategy.kTrapezoidal, 0);
@@ -71,8 +69,8 @@ public class SwerveModule {
         location = new Translation2d(X/2, Y/2);
     
         driveMotor.setInverted(invertMotor);
-
         driveMotor.setIdleMode(IdleMode.kBrake);
+        driveMotor.setOpenLoopRampRate(0.5);
 
     }
 
@@ -112,10 +110,7 @@ public class SwerveModule {
 
     double getCANCoder() {
 
-        if (encoderBuffer++ > 5) {
-            encoderBuffer = 0;
-            encoderValue = canCoder.getAbsolutePosition();
-        }
+        encoderValue = canCoder.getAbsolutePosition();
 
         return MathUtil.inputModulus(encoderValue, 0, 360);
 
