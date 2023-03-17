@@ -62,7 +62,7 @@ public class Arm {
     // Constants
     final double ARM_LENGTH = 0.8218;
     final double ARM_PIVOT_HEIGHT = 0.9836;
-    final double IN_HAND_ROTATIONAL_SPEED = -0.2;
+    final double IN_HAND_ROTATIONAL_SPEED = -0.4;
     final double OUT_HAND_ROTATIONAL_SPEED = 0.2;
     final double ARM_MOTOR_SPEED = 0.3;
     final double INTAKE_ARM_MOTOR_SPEED = 0.25;
@@ -131,7 +131,7 @@ public class Arm {
         // Pnuematics
         pcm = new PneumaticsControlModule();
         compressor = new Compressor(1, PneumaticsModuleType.CTREPCM);
-        onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 0);
+        onSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 5);
         offSolenoid = new Solenoid(PneumaticsModuleType.CTREPCM, 4);
 
         pcm.clearAllStickyFaults();

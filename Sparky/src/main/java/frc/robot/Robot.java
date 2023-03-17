@@ -204,6 +204,7 @@ public class Robot extends TimedRobot {
 
     }
 
+    //Nathan D was here
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {
@@ -408,14 +409,14 @@ public class Robot extends TimedRobot {
 
     void updateDashboard() {
 
-        // if (!DriverStation.isFMSAttached()) {
-        //     encVals = chassis.encoderValues();
-        //     dash.putNumber("frontLeft", encVals[0]);
-        //     dash.putNumber("frontRight", encVals[1]);
-        //     dash.putNumber("backLeft", encVals[2]);
-        //     dash.putNumber("backRight", encVals[3]);
-        //     dash.putNumber("armAngle", arm.getArmEncoder());
-        // }
+        if (!DriverStation.isFMSAttached()) {
+           double[] encVals = chassis.encoderValues();
+            dash.putNumber("frontLeft", encVals[0]);
+            dash.putNumber("frontRight", encVals[1]);
+            dash.putNumber("backLeft", encVals[2]);
+            dash.putNumber("backRight", encVals[3]);
+            dash.putNumber("armAngle", arm.getArmEncoder());
+        }
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
 
