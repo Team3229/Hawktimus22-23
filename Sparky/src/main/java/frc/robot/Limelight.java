@@ -21,7 +21,7 @@ public class Limelight {
             {-7.24310+MIN_DISTANCE, -1.26019},
             {-7.24310+MIN_DISTANCE, -2.93659}
     };
-    private final double MOVE_SPEED = -0.3;
+    private final double MOVE_SPEED = 0.3;
     private final double ROTATE_SPEED = -0.02;
     private final double MOVE_TOLERANCE = 0.03;
     private final double ROTATE_TOLERANCE = 0.015;
@@ -65,7 +65,7 @@ public class Limelight {
 
         double[] distanceToTag = getDistanceToTag();
 
-        if (alliance == Alliance.Red) {
+        if (alliance == Alliance.Blue) {
             distanceToTag[0] = -distanceToTag[0];
             distanceToTag[1] = -distanceToTag[1];
         }

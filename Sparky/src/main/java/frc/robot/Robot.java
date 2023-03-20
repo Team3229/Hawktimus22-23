@@ -9,6 +9,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -23,8 +24,8 @@ import frc.robot.filemanagers.Auto;
  * project.
  */
 public class Robot extends TimedRobot {
+    
     private String selectedAuto = "";
-    // private double[] encVals = {0,0,0,0};
     private boolean autoLevel = false;
 
     boolean hold = false;
@@ -48,6 +49,7 @@ public class Robot extends TimedRobot {
     boolean controllerError = false;
     boolean hasMovedArmManuallyYet = false;
     boolean inAuto = false;
+    boolean onChargeStation = false;
 
     boolean manualIntakeToggle = true;
     boolean lastPressedA = false;
@@ -76,6 +78,9 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("kP", chassis.anglePID[0]);
         SmartDashboard.putNumber("kI", chassis.anglePID[1]);
         SmartDashboard.putNumber("kD", chassis.anglePID[2]);
+
+        // Default LED pattern
+        LED.setColor(LED.MULTICOLOR_twinklePurpleGold);
 
     }
 
@@ -121,6 +126,8 @@ public class Robot extends TimedRobot {
         auto.autoFinished = false;
         hold = false;
         inAuto = true;
+
+        LED.setColor(LED.MULTICOLOR_sinelonPurpleGold);
 
     }
 
@@ -225,19 +232,22 @@ public class Robot extends TimedRobot {
 
     void RunControls() {
 
+        if (DriverStation.getMatchTime() < 31 & !inAuto) {
+            LED.setColor(LED.MULTICOLOR_twinklePurpleGold);
+        }
+        if (DriverStation.getAlliance() == Alliance.Blue) {
+            LED.setColor(LED.FIXEDPATTERN_waveOcean);
+        }
+        if (DriverStation.getAlliance() == Alliance.Red) {
+            LED.setColor(LED.FIXEDPATTERN_waveLava);
+        }
+
         ExecuteDriveControls();
         ExecuteManipControls();
+        
     }
 
     void ExecuteDriveControls() {
-
-        //Warn driver they are going too fast on swerve
-        if (RobotController.getBatteryVoltage() < 9) {
-            controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.3);
-        } else {
-            controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-        }
-
 
         // Drive swerve chassis with joystick deadbands
         if (!DriverStation.isJoystickConnected(0)) {
@@ -246,8 +256,12 @@ public class Robot extends TimedRobot {
             if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0) {
                 if (inputs.d_LeftTriggerAxis > 0 & inputs.d_RightTriggerAxis > 0) {
                     chassis.drive(inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2);
+                    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.4);
+                    LED.setColor(LED.SOLID_red);
                 } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
                     chassis.drive(inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4);
+                    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
+                    LED.setColor(LED.SOLID_redOrange);
                 } else {
                     chassis.drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
                 }
@@ -270,13 +284,17 @@ public class Robot extends TimedRobot {
 
 
         // toggle auto level (only for autonomous)
-        if (inputs.d_YButton & inAuto) {
+        if (inputs.d_StartButton & inAuto) {
             autoLevel = true;
+        }
+
+        if ((chassis.navxGyro.getPitch() <= -3) & onChargeStation == false & inAuto) {
+            onChargeStation = true;
         }
 
         // if we're auto leveling, move to work
         if (autoLevel) {
-            chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getRoll()), 0);
+            chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getPitch(), onChargeStation), 0);
         }
 
         // Reset field orientation
@@ -377,7 +395,6 @@ public class Robot extends TimedRobot {
         } else if (inputs.m_LeftBumper) {
             arm.grabObject(true);
         } else if (inputs.m_RightBumper) {
-            arm.placeObject(false);
             arm.grabObject(false);
         } else {
             arm.leftWheels.stopMotor();
@@ -395,11 +412,22 @@ public class Robot extends TimedRobot {
         // Grabbing cone
         if (inputs.m_LeftTriggerAxis > 0.1 & manualIntakeToggle) {
             arm.placeObject(true);
+            LED.setColor(LED.SOLID_gold);
         } else {
             if (inputs.m_RightTriggerAxis > 0.1 & manualIntakeToggle) {
-                arm.grabObject(false);
                 arm.placeObject(false);
+                LED.setColor(LED.SOLID_gold);
             }
+        }
+
+        // Request Cube
+        if (inputs.m_AButton) {
+            LED.setColor(LED.COLORONEPATTERN_strobePurple);
+        }
+        
+        // Request Cone
+        if (inputs.m_BButton) {
+            LED.setColor(LED.FIXEDPATTERN_strobeGold);
         }
 
         // update arm
@@ -409,13 +437,12 @@ public class Robot extends TimedRobot {
 
     void updateDashboard() {
 
-        if (!DriverStation.isFMSAttached()) {
+        if (!DriverStation.isFMSAttached() | DriverStation.isDisabled()) {
            double[] encVals = chassis.encoderValues();
             dash.putNumber("frontLeft", encVals[0]);
             dash.putNumber("frontRight", encVals[1]);
             dash.putNumber("backLeft", encVals[2]);
             dash.putNumber("backRight", encVals[3]);
-            dash.putNumber("armAngle", arm.getArmEncoder());
         }
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
