@@ -256,18 +256,23 @@ public class Robot extends TimedRobot {
             if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0) {
                 if (inputs.d_LeftTriggerAxis > 0 & inputs.d_RightTriggerAxis > 0) {
                     chassis.drive(inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2);
-                    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.4);
+                    if (!inAuto) {
+                        controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.4);
+                    }
                     LED.setColor(LED.SOLID_red);
                 } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
                     chassis.drive(inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4);
-                    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
+                    if (!inAuto) {
+                        controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
+                    }
                     LED.setColor(LED.SOLID_redOrange);
                 } else {
+                    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
                     chassis.drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
                 }
             } else {
                 // D-Pad driving slowly
-
+                controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
                 if (inputs.d_POV != -1) {
                     dp = utils.getDirectionalPadValues(inputs.d_POV);
                     chassis.drive(dp[0] / 3, dp[1] / 3, inputs.d_rightX);
@@ -306,8 +311,12 @@ public class Robot extends TimedRobot {
         if (inputs.d_XButton) {
             double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), DriverStation.getAlliance());
             chassis.drive(speeds[0], speeds[1], speeds[2]);
+            if (speeds[0] > 0 | speeds[1] > 0 | speeds[2] > 0) {
+                controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
+            } else {
+                controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
+            }
         }
-
     }
 
 
@@ -373,15 +382,23 @@ public class Robot extends TimedRobot {
             // tolerances so we don't kill the intake:
             if ((arm.getIntakeEncoder() <= 78 & inputs.m_rightY < 0) | (arm.getIntakeEncoder() >= 330 & inputs.m_rightY > 0)) {
                 arm.intakeArmMotor.stopMotor();
+                if (!inAuto) {
+                    controller.m_rumble.setRumble(RumbleType.kRightRumble, 0.05);
+                }
             } else {
                 arm.intakeArmMotor.set(inputs.m_rightY*0.3);
+                controller.m_rumble.setRumble(RumbleType.kRightRumble, 0);
             }
 
             // tolerances so we don't kill the arm:
             if ((arm.getArmEncoder() >= 320 & arm.getArmEncoder() < 350 & inputs.m_leftY > 0) | (arm.getArmEncoder() <= 5 & inputs.m_leftY < 0)) {
                 arm.armMotor.stopMotor();
+                if (!inAuto) {
+                    controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0.05);
+                }
             } else {
                 arm.armMotor.set(inputs.m_leftY*0.2);
+                controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
             }
         }
         

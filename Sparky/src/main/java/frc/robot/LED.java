@@ -33,6 +33,10 @@ public class LED {
     LED(){}
 
     public static void setColor(double color) {
+        if (color == 0) {
+            blinkin.stopMotor();
+            return;
+        }
         blinkin.set(color);
     }
 
