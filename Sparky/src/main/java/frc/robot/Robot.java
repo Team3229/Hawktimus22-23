@@ -234,11 +234,9 @@ public class Robot extends TimedRobot {
 
         if (DriverStation.getMatchTime() < 31 & !inAuto) {
             LED.setColor(LED.MULTICOLOR_twinklePurpleGold);
-        }
-        if (DriverStation.getAlliance() == Alliance.Blue) {
+        } else if (DriverStation.getAlliance() == Alliance.Blue) {
             LED.setColor(LED.FIXEDPATTERN_waveOcean);
-        }
-        if (DriverStation.getAlliance() == Alliance.Red) {
+        } else if (DriverStation.getAlliance() == Alliance.Red) {
             LED.setColor(LED.FIXEDPATTERN_waveLava);
         }
 
