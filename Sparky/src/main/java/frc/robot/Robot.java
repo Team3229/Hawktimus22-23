@@ -68,9 +68,18 @@ public class Robot extends TimedRobot {
 
         chassis.configPIDS();
 
-        autoDropdown.setDefaultOption("Right - High Cube - Taxi", auto.kTestAuto);
-        autoDropdown.addOption("Mid - High Cube - Engage", auto.kMidAuto);
-        autoDropdown.addOption("Left - High Cube - Taxi", auto.kLeftAuto);
+        autoDropdown.setDefaultOption("Default", auto.kAutoroutineDefault);
+        autoDropdown.addOption("Blue - Basic - Left", auto.blueBasicLeft);
+        autoDropdown.addOption("Blue - Basic - Mid", auto.blueBasicMid);
+        autoDropdown.addOption("Blue - Basic - Right", auto.blueBasicRight);
+        autoDropdown.addOption("Red - Basic - Left", auto.redBasicLeft);
+        autoDropdown.addOption("Red - Basic - Mid", auto.redBasicMid);
+        autoDropdown.addOption("Red - Basic - Right", auto.redBasicRight);
+        autoDropdown.addOption("Blue - Charge - Left", auto.blueChargeLeft);
+        autoDropdown.addOption("Blue - Charge - Right", auto.blueChargeRight);
+        autoDropdown.addOption("Red - Charge - Left", auto.redChargeLeft);
+        autoDropdown.addOption("Red - Charge - Right", auto.redChargeRight);
+        SmartDashboard.putData("Auto Sequence", autoDropdown);
         SmartDashboard.putData("Auto Sequence", autoDropdown);
 
         chassis.configEncoders();
@@ -126,6 +135,8 @@ public class Robot extends TimedRobot {
         auto.autoFinished = false;
         hold = false;
         inAuto = true;
+
+        chassis.navxGyro.zeroYaw();
 
         LED.setColor(LED.MULTICOLOR_sinelonPurpleGold);
 
@@ -291,13 +302,9 @@ public class Robot extends TimedRobot {
             autoLevel = true;
         }
 
-        if ((chassis.navxGyro.getPitch() <= -3) & onChargeStation == false & inAuto) {
-            onChargeStation = true;
-        }
-
         // if we're auto leveling, move to work
         if (autoLevel) {
-            chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getPitch(), onChargeStation), 0);
+            chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getPitch()), 0);
         }
 
         // Reset field orientation
@@ -453,11 +460,11 @@ public class Robot extends TimedRobot {
     void updateDashboard() {
 
         if (!DriverStation.isFMSAttached() | DriverStation.isDisabled()) {
-           double[] encVals = chassis.encoderValues();
-            dash.putNumber("frontLeft", encVals[0]);
-            dash.putNumber("frontRight", encVals[1]);
-            dash.putNumber("backLeft", encVals[2]);
-            dash.putNumber("backRight", encVals[3]);
+        //    double[] encVals = chassis.encoderValues();
+        //     dash.putNumber("frontLeft", encVals[0]);
+        //     dash.putNumber("frontRight", encVals[1]);
+        //     dash.putNumber("backLeft", encVals[2]);
+        //     dash.putNumber("backRight", encVals[3]);
         }
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));

@@ -25,10 +25,19 @@ public class Auto {
   static final boolean WRITE = true;
   static final boolean READ = false;
   static final String basePath = "/home/lvuser/";
-  public final String kTestAuto = "rolesvilleAuto";
-  public final String kMidAuto = "midAuto";
-  public final String kLeftAuto = "leftAuto";
-  final String kAutoroutineDefault = kTestAuto;
+  public final String blueBasicLeft = "bbl";
+  public final String blueBasicMid = "bbm";
+  public final String blueBasicRight = "bbr";
+
+  public final String blueChargeLeft = "bcl";
+  public final String blueChargeRight = "bcr";
+  public final String redChargeLeft = "bcl";
+  public final String redChargeRight = "bcr";
+
+  public final String redBasicLeft = "bbl";
+  public final String redBasicMid = "bbm";
+  public final String redBasicRight = "bbr";
+  public final String kAutoroutineDefault = "bbm";
 
   public boolean autoFinished = false;
 
