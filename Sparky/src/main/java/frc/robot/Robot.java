@@ -251,12 +251,12 @@ public class Robot extends TimedRobot {
             LED.setColor(LED.FIXEDPATTERN_waveLava);
         }
 
-        ExecuteDriveControls();
+        ExecuteDriveControls(((DriverStation.getAlliance() == Alliance.Red) & (inAuto)) ? -1 : 1);
         ExecuteManipControls();
         
     }
 
-    void ExecuteDriveControls() {
+    void ExecuteDriveControls(int invert) {
 
         // Drive swerve chassis with joystick deadbands
         if (!DriverStation.isJoystickConnected(0)) {
@@ -264,27 +264,27 @@ public class Robot extends TimedRobot {
         } else {
             if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0) {
                 if (inputs.d_LeftTriggerAxis > 0 & inputs.d_RightTriggerAxis > 0) {
-                    chassis.drive(inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2);
+                    chassis.drive(invert*inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2);
                     if (!inAuto) {
                         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.4);
                     }
                     LED.setColor(LED.SOLID_red);
                 } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
-                    chassis.drive(inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4);
+                    chassis.drive(invert*inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4);
                     if (!inAuto) {
                         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
                     }
                     LED.setColor(LED.SOLID_redOrange);
                 } else {
                     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-                    chassis.drive(inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+                    chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
                 }
             } else {
                 // D-Pad driving slowly
                 controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
                 if (inputs.d_POV != -1) {
                     dp = utils.getDirectionalPadValues(inputs.d_POV);
-                    chassis.drive(dp[0] / 3, dp[1] / 3, inputs.d_rightX);
+                    chassis.drive(invert*dp[0] / 3, dp[1] / 3, inputs.d_rightX);
                 } else if (Math.abs(inputs.d_rightX) > 0){
                     chassis.drive(0, 0, inputs.d_rightX);
                 } else {
@@ -459,12 +459,12 @@ public class Robot extends TimedRobot {
 
     void updateDashboard() {
 
-        if (!DriverStation.isFMSAttached() | DriverStation.isDisabled()) {
-        //    double[] encVals = chassis.encoderValues();
-        //     dash.putNumber("frontLeft", encVals[0]);
-        //     dash.putNumber("frontRight", encVals[1]);
-        //     dash.putNumber("backLeft", encVals[2]);
-        //     dash.putNumber("backRight", encVals[3]);
+        if (!DriverStation.isFMSAttached() & DriverStation.isDisabled()) {
+           double[] encVals = chassis.encoderValues();
+            dash.putNumber("frontLeft", encVals[0]);
+            dash.putNumber("frontRight", encVals[1]);
+            dash.putNumber("backLeft", encVals[2]);
+            dash.putNumber("backRight", encVals[3]);
         }
 
         dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));

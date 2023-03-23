@@ -10,7 +10,7 @@ import edu.wpi.first.networktables.NetworkTable;
 
 public class Limelight {
     private final NetworkTable table;
-    private final double MIN_DISTANCE = 1.2192-0.4;
+    private final double MIN_DISTANCE = 0.8192;
     private final double[][] tagPositions = {
             {7.24310-MIN_DISTANCE, -2.93659},
             {7.24310-MIN_DISTANCE, -1.26019},
@@ -35,7 +35,7 @@ public class Limelight {
 
     Limelight() {
         table = NetworkTableInstance.getDefault().getTable("limelight");
-        table.getEntry("stream").setInteger(2);
+        table.getEntry("stream").setInteger(1);
     }
 
     void getValues() {

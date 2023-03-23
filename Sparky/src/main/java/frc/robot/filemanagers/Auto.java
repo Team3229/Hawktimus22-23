@@ -31,12 +31,12 @@ public class Auto {
 
   public final String blueChargeLeft = "bcl";
   public final String blueChargeRight = "bcr";
-  public final String redChargeLeft = "bcl";
-  public final String redChargeRight = "bcr";
+  public final String redChargeLeft = "bcr";
+  public final String redChargeRight = "bcl";
 
-  public final String redBasicLeft = "bbl";
+  public final String redBasicLeft = "bbr";
   public final String redBasicMid = "bbm";
-  public final String redBasicRight = "bbr";
+  public final String redBasicRight = "bbl";
   public final String kAutoroutineDefault = "bbm";
 
   public boolean autoFinished = false;
