@@ -10,6 +10,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.SparkMaxPIDController.AccelStrategy;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
@@ -71,6 +72,11 @@ public class SwerveModule {
         driveMotor.setInverted(invertMotor);
         driveMotor.setIdleMode(IdleMode.kBrake);
         driveMotor.setOpenLoopRampRate(0.35);
+
+        driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        angleMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        angleMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
 
     }
 

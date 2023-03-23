@@ -5,7 +5,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Leveling {
-    private static final double MOVE_SPEED = 0.12;
+    private static final double MOVE_SPEED = 0.1;
     private static final double ANGLE_TOLERANCE = 0.27;
 
     static Dashboard dash = new Dashboard();

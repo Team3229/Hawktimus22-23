@@ -11,6 +11,7 @@ import com.revrobotics.ColorMatch;
 import com.revrobotics.ColorMatchResult;
 import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 
@@ -156,6 +157,17 @@ public class Arm {
 
         leftWheelsEncoder.setPositionConversionFactor(360);
         rightWheelsEncoder.setPositionConversionFactor(360);
+
+        armMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        armMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        armMotor2.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
+        intakeArmMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        intakeArmMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        leftWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        leftWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        intakeArmMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        rightWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        rightWheels.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
 
     }
     

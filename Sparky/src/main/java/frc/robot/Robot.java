@@ -313,15 +313,15 @@ public class Robot extends TimedRobot {
         }
 
         // Line up with nearest cube grid
-        if (inputs.d_XButton) {
-            double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), DriverStation.getAlliance());
-            chassis.drive(speeds[0], speeds[1], speeds[2]);
-            if (speeds[0] > 0 | speeds[1] > 0 | speeds[2] > 0) {
-                controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
-            } else {
-                controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-            }
-        }
+        // if (inputs.d_XButton) {
+        //     double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), DriverStation.getAlliance());
+        //     chassis.drive(speeds[0], speeds[1], speeds[2]);
+        //     if (speeds[0] > 0 | speeds[1] > 0 | speeds[2] > 0) {
+        //         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
+        //     } else {
+        //         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
+        //     }
+        // }
     }
 
 
@@ -405,6 +405,9 @@ public class Robot extends TimedRobot {
                 arm.armMotor.set(inputs.m_leftY*0.2);
                 controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
             }
+        } else {
+            controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
+            controller.m_rumble.setRumble(RumbleType.kRightRumble, 0);
         }
         
         // grab something
