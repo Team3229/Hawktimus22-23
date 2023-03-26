@@ -84,6 +84,9 @@ public class Arm {
     final double IHYBRID = 113; //DONE
     final double IDOCK = 330; //DONE
 
+    final double PLAYER = 247.587890625;
+    final double IPLAYER = 183.1640625;
+
     final double CLOSED_COLOR_CONFIDENCE_THRESHOLD = 0.991;
     final double OPEN_COLOR_CONFIDENCE_THRESHOLD = 0.9925;
 
@@ -205,6 +208,9 @@ public class Arm {
             case 4:
                  //dock
                  return calculateArmOutputs(armAngle, intakeAngle, DOCK, IDOCK);
+            case 5:
+                 //human player
+                 return calculateArmOutputs(armAngle, intakeAngle, PLAYER, IPLAYER);
             default:
                 return new double[] {};
         }
@@ -264,8 +270,6 @@ public class Arm {
         if (!cube) {
             offSolenoid.set(false);
             onSolenoid.set(true);
-            leftWheels.set(IN_HAND_ROTATIONAL_SPEED);
-            rightWheels.set(IN_HAND_ROTATIONAL_SPEED);
         } else {
             offSolenoid.set(true);
             onSolenoid.set(false);
@@ -294,8 +298,6 @@ public class Arm {
 
         if(!cube){
             // move the pneumatic cone bits
-            leftWheels.set(OUT_HAND_ROTATIONAL_SPEED);
-            rightWheels.set(OUT_HAND_ROTATIONAL_SPEED);
             offSolenoid.set(false);
             onSolenoid.set(true);
         } else {

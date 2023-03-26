@@ -256,6 +256,10 @@ public class Robot extends TimedRobot {
             led.setColor(LED.FIXEDPATTERN_waveLava);
         }
 
+        if (auto.autoFinished & inAuto) {
+            autoLevel = true;
+        }
+
         ExecuteDriveControls(((DriverStation.getAlliance() == Alliance.Red) & (inAuto)) ? -1 : 1);
         ExecuteManipControls();
         
@@ -358,7 +362,7 @@ public class Robot extends TimedRobot {
             case 90:
                 // right - Dock
                 hasMovedArmManuallyYet = false;
-                arm.setCurrentLevel(4);
+                arm.setCurrentLevel(5);
                 hold = false;
                 break;
     

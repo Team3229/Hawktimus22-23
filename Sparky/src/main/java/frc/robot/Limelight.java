@@ -23,7 +23,7 @@ public class Limelight {
             {-7.24310+MIN_DISTANCE, -2.93659}
     };
     private final double MOVE_SPEED = -0.2;
-    private final double ROTATE_SPEED = 0.005;
+    private final double ROTATE_SPEED = -0.0005;
     private final double MOVE_TOLERANCE = 0.0002;
     private final double ROTATE_TOLERANCE = 0.015;
 
