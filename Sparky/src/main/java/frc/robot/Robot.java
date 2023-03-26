@@ -42,6 +42,7 @@ public class Robot extends TimedRobot {
     Arm arm = new Arm();
     SwerveOffsets swerveOffsets = new SwerveOffsets();
     Dashboard dash = new Dashboard();
+    LED led = new LED();
 
     public final SendableChooser <String> autoDropdown = new SendableChooser <> ();
 
@@ -89,7 +90,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("kD", chassis.anglePID[2]);
 
         // Default LED pattern
-        LED.setColor(LED.MULTICOLOR_twinklePurpleGold);
+        led.setColor(LED.MULTICOLOR_twinklePurpleGold);
 
     }
 
@@ -138,7 +139,7 @@ public class Robot extends TimedRobot {
 
         chassis.navxGyro.zeroYaw();
 
-        LED.setColor(LED.MULTICOLOR_sinelonPurpleGold);
+        led.setColor(LED.MULTICOLOR_sinelonPurpleGold);
 
     }
 
@@ -148,6 +149,7 @@ public class Robot extends TimedRobot {
 
         if (auto.autoFinished) {
             inputs = Controller.nullControls();
+            chassis.drive(0, 0, 0.000000000001);
         } else {
             inputs = auto.readFile();
             RunControls();
@@ -223,6 +225,7 @@ public class Robot extends TimedRobot {
     }
 
     //Nathan D was here
+    //Nolan T was here
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {
@@ -244,11 +247,13 @@ public class Robot extends TimedRobot {
     void RunControls() {
 
         if (DriverStation.getMatchTime() < 31 & !inAuto) {
-            LED.setColor(LED.MULTICOLOR_twinklePurpleGold);
+            led.setColor(LED.MULTICOLOR_twinklePurpleGold);
         } else if (DriverStation.getAlliance() == Alliance.Blue) {
-            LED.setColor(LED.FIXEDPATTERN_waveOcean);
+            led.setColor(LED.FIXEDPATTERN_waveOcean);
         } else if (DriverStation.getAlliance() == Alliance.Red) {
-            LED.setColor(LED.FIXEDPATTERN_waveLava);
+            led.setColor(LED.FIXEDPATTERN_waveLava);
+        } else {
+            led.setColor(LED.FIXEDPATTERN_waveLava);
         }
 
         ExecuteDriveControls(((DriverStation.getAlliance() == Alliance.Red) & (inAuto)) ? -1 : 1);
@@ -268,16 +273,16 @@ public class Robot extends TimedRobot {
                     if (!inAuto) {
                         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.4);
                     }
-                    LED.setColor(LED.SOLID_red);
+                    led.setColor(LED.SOLID_red);
                 } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
                     chassis.drive(invert*inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4);
                     if (!inAuto) {
                         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
                     }
-                    LED.setColor(LED.SOLID_redOrange);
+                    led.setColor(LED.SOLID_redOrange);
                 } else {
                     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-                    chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+                        chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
                 }
             } else {
                 // D-Pad driving slowly
@@ -288,6 +293,9 @@ public class Robot extends TimedRobot {
                 } else if (Math.abs(inputs.d_rightX) > 0){
                     chassis.drive(0, 0, inputs.d_rightX);
                 } else {
+                    if (inputs.d_AButton) {
+                        chassis.navxGyro.zeroYaw();
+                    }
                     chassis.stop();
                 }
             }
@@ -308,20 +316,20 @@ public class Robot extends TimedRobot {
         }
 
         // Reset field orientation
-        if (inputs.d_AButton) {
-            chassis.navxGyro.zeroYaw();
-        }
+        // if (inputs.d_AButton) {
+        //     chassis.navxGyro.zeroYaw();
+        // }
 
         // Line up with nearest cube grid
-        // if (inputs.d_XButton) {
-        //     double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), DriverStation.getAlliance());
-        //     chassis.drive(speeds[0], speeds[1], speeds[2]);
-        //     if (speeds[0] > 0 | speeds[1] > 0 | speeds[2] > 0) {
-        //         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
-        //     } else {
-        //         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-        //     }
-        // }
+        if (inputs.d_XButton) {
+            double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), DriverStation.getAlliance());
+            chassis.drive(speeds[0], speeds[1], speeds[2]);
+            // if (speeds[0] > 0 | speeds[1] > 0 | speeds[2] > 0) {
+            //     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
+            // } else {
+            //     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
+            // }
+        }
     }
 
 
@@ -421,7 +429,7 @@ public class Robot extends TimedRobot {
             arm.grabObject(true);
         } else if (inputs.m_RightBumper) {
             arm.grabObject(false);
-        } else {
+        }else {
             arm.leftWheels.stopMotor();
             arm.rightWheels.stopMotor();
         }
@@ -437,22 +445,22 @@ public class Robot extends TimedRobot {
         // Grabbing cone
         if (inputs.m_LeftTriggerAxis > 0.1 & manualIntakeToggle) {
             arm.placeObject(true);
-            LED.setColor(LED.SOLID_gold);
+            led.setColor(LED.SOLID_gold);
         } else {
             if (inputs.m_RightTriggerAxis > 0.1 & manualIntakeToggle) {
                 arm.placeObject(false);
-                LED.setColor(LED.SOLID_gold);
+                led.setColor(LED.SOLID_gold);
             }
         }
 
         // Request Cube
         if (inputs.m_AButton) {
-            LED.setColor(LED.COLORONEPATTERN_strobePurple);
+            led.setColor(LED.COLORONEPATTERN_strobePurple);
         }
         
         // Request Cone
         if (inputs.m_BButton) {
-            LED.setColor(LED.FIXEDPATTERN_strobeGold);
+            led.setColor(LED.FIXEDPATTERN_strobeGold);
         }
 
         // update arm
