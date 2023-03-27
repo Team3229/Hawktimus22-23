@@ -26,7 +26,7 @@ public class Utils {
      * @param povAngle The angle of the POV (in degrees).
      * @return An array containing the x, y, and z values of the directional pad.
      */
-    public double[] getDirectionalPadValues(int povAngle) {
+    public static double[] getDirectionalPadValues(int povAngle) {
         double[] output = {0, 0, 0};
         switch (povAngle) {
             case 0:

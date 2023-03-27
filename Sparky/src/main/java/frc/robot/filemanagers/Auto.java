@@ -24,20 +24,16 @@ public class Auto {
   static final boolean m_recordMode = true; // use this to force disable recording, useful at competitions
   static final boolean WRITE = true;
   static final boolean READ = false;
+  
   static final String basePath = "/home/lvuser/";
-  public final String blueBasicLeft = "bbl";
-  public final String blueBasicMid = "bbm";
-  public final String blueBasicRight = "bbr";
+  public final String basicLeft = "bbl";
+  public final String basicMid = "bbm";
+  public final String basicRight = "bbr";
 
-  public final String blueChargeLeft = "bcl";
-  public final String blueChargeRight = "bcr";
-  public final String redChargeLeft = "bcr";
-  public final String redChargeRight = "bcl";
+  public final String chargeLeft = "bcl";
+  public final String chargeRight = "bcr";
 
-  public final String redBasicLeft = "bbr";
-  public final String redBasicMid = "bbm";
-  public final String redBasicRight = "bbl";
-  public final String kAutoroutineDefault = "bbm";
+  public final String kAutoroutineDefault = "def";
 
   public boolean autoFinished = false;
 

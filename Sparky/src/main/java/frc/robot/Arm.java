@@ -57,7 +57,7 @@ public class Arm {
     final int INTAKE_ENCODER_ID = 20;
 
     // Encoder Offsets
-    final double ARM_ENCODER_OFFSET = 195.29296875+3;
+    final double ARM_ENCODER_OFFSET = 158.29296875;
     final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants

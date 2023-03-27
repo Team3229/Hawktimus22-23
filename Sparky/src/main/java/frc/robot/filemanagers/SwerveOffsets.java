@@ -5,7 +5,7 @@ package frc.robot.filemanagers;
 import java.io.*;
 import java.util.Scanner;
 
-import frc.robot.Dashboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
 public class SwerveOffsets {
@@ -13,10 +13,8 @@ public class SwerveOffsets {
     private final String path = "/home/lvuser/";
     private final String[] fileNames = {"frontLeft.txt", "frontRight.txt", "backLeft.txt", "backRight.txt"};
 
-    Dashboard dash = new Dashboard();
-
     public SwerveOffsets() {
-        dash.putBool("resetAngleOffsets", false);
+        SmartDashboard.putBoolean("resetAngleOffsets", false);
     }
 
     public double[] calculateOffsets(double fL, double fR, double bL, double bR) {

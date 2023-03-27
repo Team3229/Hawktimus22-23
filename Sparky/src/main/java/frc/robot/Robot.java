@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.drivetrain.SwerveKinematics;
-import frc.robot.filemanagers.SwerveOffsets;
 import frc.robot.filemanagers.Auto;
 
 /**
@@ -28,32 +27,25 @@ public class Robot extends TimedRobot {
     private String selectedAuto = "";
     private boolean autoLevel = false;
 
-    boolean hold = false;
-    Controller controller = new Controller();
-    ControllerInputs inputs;
-    double[] dp = {0,0,0};
-    double[] limelightDist = {0,0};
+    private boolean hold = false;
+    private Controller controller = new Controller();
+    private ControllerInputs inputs;
+    private double[] dp = {0,0,0};
 
-    SwerveKinematics chassis = new SwerveKinematics();
-    Auto auto = new Auto();
-    Utils utils = new Utils();
-    Leveling leveling = new Leveling();
-    Limelight limelight = new Limelight();
-    Arm arm = new Arm();
-    SwerveOffsets swerveOffsets = new SwerveOffsets();
-    Dashboard dash = new Dashboard();
-    LED led = new LED();
+    private SwerveKinematics chassis = new SwerveKinematics();
+    private Auto auto = new Auto();
+    private Limelight limelight = new Limelight();
+    private Arm arm = new Arm();
+    private LED led = new LED();
 
-    public final SendableChooser <String> autoDropdown = new SendableChooser <> ();
+    private final SendableChooser <String> autoDropdown = new SendableChooser <> ();
 
-    double bufferZone = 0.1;
-    boolean controllerError = false;
-    boolean hasMovedArmManuallyYet = false;
-    boolean inAuto = false;
-    boolean onChargeStation = false;
+    private boolean inAuto = false;
+    private boolean isFMSAttached = false;
+    private Alliance alliance = Alliance.Invalid;
+    private double matchTime = 0;
 
-    boolean manualIntakeToggle = true;
-    boolean lastPressedA = false;
+    private boolean manualIntakeToggle = true;
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -61,6 +53,8 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
+
+        getDSData();
 
         chassis.navxGyro.zeroYaw();
         chassis.navxGyro.calibrate();
@@ -70,17 +64,11 @@ public class Robot extends TimedRobot {
         chassis.configPIDS();
 
         autoDropdown.setDefaultOption("Default", auto.kAutoroutineDefault);
-        autoDropdown.addOption("Blue - Basic - Left", auto.blueBasicLeft);
-        autoDropdown.addOption("Blue - Basic - Mid", auto.blueBasicMid);
-        autoDropdown.addOption("Blue - Basic - Right", auto.blueBasicRight);
-        autoDropdown.addOption("Red - Basic - Left", auto.redBasicLeft);
-        autoDropdown.addOption("Red - Basic - Mid", auto.redBasicMid);
-        autoDropdown.addOption("Red - Basic - Right", auto.redBasicRight);
-        autoDropdown.addOption("Blue - Charge - Left", auto.blueChargeLeft);
-        autoDropdown.addOption("Blue - Charge - Right", auto.blueChargeRight);
-        autoDropdown.addOption("Red - Charge - Left", auto.redChargeLeft);
-        autoDropdown.addOption("Red - Charge - Right", auto.redChargeRight);
-        SmartDashboard.putData("Auto Sequence", autoDropdown);
+        autoDropdown.addOption("Basic - Left", auto.basicLeft);
+        autoDropdown.addOption("Basic - Mid", auto.basicMid);
+        autoDropdown.addOption("Basic - Right", auto.basicRight);
+        autoDropdown.addOption("Charge - Left", auto.chargeLeft);
+        autoDropdown.addOption("Charge - Right", auto.chargeRight);
         SmartDashboard.putData("Auto Sequence", autoDropdown);
 
         chassis.configEncoders();
@@ -123,6 +111,8 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
 
+        getDSData();
+
         auto.closeFile();
         chassis.configPIDS();
 
@@ -131,11 +121,10 @@ public class Robot extends TimedRobot {
 
         inputs = Controller.nullControls();
 
-        autoLevel = false;
-
         auto.autoFinished = false;
-        hold = false;
         inAuto = true;
+        hold = false;
+        autoLevel = false;
 
         chassis.navxGyro.zeroYaw();
 
@@ -146,6 +135,8 @@ public class Robot extends TimedRobot {
     /** This function is called periodically during autonomous. */
     @Override
     public void autonomousPeriodic() {
+
+        updateMatchTime();
 
         if (auto.autoFinished) {
             inputs = Controller.nullControls();
@@ -161,23 +152,22 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopInit() {
 
-        auto.closeFile();
+        getDSData();
 
+        auto.closeFile();
         inputs = Controller.nullControls();
 
         autoLevel = false;
         hold = false;
         inAuto = false;
 
-        if (dash.readBool("resetAngleOffsets")) {
+        if (SmartDashboard.getBoolean("resetAngleOffsets", false)) {
             chassis.fixOffsets();
             System.out.println("Reset Offsets");
-            dash.putBool("resetAngleOffsets", false);
+            SmartDashboard.putBoolean("resetAngleOffsets", false);
         }
 
         arm.goalLevel = 0;
-
-        hasMovedArmManuallyYet = false;
 
         chassis.anglePID[0] = SmartDashboard.getNumber("kP", 0);
         chassis.anglePID[1] = SmartDashboard.getNumber("kI", 0);
@@ -193,6 +183,8 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
 
+        updateMatchTime();
+
         inputs = controller.getControls();
         RunControls();
 
@@ -202,7 +194,6 @@ public class Robot extends TimedRobot {
     @Override
     public void disabledInit() {
         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-
     }
 
     /** This function is called periodically when disabled. */
@@ -212,6 +203,8 @@ public class Robot extends TimedRobot {
     /** This function is called once when test mode is enabled. */
     @Override
     public void testInit() {
+
+        getDSData();
 
         // record a new auto sequence
         selectedAuto = autoDropdown.getSelected();
@@ -230,6 +223,8 @@ public class Robot extends TimedRobot {
     @Override
     public void testPeriodic() {
 
+        updateMatchTime();
+
         inputs = controller.getControls();
         auto.record(inputs);
         RunControls();
@@ -246,11 +241,11 @@ public class Robot extends TimedRobot {
 
     void RunControls() {
 
-        if (DriverStation.getMatchTime() < 31 & !inAuto) {
+        if (matchTime < 31 & !inAuto) {
             led.setColor(LED.MULTICOLOR_twinklePurpleGold);
-        } else if (DriverStation.getAlliance() == Alliance.Blue) {
+        } else if (alliance == Alliance.Blue) {
             led.setColor(LED.FIXEDPATTERN_waveOcean);
-        } else if (DriverStation.getAlliance() == Alliance.Red) {
+        } else if (alliance == Alliance.Red) {
             led.setColor(LED.FIXEDPATTERN_waveLava);
         } else {
             led.setColor(LED.FIXEDPATTERN_waveLava);
@@ -260,7 +255,7 @@ public class Robot extends TimedRobot {
             autoLevel = true;
         }
 
-        ExecuteDriveControls(((DriverStation.getAlliance() == Alliance.Red) & (inAuto)) ? -1 : 1);
+        ExecuteDriveControls(((alliance == Alliance.Red) & (inAuto)) ? -1 : 1);
         ExecuteManipControls();
         
     }
@@ -286,17 +281,18 @@ public class Robot extends TimedRobot {
                     led.setColor(LED.SOLID_redOrange);
                 } else {
                     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-                        chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+                    chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
                 }
             } else {
                 // D-Pad driving slowly
                 controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
                 if (inputs.d_POV != -1) {
-                    dp = utils.getDirectionalPadValues(inputs.d_POV);
+                    dp = Utils.getDirectionalPadValues(inputs.d_POV);
                     chassis.drive(invert*dp[0] / 3, dp[1] / 3, inputs.d_rightX);
                 } else if (Math.abs(inputs.d_rightX) > 0){
                     chassis.drive(0, 0, inputs.d_rightX);
                 } else {
+                    //Reset field orientation if we aren't moving the chassis
                     if (inputs.d_AButton) {
                         chassis.navxGyro.zeroYaw();
                     }
@@ -319,20 +315,10 @@ public class Robot extends TimedRobot {
             chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getPitch()), 0);
         }
 
-        // Reset field orientation
-        // if (inputs.d_AButton) {
-        //     chassis.navxGyro.zeroYaw();
-        // }
-
         // Line up with nearest cube grid
         if (inputs.d_XButton) {
-            double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), DriverStation.getAlliance());
+            double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), alliance);
             chassis.drive(speeds[0], speeds[1], speeds[2]);
-            // if (speeds[0] > 0 | speeds[1] > 0 | speeds[2] > 0) {
-            //     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
-            // } else {
-            //     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-            // }
         }
     }
 
@@ -343,25 +329,21 @@ public class Robot extends TimedRobot {
         switch (inputs.m_POV) {
             case 0:
                 // up - High
-                hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(3);
                 hold = false;
                 break;
             case 270:
                 // left - Mid
-                hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(2);
                 hold = false;
                 break;
             case 180:
                 // down - Hybrid
-                hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(1);
                 hold = false;
                 break;
             case 90:
                 // right - Dock
-                hasMovedArmManuallyYet = false;
                 arm.setCurrentLevel(5);
                 hold = false;
                 break;
@@ -370,7 +352,6 @@ public class Robot extends TimedRobot {
 
         if (inputs.m_BackButton) {
             // back - HP Station
-            hasMovedArmManuallyYet = false;
             arm.setCurrentLevel(4);
             hold = false;
         }
@@ -474,15 +455,24 @@ public class Robot extends TimedRobot {
 
     void updateDashboard() {
 
-        if (!DriverStation.isFMSAttached() & DriverStation.isDisabled()) {
+        if (!isFMSAttached & isDisabled()) {
            double[] encVals = chassis.encoderValues();
-            dash.putNumber("frontLeft", encVals[0]);
-            dash.putNumber("frontRight", encVals[1]);
-            dash.putNumber("backLeft", encVals[2]);
-            dash.putNumber("backRight", encVals[3]);
+            SmartDashboard.putNumber("frontLeft", encVals[0]);
+            SmartDashboard.putNumber("frontRight", encVals[1]);
+            SmartDashboard.putNumber("backLeft", encVals[2]);
+            SmartDashboard.putNumber("backRight", encVals[3]);
+            SmartDashboard.putNumber("armA", arm.getArmEncoder());
+            SmartDashboard.putNumber("intakeA", arm.getIntakeEncoder());
         }
 
-        dash.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
+        SmartDashboard.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
 
     }
+
+    void getDSData() {
+        isFMSAttached = DriverStation.isFMSAttached();
+        alliance = DriverStation.getAlliance();
+    }
+
+    void updateMatchTime() {matchTime = DriverStation.getMatchTime();}
 }
