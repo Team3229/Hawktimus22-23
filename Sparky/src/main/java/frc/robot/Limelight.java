@@ -4,28 +4,39 @@ package frc.robot;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTable;
 
 public class Limelight {
     private final NetworkTable table;
-    private final double MIN_DISTANCE = 0.8192;
-    private final double[][] tagPositions = {
-            {7.24310-MIN_DISTANCE, -2.93659},
-            {7.24310-MIN_DISTANCE, -1.26019},
-            {7.24310-MIN_DISTANCE, 0.41621},
-            {7.90832-MIN_DISTANCE, 2.74161},
-            {-7.90832+MIN_DISTANCE, 2.74161},
-            {-7.24310+MIN_DISTANCE, 0.41621},
-            {-7.24310+MIN_DISTANCE, -1.26019},
-            {-7.24310+MIN_DISTANCE, -2.93659}
+    // private final double MIN_DISTANCE = 0.8192;
+    public static final double[] tagPositions = {
+            -2.9365,
+            -1.2601,
+            0.4162,
+            2.7416,
+            2.7416,
+            0.4162,
+            -1.2601,
+            -2.9365
     };
-    private final double MOVE_SPEED = -0.2;
-    private final double ROTATE_SPEED = -0.0005;
-    private final double MOVE_TOLERANCE = 0.0002;
-    private final double ROTATE_TOLERANCE = 0.015;
+    // private final double MOVE_SPEED = -0.2;
+    // private final double ROTATE_SPEED = -0.0005;
+    // private final double MOVE_TOLERANCE = 0.2;
+    // private final double ROTATE_TOLERANCE = 0.05;
+
+    private final double pos_kP = 0;
+    private final double pos_kI = 0;
+    private final double pos_kD = 0;
+    private final double rot_kP = 0;
+    private final double rot_kI = 0;
+    private final double rot_kD = 0;
+
+    private final PIDController posPID = new PIDController(pos_kP, pos_kI, pos_kD);
+    private final PIDController rotPID = new PIDController(rot_kP, rot_kI, rot_kD);
 
     Translation2d location;
     Rotation2d rotation;
@@ -36,7 +47,9 @@ public class Limelight {
 
     Limelight() {
         table = NetworkTableInstance.getDefault().getTable("limelight");
-        table.getEntry("stream").setInteger(1);
+        table.getEntry("stream").setInteger(0);
+
+        rotPID.enableContinuousInput(0, 360);
     }
 
     void getValues() {
@@ -52,41 +65,14 @@ public class Limelight {
         
     }
 
-    double[] getDistanceToTag() {
-        // Returns the distance to the targeted tag in x, y (meters), z(rotation)
-        if (id != -1 & id < 8) {
-            return new double[] {(tagPositions[id-1][0] - location.getX()), tagPositions[id-1][1] - location.getY(), 0};
-        } else {
-            return new double[3];
-        }
-    }
-
-    double[] alignWithTag(double currentChassisAngle, Alliance alliance) {
-        // MIN_DISTANCE meters is the minimum distance to be, that's how far from the tag we want to be.
-        if (id != 1 & id < 8) {
-            double[] distanceToTag = getDistanceToTag();
-
-        if (alliance == Alliance.Red) {
-            distanceToTag[0] = -distanceToTag[0];
-            distanceToTag[1] = -distanceToTag[1];
-        }
-
-        distanceToTag[2] = rotation.minus(Rotation2d.fromDegrees(currentChassisAngle)).getDegrees();
-
-        //Move tolerances
-        // distanceToTag[0] = (Math.abs(distanceToTag[0]) > MOVE_TOLERANCE) ? 0 : distanceToTag[0];
-        // distanceToTag[1] = (Math.abs(distanceToTag[1]) > MOVE_TOLERANCE) ? 0 : distanceToTag[1];
-        // distanceToTag[2] = (Math.abs(distanceToTag[2]) > ROTATE_TOLERANCE) ? 0 : distanceToTag[2];
-
-        SmartDashboard.putNumber("x", distanceToTag[1]*MOVE_SPEED);
-        SmartDashboard.putNumber("y", distanceToTag[0]*MOVE_SPEED);
-        SmartDashboard.putNumber("z", distanceToTag[2]*ROTATE_SPEED);
-
-        return new double[] {distanceToTag[1]*MOVE_SPEED, distanceToTag[0]*MOVE_SPEED, distanceToTag[2]*ROTATE_SPEED};
-        } else {
-            return new double[3];
-        }
-        
+    double[] goToTarget(double targetX, double targetZ, Alliance alliance) {
+        posPID.setSetpoint(targetX);
+        rotPID.setSetpoint(targetZ);
+        return new double[] {
+            ((alliance == Alliance.Red)?-1:1)*posPID.calculate(botPos[0]),
+            0,
+            MathUtil.inputModulus(((alliance == Alliance.Red)?180:0)+rotPID.calculate(botPos[2]), 0, 360)
+        };
     }
 
 }

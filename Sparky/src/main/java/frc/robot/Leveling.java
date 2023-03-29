@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class Leveling {
     private static final double MOVE_SPEED = -0.2;
     private static final double ANGLE_TOLERANCE = 0.3;
-    private static final double PITCH_OFFSET = 0.2599;
+    private static final double PITCH_OFFSET = 0;
 
     Leveling() {}
 

@@ -45,8 +45,6 @@ public class Robot extends TimedRobot {
     private Alliance alliance = Alliance.Invalid;
     private double matchTime = 0;
 
-    private boolean manualIntakeToggle = true;
-
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
@@ -217,8 +215,6 @@ public class Robot extends TimedRobot {
 
     }
 
-    //Nathan D was here
-    //Nolan T was here
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {
@@ -241,8 +237,8 @@ public class Robot extends TimedRobot {
 
     void RunControls() {
 
-        if (matchTime < 31 & !inAuto) {
-            led.setColor(LED.MULTICOLOR_twinklePurpleGold);
+        if (/*matchTime < 31 & */inAuto) {
+            led.setColor(LED.MULTICOLOR_sinelonPurpleGold);
         } else if (alliance == Alliance.Blue) {
             led.setColor(LED.FIXEDPATTERN_waveOcean);
         } else if (alliance == Alliance.Red) {
@@ -266,7 +262,7 @@ public class Robot extends TimedRobot {
         if (!DriverStation.isJoystickConnected(0)) {
             chassis.stop();
         } else {
-            if (Math.abs(inputs.d_leftX) > 0 | Math.abs(inputs.d_leftY) > 0) {
+            if (inputs.d_leftX != 0 | inputs.d_leftY != 0) {
                 if (inputs.d_LeftTriggerAxis > 0 & inputs.d_RightTriggerAxis > 0) {
                     chassis.drive(invert*inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2);
                     if (!inAuto) {
@@ -317,8 +313,9 @@ public class Robot extends TimedRobot {
 
         // Line up with nearest cube grid
         if (inputs.d_XButton) {
-            double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), alliance);
-            chassis.drive(speeds[0], speeds[1], speeds[2]);
+            // double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), alliance);
+            // chassis.drive(speeds[0], speeds[1], speeds[2]);
+            double[] speeds = limelight.goToTarget(chassis.navxGyro.getYaw(), alliance);
         }
     }
 
@@ -403,14 +400,7 @@ public class Robot extends TimedRobot {
             controller.m_rumble.setRumble(RumbleType.kRightRumble, 0);
         }
         
-        // grab something
-        if (inputs.m_LeftBumper & !manualIntakeToggle) {
-            // grab based on color sensor
-            arm.grabObject();
-        } else if (inputs.m_RightBumper & !manualIntakeToggle) {
-            // Place based on what we are holding, if no cube we do cone, etc.
-            arm.placeObject();
-        } else if (inputs.m_LeftBumper) {
+        if (inputs.m_LeftBumper) {
             arm.grabObject(true);
         } else if (inputs.m_RightBumper) {
             arm.grabObject(false);
@@ -419,33 +409,15 @@ public class Robot extends TimedRobot {
             arm.rightWheels.stopMotor();
         }
 
-        // turn on manual mode
-        // if (inputs.m_AButton & !lastPressedA) {
-        //     manualIntakeToggle = !manualIntakeToggle;
-        //     lastPressedA = true;
-        // } else {
-        //     lastPressedA = false;
-        // }
-
         // Grabbing cone
-        if (inputs.m_LeftTriggerAxis > 0.1 & manualIntakeToggle) {
+        if (inputs.m_LeftTriggerAxis > 0.1) {
             arm.placeObject(true);
             led.setColor(LED.SOLID_gold);
         } else {
-            if (inputs.m_RightTriggerAxis > 0.1 & manualIntakeToggle) {
+            if (inputs.m_RightTriggerAxis > 0.1) {
                 arm.placeObject(false);
                 led.setColor(LED.SOLID_gold);
             }
-        }
-
-        // Request Cube
-        if (inputs.m_AButton) {
-            led.setColor(LED.COLORONEPATTERN_strobePurple);
-        }
-        
-        // Request Cone
-        if (inputs.m_BButton) {
-            led.setColor(LED.FIXEDPATTERN_strobeGold);
         }
 
         // update arm

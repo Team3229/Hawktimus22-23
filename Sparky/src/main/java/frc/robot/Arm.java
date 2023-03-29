@@ -7,9 +7,6 @@ import com.ctre.phoenix.sensors.CANCoder;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.SensorInitializationStrategy;
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.ColorMatch;
-import com.revrobotics.ColorMatchResult;
-import com.revrobotics.ColorSensorV3;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.CANSparkMaxLowLevel.PeriodicFrame;
 import com.revrobotics.RelativeEncoder;
@@ -20,8 +17,6 @@ import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsControlModule;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Solenoid;
-import edu.wpi.first.wpilibj.I2C.Port;
-import edu.wpi.first.wpilibj.util.Color;
 
 public class Arm {
     /*
@@ -32,7 +27,6 @@ public class Arm {
     */
 
     // Objects
-    ColorSensorV3 colorSensor;
     CANSparkMax armMotor;
     CANSparkMax armMotor2;
     CANSparkMax intakeArmMotor;
@@ -57,19 +51,27 @@ public class Arm {
     final int INTAKE_ENCODER_ID = 20;
 
     // Encoder Offsets
-    final double ARM_ENCODER_OFFSET = 158.29296875;
+    final double ARM_ENCODER_OFFSET = 158.29296875-263.408203125;
     final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants
     final double ARM_LENGTH = 0.8218;
     final double ARM_PIVOT_HEIGHT = 0.9836;
-    final double IN_HAND_ROTATIONAL_SPEED = -0.4;
-    final double OUT_HAND_ROTATIONAL_SPEED = 0.2;
-    final double ARM_MOTOR_SPEED = 0.3;
-    final double INTAKE_ARM_MOTOR_SPEED = 0.25;
-    final double INTAKE_ARM_SLOW_SPEED = 0.05;
-    final double ARM_DEPLOY_SPEED = 1;
-    final double ARM_SLOW_SPEED = 0.08;
+    final double IN_HAND_ROTATIONAL_SPEED = -0.2;
+    final double OUT_HAND_ROTATIONAL_SPEED = 0.1;
+
+    final double ARM_SPEED = 0.3;
+    final double INTAKE_SPEED = 0.3;
+    final double ARM_CLOSE_SPEED = 0.2;
+    final double INTAKE_CLOSE_SPEED = 0.25;
+    final double INTAKE_CLOSER_SPEED = 0.05;
+    final double ARM_CLOSER_SPEED = 0.08;
+
+    final double INTAKE_CLOSE_POS = 7;
+    final double INTAKE_CLOSER_POS = 1;
+
+    final double ARM_CLOSE_POS = 7;
+    final double ARM_CLOSER_POS = 1;
 
     final double HIGH_CONE = 219.19921875; //DONE
     final double HIGH_CUBE = 216.771484375; //DONE
@@ -87,17 +89,6 @@ public class Arm {
     final double PLAYER = 247.587890625;
     final double IPLAYER = 183.1640625;
 
-    final double CLOSED_COLOR_CONFIDENCE_THRESHOLD = 0.991;
-    final double OPEN_COLOR_CONFIDENCE_THRESHOLD = 0.9925;
-
-    // Colors
-    Color closedCubeColor = new Color(63, 126, 64);
-    Color closedConeColor = new Color(69, 127, 58);
-    Color openCubeColor = new Color(71, 121, 62);
-    Color openConeColor = new Color(75, 121, 57);
-    ColorMatch openColorMatcher = new ColorMatch();
-    ColorMatch closedColorMatcher = new ColorMatch();
-
     public double[] holdAng = {0,0};
     // Other Variables
     int goalLevel = 0;
@@ -105,15 +96,8 @@ public class Arm {
     double armEncoderValue = 0;
     int intakeEncoderBuffer = 0;
     double intakeEncoderValue = 0;
-    boolean holdingCone = false;
-    boolean holdingCube = false;
 
     Arm() {
-
-        openColorMatcher.addColorMatch(openCubeColor);
-        openColorMatcher.addColorMatch(openConeColor);
-        closedColorMatcher.addColorMatch(openCubeColor);
-        closedColorMatcher.addColorMatch(openConeColor);
         
         // Arm
         armMotor = new CANSparkMax(ARM_ID, MotorType.kBrushless);
@@ -124,7 +108,6 @@ public class Arm {
         armMotor2.setIdleMode(IdleMode.kBrake);
 
         // Intake
-        colorSensor = new ColorSensorV3(Port.kMXP);
         intakeArmMotor = new CANSparkMax(INTAKE_ARM_ID, MotorType.kBrushless);
         intakeArmMotor.setIdleMode(IdleMode.kBrake);
         leftWheels = new CANSparkMax(LEFT_HAND_ID, MotorType.kBrushless);
@@ -175,12 +158,10 @@ public class Arm {
     }
     
     double[] calculateArmLevel(int level){
-        // check color
-        checkColor();
         // get angles
         double armAngle = getArmEncoder();
         double intakeAngle = getIntakeEncoder();
-        // switch over the level, 0 meaning we have no level and should not be moving and 1,2,3 for heights.
+        // switch over the level, 0 meaning we have no level and should not be moving and 1,2,3,4,5 for heights.
         // all handle cone/cube movement, returning the right values for each, returns the result of calcArmOutputs.
         // returns a double[] of values, arm then intake, 0 if were at the zone and a value otherwise to go in the right direction.
         switch(level){
@@ -188,29 +169,17 @@ public class Arm {
                 // hybrid
                 return calculateArmOutputs(armAngle, intakeAngle, HYBRID, IHYBRID);
             case 2:
-                // mid
-                if(holdingCone & !holdingCube){
-                    // cone
-                    return calculateArmOutputs(armAngle, intakeAngle, MID_CONE, IMID_CONE);
-                } else {
-                    // cube
-                    return calculateArmOutputs(armAngle, intakeAngle, MID_CUBE, IMID_CUBE);
-                }
+                // mid cube
+                return calculateArmOutputs(armAngle, intakeAngle, MID_CUBE, IMID_CUBE);
             case 3:
-                // high
-                if(holdingCone & !holdingCube){
-                    // cone
-                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CONE, IHIGH_CONE);
-                } else {
-                    // we have a cube
-                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CUBE, IHIGH_CUBE);
-                 }
+                // high cube
+                return calculateArmOutputs(armAngle, intakeAngle, HIGH_CUBE, IHIGH_CUBE);
             case 4:
-                 //dock
-                 return calculateArmOutputs(armAngle, intakeAngle, DOCK, IDOCK);
+                //dock
+                return calculateArmOutputs(armAngle, intakeAngle, DOCK, IDOCK);
             case 5:
-                 //human player
-                 return calculateArmOutputs(armAngle, intakeAngle, PLAYER, IPLAYER);
+                //human player
+                return calculateArmOutputs(armAngle, intakeAngle, PLAYER, IPLAYER);
             default:
                 return new double[] {};
         }
@@ -222,39 +191,49 @@ public class Arm {
         // taking the current angles, and the goal angles for intake and arm, calc what dir we need to move.
         double[] returningVal = {0, 0};
         // if the arm is lower than the lower bounds of the target, move it up, else down, if in tolerance do nothing.
-        if (iAngle < ih-1) {
-            returningVal[1] = INTAKE_ARM_SLOW_SPEED;
-        } else if (iAngle > ih+1) {
-            returningVal[1] = -INTAKE_ARM_SLOW_SPEED;
+        if (iAngle < ih-INTAKE_CLOSER_POS) {
+            returningVal[1] = INTAKE_CLOSER_SPEED;
+        } else if (iAngle > ih+INTAKE_CLOSER_POS) {
+            returningVal[1] = -INTAKE_CLOSER_SPEED;
         }
-        //slow intake
-        if (iAngle < ih-10) {
-            returningVal[1] = INTAKE_ARM_MOTOR_SPEED;
-        } else if (iAngle > ih+10) {
-            returningVal[1] = -INTAKE_ARM_MOTOR_SPEED;
+
+        if (iAngle < ih-INTAKE_CLOSE_POS) {
+            returningVal[1] = INTAKE_CLOSE_SPEED;
+        } else if (iAngle > ih+INTAKE_CLOSE_POS) {
+            returningVal[1] = -INTAKE_CLOSE_SPEED;
+        }
+
+        if (iAngle < ih-(INTAKE_CLOSE_POS+40)) {
+            returningVal[1] = INTAKE_SPEED;
+        } else if (iAngle > ih+(INTAKE_CLOSE_POS+40)) {
+            returningVal[1] = -INTAKE_SPEED;
         }
 
         // same here
-        //fast deploy
+        // fast deploy
         if (aAngle < 150 & !(goalLevel == 4)) {
             if (aAngle < th - 1) {
-                returningVal[0] = ARM_DEPLOY_SPEED;
+                returningVal[0] = ARM_SPEED;
             } else if (aAngle > th+1) {
-                returningVal[0] = -ARM_DEPLOY_SPEED;
+                returningVal[0] = -ARM_SPEED;
             }
             returningVal[1] = 0;
         } else {
-            if (aAngle < th - 1) {
-                returningVal[0] = ARM_SLOW_SPEED;
-            } else if (aAngle > th+1) {
-                returningVal[0] = -ARM_SLOW_SPEED;
+            if (aAngle < th - ARM_CLOSER_POS) {
+                returningVal[0] = ARM_CLOSER_SPEED;
+            } else if (aAngle > th+ARM_CLOSER_POS) {
+                returningVal[0] = -ARM_CLOSER_SPEED;
             }
-            if (aAngle < th - 5) {
-                returningVal[0] = ARM_MOTOR_SPEED;
-            } else if (aAngle > th+5) {
-                returningVal[0] = -ARM_MOTOR_SPEED;
+            if (aAngle < th - ARM_CLOSE_POS) {
+                returningVal[0] = ARM_CLOSE_SPEED;
+            } else if (aAngle > th+ARM_CLOSE_POS) {
+                returningVal[0] = -ARM_CLOSE_SPEED;
             }
-
+            if (aAngle < th - (ARM_CLOSE_POS+20)) {
+                returningVal[0] = ARM_SPEED;
+            } else if (aAngle > th+(ARM_CLOSE_POS+20)) {
+                returningVal[0] = -ARM_SPEED;
+            }
             
         }
         // no break intake from hybrid/ pickup position
@@ -270,22 +249,8 @@ public class Arm {
         if (!cube) {
             offSolenoid.set(false);
             onSolenoid.set(true);
-        } else {
-            offSolenoid.set(true);
-            onSolenoid.set(false);
-            leftWheels.set(IN_HAND_ROTATIONAL_SPEED);
-            rightWheels.set(IN_HAND_ROTATIONAL_SPEED);
-        }
-    }
-
-    void grabObject(){
-
-        checkColor();
-        if (holdingCone) {
-            offSolenoid.set(false);
-            onSolenoid.set(true);
-            leftWheels.set(IN_HAND_ROTATIONAL_SPEED);
-            rightWheels.set(IN_HAND_ROTATIONAL_SPEED);
+            leftWheels.set(IN_HAND_ROTATIONAL_SPEED*0.1);
+            rightWheels.set(IN_HAND_ROTATIONAL_SPEED*0.1);
         } else {
             offSolenoid.set(true);
             onSolenoid.set(false);
@@ -306,23 +271,6 @@ public class Arm {
             rightWheels.set(OUT_HAND_ROTATIONAL_SPEED);
             offSolenoid.set(true);
             onSolenoid.set(false);  
-        }
-        
-    }
-    void placeObject(){
-        checkColor();
-        if(holdingCone){
-            // move the pneumatic cone bits
-            leftWheels.set(OUT_HAND_ROTATIONAL_SPEED);
-            rightWheels.set(OUT_HAND_ROTATIONAL_SPEED);
-            offSolenoid.set(true);
-            onSolenoid.set(false);
-        } else {
-            // holding a cube
-            leftWheels.set(OUT_HAND_ROTATIONAL_SPEED);
-            rightWheels.set(OUT_HAND_ROTATIONAL_SPEED);
-            offSolenoid.set(true);
-            onSolenoid.set(false);
         }
         
     }
@@ -347,36 +295,6 @@ public class Arm {
 
         return MathUtil.inputModulus(intakeEncoderValue, 0, 360);
 
-    }
-    
-    void checkColor() {
-        if (onSolenoid.get()) {
-            ColorMatchResult result = closedColorMatcher.matchClosestColor(colorSensor.getColor());
-            // SmartDashboard.putNumber("colorConfidence", result.confidence);
-            if (result.color == closedConeColor & result.confidence > CLOSED_COLOR_CONFIDENCE_THRESHOLD) {
-                holdingCone = true;
-                holdingCube = false;
-            } else if (result.color == closedCubeColor & result.confidence > CLOSED_COLOR_CONFIDENCE_THRESHOLD) {
-                holdingCube = true;
-                holdingCone = false;
-            } else {
-                holdingCone = false;
-                holdingCube = false;
-            }
-        } else {
-            ColorMatchResult result = openColorMatcher.matchClosestColor(colorSensor.getColor());
-            // SmartDashboard.putNumber("colorConfidence", result.confidence);
-            if (result.color == openConeColor & result.confidence > OPEN_COLOR_CONFIDENCE_THRESHOLD) {
-                holdingCone = true;
-                holdingCube = false;
-            } else if (result.color == openCubeColor & result.confidence > OPEN_COLOR_CONFIDENCE_THRESHOLD) {
-                holdingCube = true;
-                holdingCone = false;
-            } else {
-                holdingCone = false;
-                holdingCube = false;
-            }
-        }
     }
 
     void setCurrentLevel(int level){goalLevel = level;}
