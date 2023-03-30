@@ -30,14 +30,16 @@ public class LED {
     public static final double COLORONEPATTERN_strobePurple = 0.15;
     public static final double off = 0;
 
+    public double currentColor = 0;
+
     LED(){}
 
-    public void setColor(double color) {
-        if (color == 0) {
+    public void setColor() {
+        if (currentColor == 0) {
             blinkin.stopMotor();
             return;
         }
-        blinkin.set(color);
+        blinkin.set(currentColor);
     }
 
 }

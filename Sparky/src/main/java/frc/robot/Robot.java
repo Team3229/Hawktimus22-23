@@ -71,13 +71,6 @@ public class Robot extends TimedRobot {
 
         chassis.configEncoders();
 
-        SmartDashboard.putNumber("kP", chassis.anglePID[0]);
-        SmartDashboard.putNumber("kI", chassis.anglePID[1]);
-        SmartDashboard.putNumber("kD", chassis.anglePID[2]);
-
-        // Default LED pattern
-        led.setColor(LED.MULTICOLOR_twinklePurpleGold);
-
     }
 
     /**
@@ -126,7 +119,7 @@ public class Robot extends TimedRobot {
 
         chassis.navxGyro.zeroYaw();
 
-        led.setColor(LED.MULTICOLOR_sinelonPurpleGold);
+        led.currentColor = LED.MULTICOLOR_sinelonPurpleGold;
 
     }
 
@@ -167,10 +160,6 @@ public class Robot extends TimedRobot {
 
         arm.goalLevel = 0;
 
-        chassis.anglePID[0] = SmartDashboard.getNumber("kP", 0);
-        chassis.anglePID[1] = SmartDashboard.getNumber("kI", 0);
-        chassis.anglePID[2] = SmartDashboard.getNumber("kD", 0);
-
         chassis.configPIDS();
 
         chassis.configEncoders();
@@ -182,7 +171,6 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
 
         updateMatchTime();
-
         inputs = controller.getControls();
         RunControls();
 
@@ -238,13 +226,13 @@ public class Robot extends TimedRobot {
     void RunControls() {
 
         if (/*matchTime < 31 & */inAuto) {
-            led.setColor(LED.MULTICOLOR_sinelonPurpleGold);
+            led.currentColor = LED.MULTICOLOR_sinelonPurpleGold;
         } else if (alliance == Alliance.Blue) {
-            led.setColor(LED.FIXEDPATTERN_waveOcean);
+            led.currentColor = LED.FIXEDPATTERN_waveOcean;
         } else if (alliance == Alliance.Red) {
-            led.setColor(LED.FIXEDPATTERN_waveLava);
+            led.currentColor = LED.FIXEDPATTERN_waveLava;
         } else {
-            led.setColor(LED.FIXEDPATTERN_waveLava);
+            led.currentColor = LED.FIXEDPATTERN_waveOcean;
         }
 
         if (auto.autoFinished & inAuto) {
@@ -253,6 +241,8 @@ public class Robot extends TimedRobot {
 
         ExecuteDriveControls(((alliance == Alliance.Red) & (inAuto)) ? -1 : 1);
         ExecuteManipControls();
+
+        led.setColor();
         
     }
 
@@ -264,20 +254,20 @@ public class Robot extends TimedRobot {
         } else {
             if (inputs.d_leftX != 0 | inputs.d_leftY != 0) {
                 if (inputs.d_LeftTriggerAxis > 0 & inputs.d_RightTriggerAxis > 0) {
-                    chassis.drive(invert*inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2);
-                    if (!inAuto) {
-                        controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.4);
-                    }
-                    led.setColor(LED.SOLID_red);
-                } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
-                    chassis.drive(invert*inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4);
+                    chassis.drive(invert*inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2*1.5);
                     if (!inAuto) {
                         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
                     }
-                    led.setColor(LED.SOLID_redOrange);
+                    led.currentColor = LED.SOLID_red;
+                } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
+                    chassis.drive(invert*inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4*1.5);
+                    if (!inAuto) {
+                        controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.1);
+                    }
+                    led.currentColor = LED.SOLID_redOrange;
                 } else {
                     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-                    chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, inputs.d_rightX);
+                    chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, inputs.d_rightX*1.5);
                 }
             } else {
                 // D-Pad driving slowly
@@ -315,7 +305,8 @@ public class Robot extends TimedRobot {
         if (inputs.d_XButton) {
             // double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), alliance);
             // chassis.drive(speeds[0], speeds[1], speeds[2]);
-            double[] speeds = limelight.goToTarget(chassis.navxGyro.getYaw(), alliance);
+            double[] speeds = limelight.goToTarget(0.4162, chassis.navxGyro.getYaw(), alliance);
+            chassis.drive(speeds[0], speeds[1], speeds[2]);
         }
     }
 
@@ -360,6 +351,8 @@ public class Robot extends TimedRobot {
             // if we have no input, stop the motors.
             arm.armMotor.stopMotor();
             arm.intakeArmMotor.stopMotor();
+            controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
+            controller.m_rumble.setRumble(RumbleType.kRightRumble, 0);
             if(!hold & arm.goalLevel == 0){
                 // if we have no input, not already holding, and are not using dp to go somewhere, start holding
                 arm.holdAng[0] = arm.getArmEncoder();
@@ -395,9 +388,6 @@ public class Robot extends TimedRobot {
                 arm.armMotor.set(inputs.m_leftY*0.2);
                 controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
             }
-        } else {
-            controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
-            controller.m_rumble.setRumble(RumbleType.kRightRumble, 0);
         }
         
         if (inputs.m_LeftBumper) {
@@ -412,12 +402,20 @@ public class Robot extends TimedRobot {
         // Grabbing cone
         if (inputs.m_LeftTriggerAxis > 0.1) {
             arm.placeObject(true);
-            led.setColor(LED.SOLID_gold);
+            led.currentColor = LED.SOLID_gold;
         } else {
             if (inputs.m_RightTriggerAxis > 0.1) {
                 arm.placeObject(false);
-                led.setColor(LED.SOLID_gold);
+                led.currentColor = LED.SOLID_gold;
             }
+        }
+
+        //led signals
+        if (inputs.m_AButton) {
+            led.currentColor = LED.COLORONEPATTERN_strobePurple;
+        }
+        if (inputs.m_BButton) {
+            led.currentColor = LED.FIXEDPATTERN_strobeGold;
         }
 
         // update arm
@@ -433,9 +431,10 @@ public class Robot extends TimedRobot {
             SmartDashboard.putNumber("frontRight", encVals[1]);
             SmartDashboard.putNumber("backLeft", encVals[2]);
             SmartDashboard.putNumber("backRight", encVals[3]);
-            SmartDashboard.putNumber("armA", arm.getArmEncoder());
-            SmartDashboard.putNumber("intakeA", arm.getIntakeEncoder());
         }
+
+        SmartDashboard.putNumber("armA", arm.getArmEncoder());
+            SmartDashboard.putNumber("intakeA", arm.getIntakeEncoder());
 
         SmartDashboard.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
 

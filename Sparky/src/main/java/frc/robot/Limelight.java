@@ -71,7 +71,7 @@ public class Limelight {
         return new double[] {
             ((alliance == Alliance.Red)?-1:1)*posPID.calculate(botPos[0]),
             0,
-            MathUtil.inputModulus(((alliance == Alliance.Red)?180:0)+rotPID.calculate(botPos[2]), 0, 360)
+            rotPID.calculate(MathUtil.inputModulus(((alliance == Alliance.Blue)?180:0) + botPos[2], 0, 360))
         };
     }
 

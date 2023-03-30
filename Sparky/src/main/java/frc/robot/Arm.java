@@ -51,7 +51,7 @@ public class Arm {
     final int INTAKE_ENCODER_ID = 20;
 
     // Encoder Offsets
-    final double ARM_ENCODER_OFFSET = 158.29296875-263.408203125;
+    final double ARM_ENCODER_OFFSET = 158.29296875-253.408203125;
     final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants
@@ -60,7 +60,7 @@ public class Arm {
     final double IN_HAND_ROTATIONAL_SPEED = -0.2;
     final double OUT_HAND_ROTATIONAL_SPEED = 0.1;
 
-    final double ARM_SPEED = 0.3;
+    final double ARM_SPEED = 0.4;
     final double INTAKE_SPEED = 0.3;
     final double ARM_CLOSE_SPEED = 0.2;
     final double INTAKE_CLOSE_SPEED = 0.25;
@@ -74,16 +74,16 @@ public class Arm {
     final double ARM_CLOSER_POS = 1;
 
     final double HIGH_CONE = 219.19921875; //DONE
-    final double HIGH_CUBE = 216.771484375; //DONE
+    final double HIGH_CUBE = 224.033203125; //DONE
     final double MID_CONE = 204.697265625; //DONE
-    final double MID_CUBE = 229.833984375; //DONE
-    final double HYBRID = 325; //DONE
+    final double MID_CUBE = 221.044921875; //DONE
+    final double HYBRID = 317.021484375; //DONE
     final double DOCK = 10; //DONE
     final double IHIGH_CONE = 223.154296875; //DONE
-    final double IHIGH_CUBE = 251.3671875; //DONE
+    final double IHIGH_CUBE = 204.515625; //DONE
     final double IMID_CONE = 289.599609375; //DONE
-    final double IMID_CUBE = 287.2265625; //DONE
-    final double IHYBRID = 113; //DONE
+    final double IMID_CUBE = 289.248046875; //DONE
+    final double IHYBRID = 108.45703125; //DONE
     final double IDOCK = 330; //DONE
 
     final double PLAYER = 247.587890625;
@@ -213,9 +213,9 @@ public class Arm {
         // fast deploy
         if (aAngle < 150 & !(goalLevel == 4)) {
             if (aAngle < th - 1) {
-                returningVal[0] = ARM_SPEED;
+                returningVal[0] = 0.8;
             } else if (aAngle > th+1) {
-                returningVal[0] = -ARM_SPEED;
+                returningVal[0] = -0.8;
             }
             returningVal[1] = 0;
         } else {
@@ -249,8 +249,8 @@ public class Arm {
         if (!cube) {
             offSolenoid.set(false);
             onSolenoid.set(true);
-            leftWheels.set(IN_HAND_ROTATIONAL_SPEED*0.1);
-            rightWheels.set(IN_HAND_ROTATIONAL_SPEED*0.1);
+            leftWheels.set(IN_HAND_ROTATIONAL_SPEED*0.6);
+            rightWheels.set(IN_HAND_ROTATIONAL_SPEED*0.6);
         } else {
             offSolenoid.set(true);
             onSolenoid.set(false);
