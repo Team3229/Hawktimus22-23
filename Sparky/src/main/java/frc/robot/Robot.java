@@ -225,14 +225,20 @@ public class Robot extends TimedRobot {
 
     void RunControls() {
 
-        if (/*matchTime < 31 & */inAuto) {
-            led.currentColor = LED.MULTICOLOR_sinelonPurpleGold;
-        } else if (alliance == Alliance.Blue) {
+        if (alliance == Alliance.Blue) {
             led.currentColor = LED.FIXEDPATTERN_waveOcean;
         } else if (alliance == Alliance.Red) {
             led.currentColor = LED.FIXEDPATTERN_waveLava;
         } else {
             led.currentColor = LED.FIXEDPATTERN_waveOcean;
+        }
+
+        if (matchTime < 31 & !inAuto) {
+            led.currentColor = LED.MULTICOLOR_sinelonPurpleGold;
+        }
+        
+        if(inAuto) {
+            led.currentColor = LED.RAINBOW_rainbowPallete;
         }
 
         if (auto.autoFinished & inAuto) {
