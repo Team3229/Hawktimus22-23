@@ -2,25 +2,17 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 public class Leveling {
-    private static final double MOVE_SPEED = -0.2;
-    private static final double ANGLE_TOLERANCE = 0.3;
-    private static final double PITCH_OFFSET = 0;
+    private static final double MOVE_SPEED = 0.5;
+    private static final double ANGLE_TOLERANCE = 0.2;
+    public static final double PITCH_OFFSET = 0.25;
 
     Leveling() {}
 
     public static double getBalanced(double currentPitch) {
-        
-        currentPitch += PITCH_OFFSET;
 
-        SmartDashboard.putNumber("pitch", currentPitch);
-
-        if (currentPitch < -ANGLE_TOLERANCE) {
-            return -MOVE_SPEED;
-        } else if (currentPitch > ANGLE_TOLERANCE) {
-            return MOVE_SPEED;
+        if (currentPitch < -ANGLE_TOLERANCE | currentPitch > ANGLE_TOLERANCE) {
+            return MOVE_SPEED*currentPitch;
         } else {
             return 0;
         }

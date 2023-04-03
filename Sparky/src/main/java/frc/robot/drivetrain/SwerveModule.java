@@ -71,7 +71,7 @@ public class SwerveModule {
     
         driveMotor.setInverted(invertMotor);
         driveMotor.setIdleMode(IdleMode.kBrake);
-        driveMotor.setOpenLoopRampRate(0.35);
+        driveMotor.setOpenLoopRampRate(0.5);
 
         driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);

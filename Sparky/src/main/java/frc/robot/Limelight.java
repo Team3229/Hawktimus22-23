@@ -4,7 +4,6 @@ package frc.robot;
 
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -28,10 +27,10 @@ public class Limelight {
     // private final double MOVE_TOLERANCE = 0.2;
     // private final double ROTATE_TOLERANCE = 0.05;
 
-    private final double pos_kP = 0;
+    private final double pos_kP = -0.7;
     private final double pos_kI = 0;
     private final double pos_kD = 0;
-    private final double rot_kP = 0;
+    private final double rot_kP = 0.02;
     private final double rot_kI = 0;
     private final double rot_kD = 0;
 
@@ -41,7 +40,7 @@ public class Limelight {
     Translation2d location;
     Rotation2d rotation;
     double area;
-    int id;
+    public int id;
     double seenTarget;
     double[] botPos;
 
@@ -65,14 +64,26 @@ public class Limelight {
         
     }
 
+    double goToTag() {
+        if (id>-1&id<9) {
+            return tagPositions[id-1];
+        } else {
+            return 0;
+        }
+    }
+
     double[] goToTarget(double targetX, double targetZ, Alliance alliance) {
-        posPID.setSetpoint(targetX);
-        rotPID.setSetpoint(targetZ);
-        return new double[] {
-            ((alliance == Alliance.Red)?-1:1)*posPID.calculate(botPos[0]),
-            0,
-            rotPID.calculate(MathUtil.inputModulus(((alliance == Alliance.Blue)?180:0) + botPos[2], 0, 360))
-        };
+        if (id>-1&id<9) {
+            posPID.setSetpoint(targetX);
+            rotPID.setSetpoint(0);
+            return new double[] {
+                ((alliance == Alliance.Red)?-1:1)*posPID.calculate(location.getY()+0.15),
+                0,
+                rotPID.calculate(targetZ)
+            };
+        } else {
+            return new double[] {0, 0, 0};
+        }
     }
 
 }

@@ -51,7 +51,7 @@ public class Arm {
     final int INTAKE_ENCODER_ID = 20;
 
     // Encoder Offsets
-    final double ARM_ENCODER_OFFSET = 158.29296875-253.408203125;
+    final double ARM_ENCODER_OFFSET = 96.7890625;
     final double INTAKE_ENCODER_OFFSET = 142.470703125;
 
     // Constants
@@ -73,17 +73,17 @@ public class Arm {
     final double ARM_CLOSE_POS = 7;
     final double ARM_CLOSER_POS = 1;
 
-    final double HIGH_CONE = 219.19921875; //DONE
+    final double HIGH_CONE = 204.533203125; //DONE
     final double HIGH_CUBE = 224.033203125; //DONE
     final double MID_CONE = 204.697265625; //DONE
     final double MID_CUBE = 221.044921875; //DONE
-    final double HYBRID = 317.021484375; //DONE
+    final double HYBRID = 325.8984375; //DONE
     final double DOCK = 10; //DONE
-    final double IHIGH_CONE = 223.154296875; //DONE
+    final double IHIGH_CONE = 238.8640625; //DONE
     final double IHIGH_CUBE = 204.515625; //DONE
     final double IMID_CONE = 289.599609375; //DONE
     final double IMID_CUBE = 289.248046875; //DONE
-    final double IHYBRID = 108.45703125; //DONE
+    final double IHYBRID = 115.576171875; //DONE
     final double IDOCK = 330; //DONE
 
     final double PLAYER = 247.587890625;
@@ -96,6 +96,9 @@ public class Arm {
     double armEncoderValue = 0;
     int intakeEncoderBuffer = 0;
     double intakeEncoderValue = 0;
+
+    boolean holdingCube = true;
+    boolean holdingCone = false;
 
     Arm() {
         
@@ -128,7 +131,7 @@ public class Arm {
         armEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         armEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         armEncoder.configSensorDirection(true);
-        armEncoder.configMagnetOffset(-ARM_ENCODER_OFFSET);
+        armEncoder.configMagnetOffset(ARM_ENCODER_OFFSET);
         armEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
 
         intakeArmEncoder = new CANCoder(INTAKE_ENCODER_ID);
@@ -169,11 +172,23 @@ public class Arm {
                 // hybrid
                 return calculateArmOutputs(armAngle, intakeAngle, HYBRID, IHYBRID);
             case 2:
-                // mid cube
-                return calculateArmOutputs(armAngle, intakeAngle, MID_CUBE, IMID_CUBE);
+                // mid
+                if (holdingCube) {
+                    return calculateArmOutputs(armAngle, intakeAngle, MID_CUBE, IMID_CUBE);
+                } else if (holdingCone) {
+                    return calculateArmOutputs(armAngle, intakeAngle, MID_CONE, IMID_CONE);
+                } else {
+                    return calculateArmOutputs(armAngle, intakeAngle, MID_CUBE, IMID_CUBE);
+                }
             case 3:
-                // high cube
-                return calculateArmOutputs(armAngle, intakeAngle, HIGH_CUBE, IHIGH_CUBE);
+                // high
+                if (holdingCube) {
+                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CUBE, IHIGH_CUBE);
+                } else if (holdingCone) {
+                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CONE, IHIGH_CONE);
+                } else {
+                    return calculateArmOutputs(armAngle, intakeAngle, HIGH_CUBE, IHIGH_CUBE);
+                }
             case 4:
                 //dock
                 return calculateArmOutputs(armAngle, intakeAngle, DOCK, IDOCK);
@@ -251,11 +266,15 @@ public class Arm {
             onSolenoid.set(true);
             leftWheels.set(IN_HAND_ROTATIONAL_SPEED*0.6);
             rightWheels.set(IN_HAND_ROTATIONAL_SPEED*0.6);
+            holdingCone = true;
+            holdingCube = false;
         } else {
             offSolenoid.set(true);
             onSolenoid.set(false);
             leftWheels.set(IN_HAND_ROTATIONAL_SPEED);
             rightWheels.set(IN_HAND_ROTATIONAL_SPEED);
+            holdingCone = false;
+            holdingCube = true;
         }
     }
 
@@ -265,6 +284,8 @@ public class Arm {
             // move the pneumatic cone bits
             offSolenoid.set(false);
             onSolenoid.set(true);
+            leftWheels.set(OUT_HAND_ROTATIONAL_SPEED*2.5);
+            rightWheels.set(OUT_HAND_ROTATIONAL_SPEED*2.5);
         } else {
             // holding a cube
             leftWheels.set(OUT_HAND_ROTATIONAL_SPEED);

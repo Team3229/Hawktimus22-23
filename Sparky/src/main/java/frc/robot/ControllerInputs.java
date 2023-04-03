@@ -31,6 +31,7 @@ public class ControllerInputs implements Serializable {
     boolean m_YButton;
     boolean m_RightBumper;
     boolean m_LeftBumper;
+    boolean m_AButtonPressed;
     double m_RightTriggerAxis;
     double m_LeftTriggerAxis;
     int m_POV;

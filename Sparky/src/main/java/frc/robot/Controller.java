@@ -58,6 +58,7 @@ public class Controller {
     ci.m_RightTriggerAxis = ((Math.abs(m_controller.getRightTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : m_controller.getRightTriggerAxis());
     ci.m_LeftTriggerAxis = ((Math.abs(m_controller.getLeftTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : m_controller.getLeftTriggerAxis());
     ci.m_POV = m_controller.getPOV();
+    ci.m_AButtonPressed = m_controller.getAButtonPressed();
     
     return ci;
   }

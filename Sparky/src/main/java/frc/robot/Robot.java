@@ -107,7 +107,17 @@ public class Robot extends TimedRobot {
         auto.closeFile();
         chassis.configPIDS();
 
-        selectedAuto = autoDropdown.getSelected();
+        if (alliance == Alliance.Blue) {
+            selectedAuto = autoDropdown.getSelected();
+        } else {
+            if (autoDropdown.getSelected() == "bbl") {
+                selectedAuto = "bbr";
+            } else if (autoDropdown.getSelected() == "bbr") {
+                selectedAuto = "bbl";
+            } else {
+                selectedAuto = autoDropdown.getSelected();
+            }
+        }
         auto.setupPlayback(selectedAuto);
 
         inputs = Controller.nullControls();
@@ -116,6 +126,7 @@ public class Robot extends TimedRobot {
         inAuto = true;
         hold = false;
         autoLevel = false;
+        arm.goalLevel = 0;
 
         chassis.navxGyro.zeroYaw();
 
@@ -131,10 +142,30 @@ public class Robot extends TimedRobot {
 
         if (auto.autoFinished) {
             inputs = Controller.nullControls();
-            chassis.drive(0, 0, 0.000000000001);
+            if ((matchTime <= 6) & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
+                chassis.drive(0, -0.07, 0);
+            }
         } else {
-            inputs = auto.readFile();
-            RunControls();
+            if ((matchTime <= 6) & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
+                chassis.drive(0, -0.07, 0);
+            } else if (selectedAuto == "def") {
+                chassis.drive(0, -0.1, 0);
+            } else {
+                inputs = auto.readFile();
+                if (selectedAuto == "bbl" | selectedAuto == "bbr") {
+                    inputs.d_leftY = -inputs.d_leftY;
+                    if (inputs.d_POV == 0) {
+                        inputs.d_POV = 180;
+                    } else if (inputs.d_POV == 90) {
+                        inputs.d_POV = 270;
+                    } else if (inputs.d_POV == 180) {
+                        inputs.d_POV = 0;
+                    } else if (inputs.d_POV == 270) {
+                        inputs.d_POV = 90;
+                    }
+                }
+                RunControls();
+            }
         }
 
     }
@@ -196,6 +227,8 @@ public class Robot extends TimedRobot {
         selectedAuto = autoDropdown.getSelected();
         inputs = Controller.nullControls();
         auto.setupRecording(selectedAuto);
+        
+        arm.goalLevel = 0;
 
         autoLevel = false;
         hold = false;
@@ -234,18 +267,14 @@ public class Robot extends TimedRobot {
         }
 
         if (matchTime < 31 & !inAuto) {
-            led.currentColor = LED.MULTICOLOR_sinelonPurpleGold;
+            led.currentColor = LED.MULTICOLOR_bpmPurpleGold;
         }
         
         if(inAuto) {
             led.currentColor = LED.RAINBOW_rainbowPallete;
         }
 
-        if (auto.autoFinished & inAuto) {
-            autoLevel = true;
-        }
-
-        ExecuteDriveControls(((alliance == Alliance.Red) & (inAuto)) ? -1 : 1);
+        ExecuteDriveControls(((alliance == Alliance.Red) & inAuto) ? -1 : 1);
         ExecuteManipControls();
 
         led.setColor();
@@ -260,29 +289,29 @@ public class Robot extends TimedRobot {
         } else {
             if (inputs.d_leftX != 0 | inputs.d_leftY != 0) {
                 if (inputs.d_LeftTriggerAxis > 0 & inputs.d_RightTriggerAxis > 0) {
-                    chassis.drive(invert*inputs.d_leftX*0.2, inputs.d_leftY*0.2, inputs.d_rightX*0.2*1.5);
+                    chassis.drive(invert*inputs.d_leftX*0.2, inputs.d_leftY*0.2, invert*inputs.d_rightX*0.2*1.5);
                     if (!inAuto) {
                         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
                     }
                     led.currentColor = LED.SOLID_red;
                 } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
-                    chassis.drive(invert*inputs.d_leftX*0.4, inputs.d_leftY*0.4, inputs.d_rightX*0.4*1.5);
+                    chassis.drive(invert*inputs.d_leftX*0.4, inputs.d_leftY*0.4, invert*inputs.d_rightX*0.4*1.5);
                     if (!inAuto) {
                         controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.1);
                     }
                     led.currentColor = LED.SOLID_redOrange;
                 } else {
                     controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-                    chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, inputs.d_rightX*1.5);
+                    chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, invert*inputs.d_rightX*1.5);
                 }
             } else {
                 // D-Pad driving slowly
                 controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
                 if (inputs.d_POV != -1) {
                     dp = Utils.getDirectionalPadValues(inputs.d_POV);
-                    chassis.drive(invert*dp[0] / 3, dp[1] / 3, inputs.d_rightX);
+                    chassis.drive(invert*dp[0] / 3, dp[1] / 3, invert*inputs.d_rightX);
                 } else if (Math.abs(inputs.d_rightX) > 0){
-                    chassis.drive(0, 0, inputs.d_rightX);
+                    chassis.drive(0, 0, invert*inputs.d_rightX);
                 } else {
                     //Reset field orientation if we aren't moving the chassis
                     if (inputs.d_AButton) {
@@ -292,7 +321,7 @@ public class Robot extends TimedRobot {
                 }
             }
 
-            chassis.relativeMode = inputs.d_LeftBumper;
+            chassis.relativeMode = inputs.d_LeftBumper; 
 
         }
 
@@ -304,15 +333,20 @@ public class Robot extends TimedRobot {
 
         // if we're auto leveling, move to work
         if (autoLevel) {
-            chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getPitch()), 0);
+            chassis.drive(0, Leveling.getBalanced(chassis.navxGyro.getPitch()+Leveling.PITCH_OFFSET), 0);
         }
 
         // Line up with nearest cube grid
         if (inputs.d_XButton) {
             // double[] speeds = limelight.alignWithTag(chassis.navxGyro.getYaw(), alliance);
             // chassis.drive(speeds[0], speeds[1], speeds[2]);
-            double[] speeds = limelight.goToTarget(0.4162, chassis.navxGyro.getYaw(), alliance);
+            double[] speeds = limelight.goToTarget(limelight.goToTag(), chassis.navxGyro.getYaw(), alliance);
             chassis.drive(speeds[0], speeds[1], speeds[2]);
+            led.currentColor = LED.SOLID_white;
+        }
+
+        if (inputs.d_YButton) {
+            chassis.configEncoders();
         }
     }
 
@@ -342,6 +376,14 @@ public class Robot extends TimedRobot {
                 hold = false;
                 break;
     
+        }
+
+        if (inputs.m_AButtonPressed) {
+            if (arm.pcm.getCompressor()) {
+                arm.pcm.disableCompressor();
+            } else {
+                arm.pcm.enableCompressorDigital();
+            }
         }
 
         if (inputs.m_BackButton) {
@@ -417,10 +459,10 @@ public class Robot extends TimedRobot {
         }
 
         //led signals
-        if (inputs.m_AButton) {
+        if (inputs.m_YButton) {
             led.currentColor = LED.COLORONEPATTERN_strobePurple;
         }
-        if (inputs.m_BButton) {
+        if (inputs.m_XButton) {
             led.currentColor = LED.FIXEDPATTERN_strobeGold;
         }
 
@@ -440,7 +482,8 @@ public class Robot extends TimedRobot {
         }
 
         SmartDashboard.putNumber("armA", arm.getArmEncoder());
-            SmartDashboard.putNumber("intakeA", arm.getIntakeEncoder());
+        SmartDashboard.putNumber("intakeA", arm.getIntakeEncoder());
+        SmartDashboard.putNumber("pitch", chassis.navxGyro.getPitch()+Leveling.PITCH_OFFSET);
 
         SmartDashboard.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
 

@@ -26,7 +26,7 @@ public class SwerveKinematics {
     // double[] anglePID = {0.003, 0.0002, 0.00001};
     // kP = 0.06
 
-    public double[] anglePID = {0.01, 0.0002, 0};
+    public double[] anglePID = {0.01, 0.0001, 0};
     public double[] drivePIDFF = {0, 0, 0, 0};
 
     final double L = 0.594;
