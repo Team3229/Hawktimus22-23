@@ -4,12 +4,6 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.PathConstraints;
-import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.commands.PPSwerveControllerCommand;
-
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotController;
@@ -49,9 +43,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 	private static Alliance alliance = Alliance.Invalid;
 	private static double matchTime = 0;
 
-	PathPlannerTrajectory examplePath;
-	PPSwerveControllerCommand autoCommand;
-
 	/**
 	 * This function is run when the robot is first started up and should be used for any
 	 * initialization code.
@@ -65,11 +56,11 @@ import frc.robot.drivetrain.SwerveKinematics;
 		chassis.configPIDS();
 
 		autoDropdown.setDefaultOption("Default", "def");
-        autoDropdown.addOption("Basic - Left", "bbl");
-        autoDropdown.addOption("Basic - Mid", "bbm");
-        autoDropdown.addOption("Basic - Right", "bbr");
-        autoDropdown.addOption("Charge - Left", "bcl");
-        autoDropdown.addOption("Charge - Right", "bcr");
+        autoDropdown.addOption("Basic - Left", "bl");
+        autoDropdown.addOption("Basic - Mid", "bm");
+        autoDropdown.addOption("Basic - Right", "br");
+        autoDropdown.addOption("Charge - Left", "cl");
+        autoDropdown.addOption("Charge - Right", "cr");
         SmartDashboard.putData("Auto Sequence", autoDropdown);
 
 	}
@@ -120,11 +111,9 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		LED.currentColor = LED.RAINBOW_rainbowPallete;
 
-		matchTime = 0;
+		matchTime = 15;
 		
-		examplePath = PathPlanner.loadPath(selectedAuto, new PathConstraints(4, 3));
-
-		autoCommand = new PPSwerveControllerCommand(examplePath, chassis.odometry::getEstimatedPosition, new PIDController(0, 0, 0), new PIDController(0, 0, 0), new PIDController(0, 0, 0), chassis::drive);
+		Auto.selectAuto(selectedAuto, chassis.odometry::getEstimatedPosition, chassis::drive);
 
 	}
 
@@ -134,7 +123,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		updateMatchTime();
 
-		autoCommand.execute();
+		Auto.autoCommand.execute();
 		// inputs = auto.read();
 
 	}
@@ -162,6 +151,8 @@ import frc.robot.drivetrain.SwerveKinematics;
 		chassis.configPIDS();
 		chassis.configEncoders();
 
+        matchTime = 135;
+
 	}
 
 	/** This function is called periodically during operator control. */
@@ -170,7 +161,9 @@ import frc.robot.drivetrain.SwerveKinematics;
 		updateMatchTime();
 		inputs = controller.getControls();
 
-		chassis.correctOdometry(limelight.position, Timer.getFPGATimestamp());
+        if (limelight.seesTag) {
+            chassis.correctOdometry(limelight.position, Timer.getFPGATimestamp());
+        }
 
 		RunControls();
 	}
@@ -430,6 +423,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 		alliance = DriverStation.getAlliance();
 	}
 
-	void updateMatchTime() {matchTime += 0.02;}
+	void updateMatchTime() {matchTime -= 0.02;}
 
 }

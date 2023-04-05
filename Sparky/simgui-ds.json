@@ -1,4 +1,10 @@
 {
+  "FMS": {
+    "window": {
+      "visible": false
+    }
+  },
+  "disable": true,
   "keyboardJoysticks": [
     {
       "axisConfig": [

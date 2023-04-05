@@ -63,7 +63,7 @@ public class ModuleOffsets {
                 scanner.close();
             }
         } catch(IOException e){
-            System.out.println("An error occurred while reading the swerve angle offsets fr.getDegrees()om file.");
+            System.out.println("An error occurred while reading the swerve angle offsets from file.");
             e.printStackTrace();
         }
         return values;
