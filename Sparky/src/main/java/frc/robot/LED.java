@@ -22,23 +22,21 @@ public class LED {
     public static final float SOLID_grey = 0.95f;
     public static final float SOLID_darkGrey = 0.97f;
     public static final float SOLID_black = 0.99f;
-    public static final float MULTICOLOR_sinelonPurpleGold = 0.55f;
-    public static final float MULTICOLOR_twinklePurpleGold = 0.51f;
-    public static final float MULTICOLOR_sparklePurpleGold = 0.37f;
-    public static final float MULTICOLOR_colorWavesPurpleGold = 0.53f;
-    public static final float MULTICOLOR_bpmPurpleGold = 0.43f;
+    public static final float MULTICOLOR_sinelon = 0.55f;
+    public static final float MULTICOLOR_twinkle = 0.51f;
+    public static final float MULTICOLOR_sparkle = 0.37f;
+    public static final float MULTICOLOR_colorWaves = 0.53f;
+    public static final float MULTICOLOR_bpm = 0.43f;
     public static final float FIXEDPATTERN_waveLava = -0.39f;
     public static final float FIXEDPATTERN_waveOcean = -0.41f;
-    public static final float FIXEDPATTERN_strobeGold = -0.07f;
-    public static final float COLORONEPATTERN_strobePurple = 0.15f;
+    public static final float STROBE_gold = -0.07f;
+    public static final float STROBE_purple = 0.15f;
     public static final float off = 0f;
 
-    public float currentColor = 0f;
+    public static float currentColor = 0f;
 
-    LED(){}
-
-    public void setColor() {
-        if (currentColor == 0) {
+    public static void setColor() {
+        if (currentColor == 0f) {
             blinkin.stopMotor();
             return;
         }

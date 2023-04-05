@@ -1,128 +1,152 @@
-//Otters: 3229 Programming Sub-Team
-
 package frc.robot.drivetrain;
 
 import com.kauailabs.navx.frc.AHRS;
+
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.math.MathUtil;
-import frc.robot.filemanagers.SwerveOffsets;
 
 public class SwerveKinematics {
+    
+    // Instantiate each module
+    private static SwerveModule frontLeftModule;
+    private static SwerveModule frontRightModule;
+    private static SwerveModule backLeftModule;
+    private static SwerveModule backRightModule;
+    public static ModuleOffsets offsets;
 
-    SwerveModule frontLeftModule;
-    SwerveModule frontRightModule;
-    SwerveModule backLeftModule;
-    SwerveModule backRightModule;
+    // Create kinematics objects
+    private static SwerveDriveKinematics kinematics;
+    private static ChassisSpeeds chassisState;
+    private static SwerveModuleState[] moduleStates;
+
+    public SwerveModulePosition[] positions;
+    public SwerveDrivePoseEstimator odometry;
+
+    // Create gyro and rotation objects
     public AHRS navxGyro;
-    SwerveDriveKinematics kinematicsObject;
-    ChassisSpeeds speeds;
-    SwerveModuleState[] states;
-    public double robotRotation = 0;
-    SwerveOffsets offset;
-    // double[] anglePID = {0.003, 0.0002, 0.00001};
-    // kP = 0.06
-
-    public double[] anglePID = {0.01, 0.0001, 0};
-    public double[] drivePIDFF = {0, 0, 0, 0};
-
-    final double L = 0.594;
-    final double W = 0.594;
-    final double maxSpeedMetersPerSecond = 1;
-    double maxRadiansPerSecond = 0.75;
-
+    public Rotation2d robotRotation;
     public boolean relativeMode = false;
 
-    double[] encoderValues = {0, 0, 0, 0};
+    // PID
+    private static final double[] anglePID = {0.01, 0.0001, 0};
+    private static final double[] drivePID = {0, 0, 0};
 
-    double[] initialOffsets;
+    // Constants
+    private static final double robotWidth = 0.762;
+    private static final double maxModuleSpeed = 1; //meters/sec
+    private static final double maxChassisRotationSpeed = 0.75; //radians/sec
 
     public SwerveKinematics() {
 
-        offset = new SwerveOffsets();
+        frontLeftModule = new SwerveModule(1, 2, 9, anglePID, drivePID, robotWidth, robotWidth, false);
+        frontRightModule = new SwerveModule(6, 5, 10, anglePID, drivePID, robotWidth, -robotWidth, false);
+        backLeftModule = new SwerveModule(4, 3, 11, anglePID, drivePID, -robotWidth, robotWidth, false);
+        backRightModule = new SwerveModule(8, 7, 12, anglePID, drivePID, -robotWidth, -robotWidth, true);
 
-        frontLeftModule = new SwerveModule(2, 1, 9, anglePID, drivePIDFF, L, W, false);
-        frontRightModule = new SwerveModule(5, 6, 10, anglePID, drivePIDFF, L, -W, false);
-        backLeftModule = new SwerveModule(3, 4, 11, anglePID, drivePIDFF, -L, W, false);
-        backRightModule = new SwerveModule(7, 8, 12, anglePID, drivePIDFF, -L, -W, true);
-
-        initialOffsets = offset.readFiles();
-        frontLeftModule.configEncoder(initialOffsets[0]);
-        frontRightModule.configEncoder(initialOffsets[1]);
-        backLeftModule.configEncoder(initialOffsets[2]);
-        backRightModule.configEncoder(initialOffsets[3]);
+        offsets = new ModuleOffsets();
+        configEncoders(offsets.read());
 
         navxGyro = new AHRS(SPI.Port.kMXP);
 
-        kinematicsObject = new SwerveDriveKinematics(frontLeftModule.location, frontRightModule.location, backLeftModule.location, backRightModule.location);
+        kinematics = new SwerveDriveKinematics(frontLeftModule.location, frontRightModule.location, backLeftModule.location, backRightModule.location);
+
+        positions = new SwerveModulePosition[4];
+
+        for (int i = 0; i < moduleStates.length; i++) {
+            positions[i] = new SwerveModulePosition(moduleStates[i].speedMetersPerSecond, moduleStates[i].angle);
+        }
+
+        odometry = new SwerveDrivePoseEstimator(kinematics, robotRotation, positions, null);
 
     }
 
     public void drive(double X, double Y, double Z) {
-
         if (relativeMode) {
-            robotRotation = 180;
+            robotRotation = Rotation2d.fromDegrees(180);
         } else {
-            robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
+            robotRotation = Rotation2d.fromDegrees(navxGyro.getAngle());
         }
-        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxRadiansPerSecond, Rotation2d.fromDegrees(robotRotation));
-        states = kinematicsObject.toSwerveModuleStates(speeds);
-        SwerveDriveKinematics.desaturateWheelSpeeds(states, maxSpeedMetersPerSecond);
 
-        frontLeftModule.setState(states[0]);
-        frontRightModule.setState(states[1]);
-        backLeftModule.setState(states[2]);
-        backRightModule.setState(states[3]);
+        chassisState = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxChassisRotationSpeed, robotRotation);
+        moduleStates = kinematics.toSwerveModuleStates(chassisState);
+        SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, maxModuleSpeed);
 
-    }
-
-    public double[] encoderValues() {
-
-        encoderValues[0] = frontLeftModule.getCANCoder();
-        encoderValues[1] = frontRightModule.getCANCoder();
-        encoderValues[2] = backLeftModule.getCANCoder();
-        encoderValues[3] = backRightModule.getCANCoder();
-        robotRotation = MathUtil.inputModulus(navxGyro.getYaw()*-1, 0, 360);
-        return encoderValues;
+        frontLeftModule.setState(moduleStates[0]);
+        frontRightModule.setState(moduleStates[0]);
+        backLeftModule.setState(moduleStates[0]);
+        backRightModule.setState(moduleStates[0]);
 
     }
 
-    public void configPIDS() {
+    public void drive(ChassisSpeeds speeds) {
+        
+        moduleStates = kinematics.toSwerveModuleStates(speeds);
+        SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, maxModuleSpeed);
 
-        frontLeftModule.configPID(anglePID, drivePIDFF);
-        frontRightModule.configPID(anglePID, drivePIDFF);
-        backLeftModule.configPID(anglePID, drivePIDFF);
-        backRightModule.configPID(anglePID, drivePIDFF);
-    }
-
-    public void fixOffsets() {
-
-        double[] offsets = offset.calculateOffsets(frontLeftModule.getCANCoder(), frontRightModule.getCANCoder(), backLeftModule.getCANCoder(), backRightModule.getCANCoder());
-        frontLeftModule.configEncoder(offsets[0]);
-        frontRightModule.configEncoder(offsets[1]);
-        backLeftModule.configEncoder(offsets[2]);
-        backRightModule.configEncoder(offsets[3]);
-
+        frontLeftModule.setState(moduleStates[0]);
+        frontRightModule.setState(moduleStates[0]);
+        backLeftModule.setState(moduleStates[0]);
+        backRightModule.setState(moduleStates[0]);
     }
 
     public void configEncoders() {
-        double[] offsets = offset.readFiles();
-        frontLeftModule.configEncoder(offsets[0]);
-        frontRightModule.configEncoder(offsets[1]);
-        backLeftModule.configEncoder(offsets[2]);
-        backRightModule.configEncoder(offsets[3]);
+        double[] offset = offsets.read();
+        frontLeftModule.configEncoder(offset[0]);
+        frontRightModule.configEncoder(offset[1]);
+        backLeftModule.configEncoder(offset[2]);
+        backRightModule.configEncoder(offset[3]);
+    }
+
+    private void configEncoders(double[] offset) {
+        frontLeftModule.configEncoder(offset[0]);
+        frontRightModule.configEncoder(offset[1]);
+        backLeftModule.configEncoder(offset[2]);
+        backRightModule.configEncoder(offset[3]);
+    }
+
+    public Rotation2d[] absEncoderValues() {
+        return new Rotation2d[] {frontLeftModule.getABSEncoder(), frontRightModule.getABSEncoder(), backLeftModule.getABSEncoder(), backRightModule.getABSEncoder()};
+    }
+
+    public void configPIDS() {
+        frontLeftModule.configPID(anglePID, drivePID);
+        frontRightModule.configPID(anglePID, drivePID);
+        backLeftModule.configPID(anglePID, drivePID);
+        backRightModule.configPID(anglePID, drivePID);
+    }
+
+    public void fixOffsets() {
+        configEncoders(offsets.calculateOffsets(frontLeftModule.getABSEncoder(), frontRightModule.getABSEncoder(), backLeftModule.getABSEncoder(), backRightModule.getABSEncoder()));
+    }
+
+    public void zeroGyro() {
+        navxGyro.zeroYaw();
+        navxGyro.calibrate();
+    }
+
+    public double getPitch() {
+        return navxGyro.getPitch();
+    }
+
+    public void updateOdometry() {
+        odometry.update(robotRotation, positions);
+    }
+
+    public void correctOdometry(Pose2d position, double timeStamp) {
+        odometry.addVisionMeasurement(position, timeStamp);
     }
 
     public void stop() {
-
-        frontLeftModule.stop();
-        frontRightModule.stop();
-        backLeftModule.stop();
-        backRightModule.stop();
-
+        frontLeftModule.stopMotors();
+        frontRightModule.stopMotors();
+        backLeftModule.stopMotors();
+        backRightModule.stopMotors();
     }
 
 }
