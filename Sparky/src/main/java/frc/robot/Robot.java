@@ -4,9 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -39,6 +39,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 	private final SendableChooser <String> autoDropdown = new SendableChooser <> ();
 
 	private static boolean inAuto = false;
+    private static boolean autoMode = true;
 	private static boolean isFMSAttached = false;
 	private static Alliance alliance = Alliance.Invalid;
 	private static double matchTime = 0;
@@ -62,6 +63,8 @@ import frc.robot.drivetrain.SwerveKinematics;
         autoDropdown.addOption("Charge - Left", "cl");
         autoDropdown.addOption("Charge - Right", "cr");
         SmartDashboard.putData("Auto Sequence", autoDropdown);
+
+        SmartDashboard.putBoolean("autoMode", true);
 
 	}
 
@@ -112,8 +115,10 @@ import frc.robot.drivetrain.SwerveKinematics;
 		LED.currentColor = LED.RAINBOW_rainbowPallete;
 
 		matchTime = 15;
+
+        autoMode = SmartDashboard.getBoolean("autoMode", true);
 		
-		Auto.selectAuto(selectedAuto, chassis.odometry::getEstimatedPosition, chassis::drive);
+		Auto.selectAuto(autoMode, selectedAuto, chassis.odometry::getEstimatedPosition, chassis::drive);
 
 	}
 
@@ -123,8 +128,11 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		updateMatchTime();
 
-		Auto.autoCommand.execute();
-		// inputs = auto.read();
+        if (autoMode) {
+            inputs = Auto.readFile();
+        } else {
+            Auto.autoCommand.execute();
+        }
 
 	}
 
@@ -180,11 +188,46 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 	/** This function is called once when test mode is enabled. */
 	@Override
-	public void testInit() {}
+	public void testInit() {
+
+        getDSData();
+
+		chassis.configPIDS();
+
+		inputs = Controller.nullControls();
+
+		inAuto = true;
+		holding = false;
+		autoLeveling = false;
+		arm.setLevel(0);
+
+		chassis.zeroGyro();
+
+		LED.currentColor = LED.RAINBOW_rainbowPallete;
+
+		matchTime = 15;
+
+        autoMode = SmartDashboard.getBoolean("autoMode", true);
+
+        if (autoMode) {
+            Auto.selectAuto(true, selectedAuto, null, null);
+        }
+
+    }
 
 	/** This function is called periodically during test mode. */
 	@Override
-	public void testPeriodic() {}
+	public void testPeriodic() {
+
+        if (autoMode & (matchTime > 0)) {
+            Auto.record(inputs);
+
+            RunControls();
+
+            updateMatchTime();
+        }
+
+    }
 
 	/** This function is called once when the robot is first started up. */
 	@Override
@@ -405,17 +448,17 @@ import frc.robot.drivetrain.SwerveKinematics;
 	void updateDashboard() {
 
         if (!isFMSAttached & isDisabled()) {
-        	Rotation2d[] encVals = chassis.absEncoderValues();
-            SmartDashboard.putNumber("frontLeft", encVals[0].getDegrees());
-            SmartDashboard.putNumber("frontRight", encVals[1].getDegrees());
-            SmartDashboard.putNumber("backLeft", encVals[2].getDegrees());
-            SmartDashboard.putNumber("backRight", encVals[3].getDegrees());
-
 			SmartDashboard.putNumber("armA", arm.getArmEncoder());
         	SmartDashboard.putNumber("intakeA", arm.getIntakeEncoder());
 		}
+        Rotation2d[] encVals = chassis.absEncoderValues();
 
-        SmartDashboard.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
+        SmartDashboard.putNumberArray("moduleStates", new double[] {encVals[0].getDegrees(),encVals[1].getDegrees(),encVals[2].getDegrees(),encVals[3].getDegrees()});
+        SmartDashboard.putNumber("gyro", chassis.robotRotation.getDegrees());
+        
+        Pose2d position = chassis.odometry.getEstimatedPosition();
+        SmartDashboard.putNumberArray("odometry", new double[] {position.getX(), position.getY(), position.getRotation().getDegrees()});
+
     }
 
 	void getDSData() {

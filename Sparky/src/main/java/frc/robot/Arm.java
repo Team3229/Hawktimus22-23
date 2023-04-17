@@ -23,10 +23,6 @@ public class Arm {
     public double[] holdAng = {0,0};
 
     public int goalLevel = 0;
-    private int armEncoderBuffer = 0;
-    private double armEncoderValue = 0;
-    private int intakeEncoderBuffer = 0;
-    private double intakeEncoderValue = 0;
 
     private boolean holdingCube = true;
     private boolean holdingCone = false;
@@ -88,14 +84,14 @@ public class Arm {
         armEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         armEncoder.configSensorDirection(true);
         armEncoder.configMagnetOffset(ARM_OFFSET);
-        armEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
+        armEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 20);
 
         intakeEncoder = new CANCoder(INTAKE_ENCODER_ID);
         intakeEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         intakeEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         intakeEncoder.configSensorDirection(true);
         intakeEncoder.configMagnetOffset(INTAKE_OFFSET);
-        intakeEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
+        intakeEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 20);
 
         armMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         armMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
@@ -109,23 +105,13 @@ public class Arm {
 
     public double getArmEncoder() {
 
-        if (armEncoderBuffer++ > 7) {
-            armEncoderBuffer = 0;
-            armEncoderValue = armEncoder.getAbsolutePosition();
-        }
-
-        return MathUtil.inputModulus(armEncoderValue, 0, 360);
+        return MathUtil.inputModulus(armEncoder.getAbsolutePosition(), 0, 360);
 
     }
 
     public double getIntakeEncoder() {
 
-        if (intakeEncoderBuffer++ > 7) {
-            intakeEncoderBuffer = 0;
-            intakeEncoderValue = intakeEncoder.getAbsolutePosition();
-        }
-
-        return MathUtil.inputModulus(intakeEncoderValue, 0, 360);
+        return MathUtil.inputModulus(intakeEncoder.getAbsolutePosition(), 0, 360);
 
     }
 
