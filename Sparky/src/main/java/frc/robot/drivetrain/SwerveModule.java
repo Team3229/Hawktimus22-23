@@ -89,7 +89,8 @@ public class SwerveModule {
         angleEncoder.setPositionConversionFactor(360/12.8);
         angleEncoder.setPosition(getABSEncoder().getDegrees());
 
-        driveEncoder.setVelocityConversionFactor(((2*Math.PI*wheelRadius)/60)*8.14);
+        driveEncoder.setVelocityConversionFactor(((2*Math.PI*wheelRadius)/60)/8.14);
+        driveEncoder.setPositionConversionFactor(1/8.14);
 
     }
 
@@ -115,7 +116,7 @@ public class SwerveModule {
     }
 
     public SwerveModulePosition getModuleState() {
-        return new SwerveModulePosition(driveEncoder.getVelocity(), getEncoder());
+        return new SwerveModulePosition(driveEncoder.getPosition(), getEncoder());
     }
 
     public void stopMotors() {

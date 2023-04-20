@@ -53,7 +53,7 @@ public class Auto {
 	private static FollowPathWithEvents events;
 
 	private static final double maxVel = 4;
-	private static final double maxAccel = 3;
+	private static final double maxAccel = 1;
 
 	private static PIDController linearController = new PIDController(0.7, 0, 0);
 	private static PIDController rotationalController = new PIDController(0.02, 0, 0);

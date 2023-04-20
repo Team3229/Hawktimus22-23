@@ -57,11 +57,11 @@ import frc.robot.drivetrain.SwerveKinematics;
 		chassis.configPIDS();
 
 		autoDropdown.setDefaultOption("Default", "def");
-        autoDropdown.addOption("Basic - Left", "bl");
-        autoDropdown.addOption("Basic - Mid", "bm");
-        autoDropdown.addOption("Basic - Right", "br");
-        autoDropdown.addOption("Charge - Left", "cl");
-        autoDropdown.addOption("Charge - Right", "cr");
+        autoDropdown.addOption("Basic - Left", "bbl");
+        autoDropdown.addOption("Basic - Mid", "bbm");
+        autoDropdown.addOption("Basic - Right", "bbr");
+        autoDropdown.addOption("Charge - Left", "ccl");
+        autoDropdown.addOption("Charge - Right", "ccr");
         SmartDashboard.putData("Auto Sequence", autoDropdown);
 
         SmartDashboard.putBoolean("autoMode", true);
@@ -102,8 +102,11 @@ import frc.robot.drivetrain.SwerveKinematics;
 		getDSData();
 
 		chassis.configPIDS();
+        Auto.closeFile();
 
 		inputs = Controller.nullControls();
+
+        Auto.autoFinished = false;
 
 		inAuto = true;
 		holding = false;
@@ -115,6 +118,8 @@ import frc.robot.drivetrain.SwerveKinematics;
 		LED.currentColor = LED.RAINBOW_rainbowPallete;
 
 		matchTime = 15;
+
+        selectedAuto = autoDropdown.getSelected();
 
         autoMode = SmartDashboard.getBoolean("autoMode", true);
 		
@@ -129,7 +134,34 @@ import frc.robot.drivetrain.SwerveKinematics;
 		updateMatchTime();
 
         if (autoMode) {
-            inputs = Auto.readFile();
+
+            if (Auto.autoFinished) {
+                inputs = Controller.nullControls();
+                if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
+                    chassis.drive(0, -0.07, 0);
+                }
+            } else {
+                if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
+                    chassis.drive(0, -0.07, 0);
+                } else if (selectedAuto == "def") {
+                    chassis.drive(0, -0.1, 0);
+                } else {
+                    inputs = Auto.readFile();
+                    if (selectedAuto == "bbl" | selectedAuto == "bbr") {
+                        inputs.d_leftY = -inputs.d_leftY;
+                        if (inputs.d_POV == 0) {
+                            inputs.d_POV = 180;
+                        } else if (inputs.d_POV == 90) {
+                            inputs.d_POV = 270;
+                        } else if (inputs.d_POV == 180) {
+                            inputs.d_POV = 0;
+                        } else if (inputs.d_POV == 270) {
+                            inputs.d_POV = 90;
+                        }
+                    }
+                    RunControls();
+                }
+            }
         } else {
             Auto.autoCommand.execute();
         }
@@ -147,6 +179,8 @@ import frc.robot.drivetrain.SwerveKinematics;
 		autoLeveling = false;
 		holding = false;
 		inAuto = false;
+
+        Auto.autoFinished = false;
 
 		if (SmartDashboard.getBoolean("resetAngleOffsets", false)) {
 			chassis.fixOffsets();
@@ -196,6 +230,8 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		inputs = Controller.nullControls();
 
+        selectedAuto = autoDropdown.getSelected();
+
 		inAuto = true;
 		holding = false;
 		autoLeveling = false;
@@ -210,7 +246,7 @@ import frc.robot.drivetrain.SwerveKinematics;
         autoMode = SmartDashboard.getBoolean("autoMode", true);
 
         if (autoMode) {
-            Auto.selectAuto(true, selectedAuto, null, null);
+            Auto.setupRecording(selectedAuto);
         }
 
     }
@@ -220,6 +256,9 @@ import frc.robot.drivetrain.SwerveKinematics;
 	public void testPeriodic() {
 
         if (autoMode & (matchTime > 0)) {
+
+            inputs = controller.getControls();
+            
             Auto.record(inputs);
 
             RunControls();
@@ -302,7 +341,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
         }
 
-		if (limelight.seesTag & (matchTime%2 == 0)) {
+		if (limelight.seesTag & (matchTime == 0)) {
 			chassis.navxGyro.setAngleAdjustment(chassis.robotRotation.minus(limelight.position.getRotation()).getDegrees());
 		}
 

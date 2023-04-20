@@ -35,7 +35,7 @@ public class SwerveKinematics {
 
     // PID
     private static final double[] anglePID = {0.01, 0.0001, 0};
-    private static final double[] drivePID = {0, 0, 0};
+    private static final double[] drivePID = {0.1, 0, 0};
 
     // Constants
     private static final double robotWidth = 0.762;
@@ -73,7 +73,7 @@ public class SwerveKinematics {
             robotRotation = Rotation2d.fromDegrees(navxGyro.getAngle());
         }
 
-        chassisState = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxChassisRotationSpeed, robotRotation);
+        chassisState = ChassisSpeeds.fromFieldRelativeSpeeds(Y*12, X*12, Z*maxChassisRotationSpeed*12, robotRotation);
         moduleStates = kinematics.toSwerveModuleStates(chassisState);
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, maxModuleSpeed);
 

@@ -30,7 +30,7 @@ public class Arm {
     // CAN IDs
     private static final int ARM_ID = 16;
     private static final int ARM_FOLLOW_ID = 17;
-    private static final int INTAKE_ID = 19;
+    private static final int INTAKE_ID = 18;
     private static final int ARM_ENCODER_ID = 19;
     private static final int INTAKE_ENCODER_ID = 20;
 
@@ -56,7 +56,7 @@ public class Arm {
     private static final double MID_CUBE = 221.044921875;
     private static final double HYBRID = 325.8984375;
     private static final double PLAYER = 247.587890625;
-    private static final double DOCK = 10;
+    private static final double DOCK = 17;
 
     private static final double IHIGH_CONE = 238.8640625;
     private static final double IHIGH_CUBE = 204.515625;

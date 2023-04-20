@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.XboxController;
 
 public class Controller {
   //Limits
-  static final double STICK_DEADBAND = 0.125;
+  static final double STICK_DEADBAND = 0.15;
   static final double TRIGGER_DEADBAND = 0.1;
 
   // Controller
