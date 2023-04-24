@@ -30,16 +30,16 @@ public class SwerveKinematics {
 
     // Create gyro and rotation objects
     public AHRS navxGyro;
-    public Rotation2d robotRotation;
+    public Rotation2d robotRotation = Rotation2d.fromDegrees(0);
     public boolean relativeMode = false;
 
     // PID
     private static final double[] anglePID = {0.01, 0.0001, 0};
-    private static final double[] drivePID = {0, 0, 0};
+    private static final double[] drivePID = {0.1, 0, 0};
 
     // Constants
     private static final double robotWidth = 0.762;
-    private static final double maxModuleSpeed = 1; //meters/sec
+    private static final double maxModuleSpeed = 12; //meters/sec
     private static final double maxChassisRotationSpeed = 0.75; //radians/sec
 
     public SwerveKinematics() {
@@ -58,11 +58,11 @@ public class SwerveKinematics {
 
         positions = new SwerveModulePosition[4];
 
-        for (int i = 0; i < moduleStates.length; i++) {
-            positions[i] = new SwerveModulePosition(moduleStates[i].speedMetersPerSecond, moduleStates[i].angle);
+        for (int i = 0; i < 4; i++) {
+            positions[i] = new SwerveModulePosition(0, Rotation2d.fromDegrees(0));
         }
 
-        odometry = new SwerveDrivePoseEstimator(kinematics, robotRotation, positions, null);
+        odometry = new SwerveDrivePoseEstimator(kinematics, robotRotation, positions, new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
 
     }
 
@@ -73,26 +73,27 @@ public class SwerveKinematics {
             robotRotation = Rotation2d.fromDegrees(navxGyro.getAngle());
         }
 
-        chassisState = ChassisSpeeds.fromFieldRelativeSpeeds(Y, X, Z*maxChassisRotationSpeed, robotRotation);
+        chassisState = ChassisSpeeds.fromFieldRelativeSpeeds(Y*12, X*12, Z*maxChassisRotationSpeed*12, robotRotation);
         moduleStates = kinematics.toSwerveModuleStates(chassisState);
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, maxModuleSpeed);
 
         frontLeftModule.setState(moduleStates[0]);
-        frontRightModule.setState(moduleStates[0]);
-        backLeftModule.setState(moduleStates[0]);
-        backRightModule.setState(moduleStates[0]);
+        frontRightModule.setState(moduleStates[1]);
+        backLeftModule.setState(moduleStates[2]);
+        backRightModule.setState(moduleStates[3]);
 
     }
 
     public void drive(ChassisSpeeds speeds) {
-        
+
+        robotRotation = Rotation2d.fromDegrees(navxGyro.getAngle());
         moduleStates = kinematics.toSwerveModuleStates(speeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, maxModuleSpeed);
 
         frontLeftModule.setState(moduleStates[0]);
-        frontRightModule.setState(moduleStates[0]);
-        backLeftModule.setState(moduleStates[0]);
-        backRightModule.setState(moduleStates[0]);
+        frontRightModule.setState(moduleStates[1]);
+        backLeftModule.setState(moduleStates[2]);
+        backRightModule.setState(moduleStates[3]);
     }
 
     public void configEncoders() {
@@ -135,6 +136,10 @@ public class SwerveKinematics {
     }
 
     public void updateOdometry() {
+        positions[0] = frontLeftModule.getModuleState();
+        positions[1] = frontRightModule.getModuleState();
+        positions[2] = backLeftModule.getModuleState();
+        positions[3] = backRightModule.getModuleState();
         odometry.update(robotRotation, positions);
     }
 

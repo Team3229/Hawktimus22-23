@@ -14,6 +14,7 @@ import com.revrobotics.SparkMaxPIDController.AccelStrategy;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public class SwerveModule {
@@ -65,10 +66,10 @@ public class SwerveModule {
         driveMotor.setIdleMode(IdleMode.kBrake);
         driveMotor.setOpenLoopRampRate(0.5);
 
-        driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
+        driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 20);
         driveMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
         angleMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
-        angleMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
+        angleMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 20);
 
     }
 
@@ -82,13 +83,14 @@ public class SwerveModule {
     public void configEncoder(double offset) {
         
         absEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
-        absEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
+        absEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 20);
         absEncoder.configMagnetOffset(offset);
 
         angleEncoder.setPositionConversionFactor(360/12.8);
         angleEncoder.setPosition(getABSEncoder().getDegrees());
 
-        driveEncoder.setVelocityConversionFactor((2*Math.PI*wheelRadius)/60);
+        driveEncoder.setVelocityConversionFactor(((2*Math.PI*wheelRadius)/60)/8.14);
+        driveEncoder.setPositionConversionFactor(1/8.14);
 
     }
 
@@ -111,6 +113,10 @@ public class SwerveModule {
 
     public Rotation2d getEncoder() {
         return Rotation2d.fromDegrees(angleEncoder.getPosition());
+    }
+
+    public SwerveModulePosition getModuleState() {
+        return new SwerveModulePosition(driveEncoder.getPosition(), getEncoder());
     }
 
     public void stopMotors() {

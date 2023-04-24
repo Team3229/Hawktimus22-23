@@ -12,7 +12,8 @@ public class Leveling {
     public static double getBalanced(double currentPitch) {
 
         if (currentPitch < -ANGLE_TOLERANCE | currentPitch > ANGLE_TOLERANCE) {
-            return MOVE_SPEED*currentPitch;
+            // return MOVE_SPEED*currentPitch;
+            return 0;
         } else {
             return 0;
         }

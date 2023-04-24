@@ -23,10 +23,6 @@ public class Arm {
     public double[] holdAng = {0,0};
 
     public int goalLevel = 0;
-    private int armEncoderBuffer = 0;
-    private double armEncoderValue = 0;
-    private int intakeEncoderBuffer = 0;
-    private double intakeEncoderValue = 0;
 
     private boolean holdingCube = true;
     private boolean holdingCone = false;
@@ -34,7 +30,7 @@ public class Arm {
     // CAN IDs
     private static final int ARM_ID = 16;
     private static final int ARM_FOLLOW_ID = 17;
-    private static final int INTAKE_ID = 19;
+    private static final int INTAKE_ID = 18;
     private static final int ARM_ENCODER_ID = 19;
     private static final int INTAKE_ENCODER_ID = 20;
 
@@ -60,7 +56,7 @@ public class Arm {
     private static final double MID_CUBE = 221.044921875;
     private static final double HYBRID = 325.8984375;
     private static final double PLAYER = 247.587890625;
-    private static final double DOCK = 10;
+    private static final double DOCK = 17;
 
     private static final double IHIGH_CONE = 238.8640625;
     private static final double IHIGH_CUBE = 204.515625;
@@ -88,14 +84,14 @@ public class Arm {
         armEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         armEncoder.configSensorDirection(true);
         armEncoder.configMagnetOffset(ARM_OFFSET);
-        armEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
+        armEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 20);
 
         intakeEncoder = new CANCoder(INTAKE_ENCODER_ID);
         intakeEncoder.configAbsoluteSensorRange(AbsoluteSensorRange.Unsigned_0_to_360);
         intakeEncoder.configSensorInitializationStrategy(SensorInitializationStrategy.BootToAbsolutePosition);
         intakeEncoder.configSensorDirection(true);
         intakeEncoder.configMagnetOffset(INTAKE_OFFSET);
-        intakeEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 100);
+        intakeEncoder.setStatusFramePeriod(CANCoderStatusFrame.SensorData, 20);
 
         armMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         armMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
@@ -109,23 +105,13 @@ public class Arm {
 
     public double getArmEncoder() {
 
-        if (armEncoderBuffer++ > 7) {
-            armEncoderBuffer = 0;
-            armEncoderValue = armEncoder.getAbsolutePosition();
-        }
-
-        return MathUtil.inputModulus(armEncoderValue, 0, 360);
+        return MathUtil.inputModulus(armEncoder.getAbsolutePosition(), 0, 360);
 
     }
 
     public double getIntakeEncoder() {
 
-        if (intakeEncoderBuffer++ > 7) {
-            intakeEncoderBuffer = 0;
-            intakeEncoderValue = intakeEncoder.getAbsolutePosition();
-        }
-
-        return MathUtil.inputModulus(intakeEncoderValue, 0, 360);
+        return MathUtil.inputModulus(intakeEncoder.getAbsolutePosition(), 0, 360);
 
     }
 

@@ -4,9 +4,9 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -39,6 +39,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 	private final SendableChooser <String> autoDropdown = new SendableChooser <> ();
 
 	private static boolean inAuto = false;
+    private static boolean autoMode = true;
 	private static boolean isFMSAttached = false;
 	private static Alliance alliance = Alliance.Invalid;
 	private static double matchTime = 0;
@@ -56,12 +57,14 @@ import frc.robot.drivetrain.SwerveKinematics;
 		chassis.configPIDS();
 
 		autoDropdown.setDefaultOption("Default", "def");
-        autoDropdown.addOption("Basic - Left", "bl");
-        autoDropdown.addOption("Basic - Mid", "bm");
-        autoDropdown.addOption("Basic - Right", "br");
-        autoDropdown.addOption("Charge - Left", "cl");
-        autoDropdown.addOption("Charge - Right", "cr");
+        autoDropdown.addOption("Basic - Left", "bbl");
+        autoDropdown.addOption("Basic - Mid", "bbm");
+        autoDropdown.addOption("Basic - Right", "bbr");
+        autoDropdown.addOption("Charge - Left", "ccl");
+        autoDropdown.addOption("Charge - Right", "ccr");
         SmartDashboard.putData("Auto Sequence", autoDropdown);
+
+        SmartDashboard.putBoolean("autoMode", true);
 
 	}
 
@@ -99,8 +102,11 @@ import frc.robot.drivetrain.SwerveKinematics;
 		getDSData();
 
 		chassis.configPIDS();
+        Auto.closeFile();
 
 		inputs = Controller.nullControls();
+
+        Auto.autoFinished = false;
 
 		inAuto = true;
 		holding = false;
@@ -112,8 +118,12 @@ import frc.robot.drivetrain.SwerveKinematics;
 		LED.currentColor = LED.RAINBOW_rainbowPallete;
 
 		matchTime = 15;
+
+        selectedAuto = autoDropdown.getSelected();
+
+        autoMode = SmartDashboard.getBoolean("autoMode", true);
 		
-		Auto.selectAuto(selectedAuto, chassis.odometry::getEstimatedPosition, chassis::drive);
+		Auto.selectAuto(autoMode, selectedAuto, chassis.odometry::getEstimatedPosition, chassis::drive);
 
 	}
 
@@ -123,8 +133,38 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		updateMatchTime();
 
-		Auto.autoCommand.execute();
-		// inputs = auto.read();
+        if (autoMode) {
+
+            if (Auto.autoFinished) {
+                inputs = Controller.nullControls();
+                if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
+                    chassis.drive(0, -0.07, 0);
+                }
+            } else {
+                if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
+                    chassis.drive(0, -0.07, 0);
+                } else if (selectedAuto == "def") {
+                    chassis.drive(0, -0.1, 0);
+                } else {
+                    inputs = Auto.readFile();
+                    if (selectedAuto == "bbl" | selectedAuto == "bbr") {
+                        inputs.d_leftY = -inputs.d_leftY;
+                        if (inputs.d_POV == 0) {
+                            inputs.d_POV = 180;
+                        } else if (inputs.d_POV == 90) {
+                            inputs.d_POV = 270;
+                        } else if (inputs.d_POV == 180) {
+                            inputs.d_POV = 0;
+                        } else if (inputs.d_POV == 270) {
+                            inputs.d_POV = 90;
+                        }
+                    }
+                    RunControls();
+                }
+            }
+        } else {
+            Auto.autoCommand.execute();
+        }
 
 	}
 
@@ -139,6 +179,8 @@ import frc.robot.drivetrain.SwerveKinematics;
 		autoLeveling = false;
 		holding = false;
 		inAuto = false;
+
+        Auto.autoFinished = false;
 
 		if (SmartDashboard.getBoolean("resetAngleOffsets", false)) {
 			chassis.fixOffsets();
@@ -180,11 +222,51 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 	/** This function is called once when test mode is enabled. */
 	@Override
-	public void testInit() {}
+	public void testInit() {
+
+        getDSData();
+
+		chassis.configPIDS();
+
+		inputs = Controller.nullControls();
+
+        selectedAuto = autoDropdown.getSelected();
+
+		inAuto = true;
+		holding = false;
+		autoLeveling = false;
+		arm.setLevel(0);
+
+		chassis.zeroGyro();
+
+		LED.currentColor = LED.RAINBOW_rainbowPallete;
+
+		matchTime = 15;
+
+        autoMode = SmartDashboard.getBoolean("autoMode", true);
+
+        if (autoMode) {
+            Auto.setupRecording(selectedAuto);
+        }
+
+    }
 
 	/** This function is called periodically during test mode. */
 	@Override
-	public void testPeriodic() {}
+	public void testPeriodic() {
+
+        if (autoMode & (matchTime > 0)) {
+
+            inputs = controller.getControls();
+            
+            Auto.record(inputs);
+
+            RunControls();
+
+            updateMatchTime();
+        }
+
+    }
 
 	/** This function is called once when the robot is first started up. */
 	@Override
@@ -259,7 +341,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
         }
 
-		if (limelight.seesTag & (matchTime%2 == 0)) {
+		if (limelight.seesTag & (matchTime == 0)) {
 			chassis.navxGyro.setAngleAdjustment(chassis.robotRotation.minus(limelight.position.getRotation()).getDegrees());
 		}
 
@@ -405,17 +487,17 @@ import frc.robot.drivetrain.SwerveKinematics;
 	void updateDashboard() {
 
         if (!isFMSAttached & isDisabled()) {
-        	Rotation2d[] encVals = chassis.absEncoderValues();
-            SmartDashboard.putNumber("frontLeft", encVals[0].getDegrees());
-            SmartDashboard.putNumber("frontRight", encVals[1].getDegrees());
-            SmartDashboard.putNumber("backLeft", encVals[2].getDegrees());
-            SmartDashboard.putNumber("backRight", encVals[3].getDegrees());
-
 			SmartDashboard.putNumber("armA", arm.getArmEncoder());
         	SmartDashboard.putNumber("intakeA", arm.getIntakeEncoder());
 		}
+        Rotation2d[] encVals = chassis.absEncoderValues();
 
-        SmartDashboard.putNumber("CAN Uilization", Math.floor(RobotController.getCANStatus().percentBusUtilization*100));
+        SmartDashboard.putNumberArray("moduleStates", new double[] {encVals[0].getDegrees(),encVals[1].getDegrees(),encVals[2].getDegrees(),encVals[3].getDegrees()});
+        SmartDashboard.putNumber("gyro", chassis.robotRotation.getDegrees());
+        
+        Pose2d position = chassis.odometry.getEstimatedPosition();
+        SmartDashboard.putNumberArray("odometry", new double[] {position.getX(), position.getY(), position.getRotation().getDegrees()});
+
     }
 
 	void getDSData() {
