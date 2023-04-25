@@ -70,7 +70,7 @@ public class SwerveKinematics {
         if (relativeMode) {
             robotRotation = Rotation2d.fromDegrees(180);
         } else {
-            robotRotation = Rotation2d.fromDegrees(navxGyro.getAngle());
+            robotRotation = Rotation2d.fromDegrees(navxGyro.getYaw()*-1);
         }
 
         chassisState = ChassisSpeeds.fromFieldRelativeSpeeds(Y*12, X*12, Z*maxChassisRotationSpeed*12, robotRotation);
@@ -86,7 +86,7 @@ public class SwerveKinematics {
 
     public void drive(ChassisSpeeds speeds) {
 
-        robotRotation = Rotation2d.fromDegrees(navxGyro.getAngle());
+        robotRotation = Rotation2d.fromDegrees(navxGyro.getYaw()*-1);
         moduleStates = kinematics.toSwerveModuleStates(speeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, maxModuleSpeed);
 

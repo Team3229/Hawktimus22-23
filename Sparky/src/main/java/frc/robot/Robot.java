@@ -60,7 +60,7 @@ import frc.robot.drivetrain.SwerveKinematics;
         autoDropdown.addOption("Basic - Left", "bbl");
         autoDropdown.addOption("Basic - Mid", "bbm");
         autoDropdown.addOption("Basic - Right", "bbr");
-        autoDropdown.addOption("Charge - Left", "ccl");
+        autoDropdown.addOption("Basic - Only Score", "ccl");
         autoDropdown.addOption("Charge - Right", "ccr");
         SmartDashboard.putData("Auto Sequence", autoDropdown);
 
@@ -138,13 +138,13 @@ import frc.robot.drivetrain.SwerveKinematics;
             if (Auto.autoFinished) {
                 inputs = Controller.nullControls();
                 if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
-                    chassis.drive(0, -0.07, 0);
+                    chassis.drive(0, -0.13, 0);
                 }
             } else {
                 if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
-                    chassis.drive(0, -0.07, 0);
+                    chassis.drive(0, -0.13, 0);
                 } else if (selectedAuto == "def") {
-                    chassis.drive(0, -0.1, 0);
+                    chassis.drive(0, -0.13, 0);
                 } else {
                     inputs = Auto.readFile();
                     if (selectedAuto == "bbl" | selectedAuto == "bbr") {
@@ -341,9 +341,9 @@ import frc.robot.drivetrain.SwerveKinematics;
 
         }
 
-		if (limelight.seesTag & (matchTime == 0)) {
-			chassis.navxGyro.setAngleAdjustment(chassis.robotRotation.minus(limelight.position.getRotation()).getDegrees());
-		}
+		if (inputs.d_AButton) {
+            chassis.navxGyro.zeroYaw();
+        }
 
         // toggle auto level (only for autonomous)
         if (inputs.d_StartButton & inAuto) {
@@ -399,6 +399,10 @@ import frc.robot.drivetrain.SwerveKinematics;
             } else {
                 intake.pcm.enableCompressorDigital();
             }
+        }
+        
+        if (inputs.m_BButton) {
+            chassis.configEncoders();
         }
 
         if (inputs.m_BackButton) {
@@ -463,7 +467,12 @@ import frc.robot.drivetrain.SwerveKinematics;
 
         // Grabbing cone
         if (inputs.m_LeftTriggerAxis > 0.1) {
-            intake.placeObject(true);
+            if (inAuto) {
+                intake.placeObject(true);
+            } else {
+                intake.intakeMotor.set(0.2);
+                intake.intakeFollowerMotor.set(0.2);
+            }
             LED.currentColor = LED.SOLID_gold;
         } else {
             if (inputs.m_RightTriggerAxis > 0.1) {
@@ -489,14 +498,16 @@ import frc.robot.drivetrain.SwerveKinematics;
         if (!isFMSAttached & isDisabled()) {
 			SmartDashboard.putNumber("armA", arm.getArmEncoder());
         	SmartDashboard.putNumber("intakeA", arm.getIntakeEncoder());
+            SmartDashboard.putNumber("gyro", chassis.robotRotation.getDegrees());
 		}
         Rotation2d[] encVals = chassis.absEncoderValues();
 
         SmartDashboard.putNumberArray("moduleStates", new double[] {encVals[0].getDegrees(),encVals[1].getDegrees(),encVals[2].getDegrees(),encVals[3].getDegrees()});
-        SmartDashboard.putNumber("gyro", chassis.robotRotation.getDegrees());
         
         Pose2d position = chassis.odometry.getEstimatedPosition();
         SmartDashboard.putNumberArray("odometry", new double[] {position.getX(), position.getY(), position.getRotation().getDegrees()});
+
+        SmartDashboard.putNumber("Time Left", matchTime);
 
     }
 
