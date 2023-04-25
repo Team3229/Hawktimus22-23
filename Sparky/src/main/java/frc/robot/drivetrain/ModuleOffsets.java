@@ -1,34 +1,35 @@
 //Otters: 3229 Programming SubTeam
 
-package frc.robot.filemanagers;
+package frc.robot.drivetrain;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Scanner;
 
-import frc.robot.Dashboard;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
-public class SwerveOffsets {
+public class ModuleOffsets {
 
     private final String path = "/home/lvuser/";
     private final String[] fileNames = {"frontLeft.txt", "frontRight.txt", "backLeft.txt", "backRight.txt"};
 
-    Dashboard dash = new Dashboard();
-
-    public SwerveOffsets() {
-        dash.putBool("resetAngleOffsets", false);
+    public ModuleOffsets() {
+        SmartDashboard.putBoolean("resetAngleOffsets", false);
     }
 
-    public double[] calculateOffsets(double fL, double fR, double bL, double bR) {
+    public double[] calculateOffsets(Rotation2d fL, Rotation2d fR, Rotation2d bL, Rotation2d bR) {
         // takes the current values, assumes they should be 0, and returns an [] of the new values to set them to after storing it for futute use
         // if old offsets < 90, its closer to 0. Else if > 90 & < 270, closer to 180. Else its > 270, so closer to 360
         // if the values passed, which are the current values, and should be zero.
-        double[] currentValues = readFiles();
+        double[] currentValues = read();
         double[] newOffsets = {
-            currentValues[0] + (fL < 90 ? -fL: fL > 90 && fL < 270 ? 180 - fL:360 - fL),
-            currentValues[1] + (fR < 90 ? -fR: fR > 90 && fR < 270 ? 180 - fR:360 - fR),
-            currentValues[2] + (bL < 90 ? -bL: bL > 90 && bL < 270 ? 180 - bL:360 - bL),
-            currentValues[3] + (bR < 90 ? -bR: bR > 90 && bR < 270 ? 180 - bR:360 - bR)
+            currentValues[0] + (fL.getDegrees() < 90 ? -fL.getDegrees(): fL.getDegrees() > 90 && fL.getDegrees() < 270 ? 180 - fL.getDegrees():360 - fL.getDegrees()),
+            currentValues[1] + (fR.getDegrees() < 90 ? -fR.getDegrees(): fR.getDegrees() > 90 && fR.getDegrees() < 270 ? 180 - fR.getDegrees():360 - fR.getDegrees()),
+            currentValues[2] + (bL.getDegrees() < 90 ? -bL.getDegrees(): bL.getDegrees() > 90 && bL.getDegrees() < 270 ? 180 - bL.getDegrees():360 - bL.getDegrees()),
+            currentValues[3] + (bR.getDegrees() < 90 ? -bR.getDegrees(): bR.getDegrees() > 90 && bR.getDegrees() < 270 ? 180 - bR.getDegrees():360 - bR.getDegrees())
         };
         writeOffsets(newOffsets);
         return newOffsets;
@@ -36,7 +37,7 @@ public class SwerveOffsets {
 
     private void writeOffsets(double[] newAngles) {
         // attempt to write the new offsets to the file, catches exceptions if failure
-        // writes strings to the file, need to parse it to double once read.
+        // writes strings to the file, need to parse it to doubl.getDegrees()e once read.
         try {
             for (int i = 0; i < fileNames.length; i++) {
                 FileWriter writer = new FileWriter(path + fileNames[i]);
@@ -49,8 +50,8 @@ public class SwerveOffsets {
         }
     }
 
-    public double[] readFiles() {
-        // returns the currently stored values, 0,0,0,0 if none, as doubles.
+    public double[] read() {
+        // returns the currently stored values, 0,0,0,0 if none, as doubl.getDegrees()es.
         double[] values = {0,0,0,0};
         try {
             for (int i = 0; i < fileNames.length; i++) {

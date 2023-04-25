@@ -1,19 +1,18 @@
 //Otters: 3229 Programming SubTeam
 
 package frc.robot;
-public class Leveling {
-    private static final double MOVE_SPEED = 0.1;
-    private static final double TOTAL_ANGLE = 10;
 
-    static Dashboard dash = new Dashboard();
+public class Leveling {
+    private static final double ANGLE_TOLERANCE = 0.2;
+    public static final double PITCH_OFFSET = 0.25;
+
     Leveling() {}
 
-    public static double getBalanced(double currentAngle) {
+    public static double getBalanced(double currentPitch) {
 
-        if (currentAngle < -TOTAL_ANGLE) {
-            return MOVE_SPEED;
-        } else if (currentAngle > TOTAL_ANGLE) {
-            return -MOVE_SPEED;
+        if (currentPitch < -ANGLE_TOLERANCE | currentPitch > ANGLE_TOLERANCE) {
+            // return MOVE_SPEED*currentPitch;
+            return 0;
         } else {
             return 0;
         }
