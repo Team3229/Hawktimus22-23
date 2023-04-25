@@ -27,8 +27,9 @@ import frc.robot.drivetrain.SwerveKinematics;
 	private static boolean autoLeveling = false;
 
 	private static boolean holding = false;
-	private static Controller controller = new Controller();
-	private static ControllerInputs inputs;
+	private static Inputs inputs = new Inputs(2);
+    private static final int DRIVE_CONTROLLER_ID = 0;
+    private static final int MANIP_CONTROLLER_ID = 1;
 	private static double[] dp = {0, 0};
 
 	private static SwerveKinematics chassis = new SwerveKinematics();
@@ -104,7 +105,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 		chassis.configPIDS();
         Auto.closeFile();
 
-		inputs = Controller.nullControls();
+		inputs.nullControls();
 
         Auto.autoFinished = false;
 
@@ -136,7 +137,7 @@ import frc.robot.drivetrain.SwerveKinematics;
         if (autoMode) {
 
             if (Auto.autoFinished) {
-                inputs = Controller.nullControls();
+                inputs.nullControls();
                 if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
                     chassis.drive(0, -0.07, 0);
                 }
@@ -148,15 +149,15 @@ import frc.robot.drivetrain.SwerveKinematics;
                 } else {
                     inputs = Auto.readFile();
                     if (selectedAuto == "bbl" | selectedAuto == "bbr") {
-                        inputs.d_leftY = -inputs.d_leftY;
-                        if (inputs.d_POV == 0) {
-                            inputs.d_POV = 180;
-                        } else if (inputs.d_POV == 90) {
-                            inputs.d_POV = 270;
-                        } else if (inputs.d_POV == 180) {
-                            inputs.d_POV = 0;
-                        } else if (inputs.d_POV == 270) {
-                            inputs.d_POV = 90;
+                        inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY = -inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY;
+                        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == 0) {
+                            inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV = 180;
+                        } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == 90) {
+                            inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV = 270;
+                        } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == 180) {
+                            inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV = 0;
+                        } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == 270) {
+                            inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV = 90;
                         }
                     }
                     RunControls();
@@ -174,7 +175,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		getDSData();
 
-		inputs = Controller.nullControls();
+		inputs.nullControls();
 
 		autoLeveling = false;
 		holding = false;
@@ -201,7 +202,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 	@Override
 	public void teleopPeriodic() {
 		updateMatchTime();
-		inputs = controller.getControls();
+		inputs.getControls();
 
         if (limelight.seesTag) {
             chassis.correctOdometry(limelight.position, Timer.getFPGATimestamp());
@@ -213,7 +214,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 	/** This function is called once when the robot is disabled. */
 	@Override
 	public void disabledInit() {
-		controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
+		inputs.Rumbles[DRIVE_CONTROLLER_ID].setRumble(RumbleType.kBothRumble, 0);
 	}
 
 	/** This function is called periodically when disabled. */
@@ -228,7 +229,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		chassis.configPIDS();
 
-		inputs = Controller.nullControls();
+		inputs.nullControls();
 
         selectedAuto = autoDropdown.getSelected();
 
@@ -257,7 +258,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
         if (autoMode & (matchTime > 0)) {
 
-            inputs = controller.getControls();
+            inputs.getControls();
             
             Auto.record(inputs);
 
@@ -306,38 +307,38 @@ import frc.robot.drivetrain.SwerveKinematics;
         if (!DriverStation.isJoystickConnected(0)) {
             chassis.stop();
         } else {
-            if (inputs.d_leftX != 0 | inputs.d_leftY != 0) {
-                if (inputs.d_LeftTriggerAxis > 0 & inputs.d_RightTriggerAxis > 0) {
-                    chassis.drive(invert*inputs.d_leftX*0.2, inputs.d_leftY*0.2, invert*inputs.d_rightX*0.2*1.5);
+            if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftX != 0 | inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY != 0) {
+                if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].LeftTriggerAxis > 0 & inputs.ControllerInputs[DRIVE_CONTROLLER_ID].RightTriggerAxis > 0) {
+                    chassis.drive(invert*inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftX*0.2, inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY*0.2, invert*inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightX*0.2*1.5);
                     if (!inAuto) {
-                        controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.2);
+                        inputs.Rumbles[DRIVE_CONTROLLER_ID].setRumble(RumbleType.kBothRumble, 0.2);
                     }
                     LED.currentColor = LED.SOLID_red;
-                } else if (inputs.d_LeftTriggerAxis > 0 | inputs.d_RightTriggerAxis > 0) {
-                    chassis.drive(invert*inputs.d_leftX*0.4, inputs.d_leftY*0.4, invert*inputs.d_rightX*0.4*1.5);
+                } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].LeftTriggerAxis > 0 | inputs.ControllerInputs[DRIVE_CONTROLLER_ID].RightTriggerAxis > 0) {
+                    chassis.drive(invert*inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftX*0.4, inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY*0.4, invert*inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightX*0.4*1.5);
                     if (!inAuto) {
-                        controller.d_rumble.setRumble(RumbleType.kBothRumble, 0.1);
+                        inputs.Rumbles[DRIVE_CONTROLLER_ID].setRumble(RumbleType.kBothRumble, 0.1);
                     }
                     LED.currentColor = LED.SOLID_redOrange;
                 } else {
-                    controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-                    chassis.drive(invert*inputs.d_leftX, inputs.d_leftY, invert*inputs.d_rightX*1.5);
+                    inputs.Rumbles[DRIVE_CONTROLLER_ID].setRumble(RumbleType.kBothRumble, 0);
+                    chassis.drive(invert*inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftX, inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY, invert*inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightX*1.5);
                 }
             } else {
                 // D-Pad driving slowly
-                controller.d_rumble.setRumble(RumbleType.kBothRumble, 0);
-                if (inputs.d_POV != -1) {
-                    dp = Utils.getDirectionalPadValues(inputs.d_POV);
-                    chassis.drive(invert*dp[0] / 3, dp[1] / 3, invert*inputs.d_rightX);
-                } else if (Math.abs(inputs.d_rightX) > 0){
-                    chassis.drive(0, 0, invert*inputs.d_rightX);
+                inputs.Rumbles[DRIVE_CONTROLLER_ID].setRumble(RumbleType.kBothRumble, 0);
+                if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV != -1) {
+                    dp = Utils.getDirectionalPadValues(inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV);
+                    chassis.drive(invert*dp[0] / 3, dp[1] / 3, invert*inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightX);
+                } else if (Math.abs(inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightX) > 0){
+                    chassis.drive(0, 0, invert*inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightX);
                 } else {
                     //Reset field orientation if we aren't moving the chassis
                     chassis.stop();
                 }
             }
 
-            chassis.relativeMode = inputs.d_LeftBumper; 
+            chassis.relativeMode = inputs.ControllerInputs[DRIVE_CONTROLLER_ID].LeftBumper; 
 
         }
 
@@ -346,7 +347,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 		}
 
         // toggle auto level (only for autonomous)
-        if (inputs.d_StartButton & inAuto) {
+        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].StartButton & inAuto) {
             autoLeveling = true;
         }
 
@@ -356,20 +357,20 @@ import frc.robot.drivetrain.SwerveKinematics;
         }
 
         // Line up with nearest cube grid
-        // if (inputs.d_XButton) {
+        // if (inputs.XButton) {
         //     double[] speeds = limelight.goToTarget(limelight.goToTag(), chassis.navxGyro.getYaw(), alliance);
         //     chassis.drive(speeds[0], speeds[1], speeds[2]);
-        //     LED.currentColor = LED.SOLID_white;
+        //     LED.currentColor = LED.SOLIwhite;
         // }
 
-        if (inputs.d_YButton) {
+        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].YButton) {
             chassis.configEncoders();
         }
 	}
 
 	void ExecuteManipControls() {
 		// dP for controlling arm levels
-        switch (inputs.m_POV) {
+        switch (inputs.ControllerInputs[MANIP_CONTROLLER_ID].POV) {
             case 0:
                 // up - High
                 arm.setLevel(3);
@@ -393,7 +394,7 @@ import frc.robot.drivetrain.SwerveKinematics;
     
         }
 
-        if (inputs.m_AButtonPressed) {
+        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].AButtonPressed) {
             if (intake.pcm.getCompressor()) {
                 intake.pcm.disableCompressor();
             } else {
@@ -401,7 +402,7 @@ import frc.robot.drivetrain.SwerveKinematics;
             }
         }
 
-        if (inputs.m_BackButton) {
+        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].BackButton) {
             // back - HP Station
             arm.setLevel(4);
             holding = false;
@@ -410,12 +411,12 @@ import frc.robot.drivetrain.SwerveKinematics;
         if(!DriverStation.isJoystickConnected(1)){
             arm.armMotor.stopMotor();
             arm.intakeMotor.stopMotor();
-        } else if (inputs.m_POV == -1 & inputs.m_leftY == 0 & inputs.m_rightY == 0){
+        } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == -1 & inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY == 0 & inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightY == 0){
             // if we have no input, stop the motors.
             arm.armMotor.stopMotor();
             arm.intakeMotor.stopMotor();
-            controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
-            controller.m_rumble.setRumble(RumbleType.kRightRumble, 0);
+            inputs.Rumbles[MANIP_CONTROLLER_ID].setRumble(RumbleType.kLeftRumble, 0);
+            inputs.Rumbles[MANIP_CONTROLLER_ID].setRumble(RumbleType.kRightRumble, 0);
             if(!holding & arm.goalLevel == 0){
                 // if we have no input, not already holding, and are not using dp to go somewhere, start holding
                 arm.holdAng[0] = arm.getArmEncoder();
@@ -423,7 +424,7 @@ import frc.robot.drivetrain.SwerveKinematics;
                 holding = true;
             }
             //no input, hold
-        } else if(inputs.m_leftY != 0 | inputs.m_rightY != 0){
+        } else if(inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY != 0 | inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightY != 0){
             // if we have a controller, have input on the sticks, we are manually moving. This should automatically override dp movement.
             arm.setLevel(0);
             // manual arming
@@ -431,52 +432,52 @@ import frc.robot.drivetrain.SwerveKinematics;
             // if we are using sticks we need to stop the dp movement, manual should ovverride it.
             holding = false;
             // tolerances so we don't kill the intake:
-            if ((arm.getIntakeEncoder() <= 78 & inputs.m_rightY < 0) | (arm.getIntakeEncoder() >= 330 & inputs.m_rightY > 0)) {
+            if ((arm.getIntakeEncoder() <= 78 & inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightY < 0) | (arm.getIntakeEncoder() >= 330 & inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightY > 0)) {
                 arm.intakeMotor.stopMotor();
                 if (!inAuto) {
-                    controller.m_rumble.setRumble(RumbleType.kRightRumble, 0.05);
+                    inputs.Rumbles[MANIP_CONTROLLER_ID].setRumble(RumbleType.kRightRumble, 0.05);
                 }
             } else {
-                arm.intakeMotor.set(inputs.m_rightY*0.3);
-                controller.m_rumble.setRumble(RumbleType.kRightRumble, 0);
+                arm.intakeMotor.set(inputs.ControllerInputs[DRIVE_CONTROLLER_ID].rightY*0.3);
+                inputs.Rumbles[MANIP_CONTROLLER_ID].setRumble(RumbleType.kRightRumble, 0);
             }
 
             // tolerances so we don't kill the arm:
-            if ((arm.getArmEncoder() >= 320 & arm.getArmEncoder() < 350 & inputs.m_leftY > 0) | (arm.getArmEncoder() <= 5 & inputs.m_leftY < 0)) {
+            if ((arm.getArmEncoder() >= 320 & arm.getArmEncoder() < 350 & inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY > 0) | (arm.getArmEncoder() <= 5 & inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY < 0)) {
                 arm.armMotor.stopMotor();
                 if (!inAuto) {
-                    controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0.05);
+                    inputs.Rumbles[MANIP_CONTROLLER_ID].setRumble(RumbleType.kLeftRumble, 0.05);
                 }
             } else {
-                arm.armMotor.set(inputs.m_leftY*0.2);
-                controller.m_rumble.setRumble(RumbleType.kLeftRumble, 0);
+                arm.armMotor.set(inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY*0.2);
+                inputs.Rumbles[MANIP_CONTROLLER_ID].setRumble(RumbleType.kLeftRumble, 0);
             }
         }
         
-        if (inputs.m_LeftBumper) {
+        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].LeftBumper) {
             intake.grabObject(true);
-        } else if (inputs.m_RightBumper) {
+        } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].RightBumper) {
             intake.grabObject(false);
         }else {
             intake.stopMotors();
         }
 
         // Grabbing cone
-        if (inputs.m_LeftTriggerAxis > 0.1) {
+        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].LeftTriggerAxis > 0.1) {
             intake.placeObject(true);
             LED.currentColor = LED.SOLID_gold;
         } else {
-            if (inputs.m_RightTriggerAxis > 0.1) {
+            if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].RightTriggerAxis > 0.1) {
                 intake.placeObject(false);
                 LED.currentColor = LED.SOLID_gold;
             }
         }
 
         //led signals
-        if (inputs.m_YButton) {
+        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].YButton) {
             LED.currentColor = LED.STROBE_purple;
         }
-        if (inputs.m_XButton) {
+        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].XButton) {
             LED.currentColor = LED.STROBE_gold;
         }
 

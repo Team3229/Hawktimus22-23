@@ -13,12 +13,10 @@ public class Inputs {
   static final double TRIGGER_DEADBAND = 0.1;
 
   // Controller
-  private XboxController[] Controllers = {null,null,null,null,null};
-  private GenericHID[] Rumbles = {null,null,null,null,null};
+  public XboxController[] Controllers = {null,null,null,null,null};
+  public GenericHID[] Rumbles = {null,null,null,null,null};
   public int controllerCount = 0;
   public ControllerInputs[] ControllerInputs = {null,null,null,null,null};
-  GenericHID m_rumble;
-  GenericHID d_rumble;
 
   public Inputs(int count) {
     controllerCount = count;
@@ -47,7 +45,11 @@ public class Inputs {
       ControllerInputs[i].RightTriggerAxis = ((Math.abs(Controllers[i].getRightTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : Controllers[i].getRightTriggerAxis());
       ControllerInputs[i].LeftTriggerAxis = ((Math.abs(Controllers[i].getLeftTriggerAxis()) < TRIGGER_DEADBAND) ? 0 : Controllers[i].getLeftTriggerAxis());
       ControllerInputs[i].POV = Controllers[i].getPOV();
-    }
+      ControllerInputs[i].AButtonPressed = Controllers[i].getAButtonPressed();
+      ControllerInputs[i].AButtonPressed = Controllers[i].getAButtonReleased();
+      ControllerInputs[i].BButtonPressed = Controllers[i].getBButtonPressed();
+      ControllerInputs[i].BButtonReleased = Controllers[i].getBButtonReleased();
+      }
   }
 
   public void nullControls() {

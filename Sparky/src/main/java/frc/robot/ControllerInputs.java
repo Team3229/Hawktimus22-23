@@ -18,4 +18,8 @@ public class ControllerInputs implements Serializable {
     int POV;
     boolean StartButton;
     boolean BackButton;
+    boolean AButtonPressed;
+    boolean AButtonReleased;
+    boolean BButtonPressed;
+    boolean BButtonReleased;
   }
