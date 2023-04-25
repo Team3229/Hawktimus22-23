@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.drivetrain.SwerveKinematics;
 
@@ -23,7 +22,8 @@ import frc.robot.drivetrain.SwerveKinematics;
  */
 	public class Robot extends TimedRobot {
 
-	private static String selectedAuto = "";
+    /** Array of the currently selected auto files, Increase length depending on how many options you have. */
+	private static String[] selectedAuto = {""};
 	private static boolean autoLeveling = false;
 
 	private static boolean holding = false;
@@ -31,16 +31,14 @@ import frc.robot.drivetrain.SwerveKinematics;
     private static final int DRIVE_CONTROLLER_ID = 0;
     private static final int MANIP_CONTROLLER_ID = 1;
 	private static double[] dp = {0, 0};
+    CaptureReplay captureReplay = new CaptureReplay();
 
 	private static SwerveKinematics chassis = new SwerveKinematics();
 	private static Limelight limelight = new Limelight();
 	private static Arm arm = new Arm();
 	private static Intake intake = new Intake();
 
-	private final SendableChooser <String> autoDropdown = new SendableChooser <> ();
-
 	private static boolean inAuto = false;
-    private static boolean autoMode = true;
 	private static boolean isFMSAttached = false;
 	private static Alliance alliance = Alliance.Invalid;
 	private static double matchTime = 0;
@@ -57,13 +55,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 		chassis.zeroGyro();
 		chassis.configPIDS();
 
-		autoDropdown.setDefaultOption("Default", "def");
-        autoDropdown.addOption("Basic - Left", "bbl");
-        autoDropdown.addOption("Basic - Mid", "bbm");
-        autoDropdown.addOption("Basic - Right", "bbr");
-        autoDropdown.addOption("Charge - Left", "ccl");
-        autoDropdown.addOption("Charge - Right", "ccr");
-        SmartDashboard.putData("Auto Sequence", autoDropdown);
+		captureReplay.setupDropdowns();
 
         SmartDashboard.putBoolean("autoMode", true);
 
@@ -103,11 +95,11 @@ import frc.robot.drivetrain.SwerveKinematics;
 		getDSData();
 
 		chassis.configPIDS();
-        Auto.closeFile();
+        captureReplay.closeFile();
 
 		inputs.nullControls();
 
-        Auto.autoFinished = false;
+        captureReplay.autoFinished = false;
 
 		inAuto = true;
 		holding = false;
@@ -120,11 +112,9 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		matchTime = 15;
 
-        selectedAuto = autoDropdown.getSelected();
-
-        autoMode = SmartDashboard.getBoolean("autoMode", true);
+        selectedAuto[0] = captureReplay.DummyDropdown.getSelected();
 		
-		Auto.selectAuto(autoMode, selectedAuto, chassis.odometry::getEstimatedPosition, chassis::drive);
+		captureReplay.setupPlayback(selectedAuto);
 
 	}
 
@@ -134,39 +124,12 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		updateMatchTime();
 
-        if (autoMode) {
-
-            if (Auto.autoFinished) {
-                inputs.nullControls();
-                if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
-                    chassis.drive(0, -0.07, 0);
-                }
-            } else {
-                if (matchTime <= 6 & (selectedAuto == "bbl" | selectedAuto == "bbr")) {
-                    chassis.drive(0, -0.07, 0);
-                } else if (selectedAuto == "def") {
-                    chassis.drive(0, -0.1, 0);
-                } else {
-                    inputs = Auto.readFile();
-                    if (selectedAuto == "bbl" | selectedAuto == "bbr") {
-                        inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY = -inputs.ControllerInputs[DRIVE_CONTROLLER_ID].leftY;
-                        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == 0) {
-                            inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV = 180;
-                        } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == 90) {
-                            inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV = 270;
-                        } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == 180) {
-                            inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV = 0;
-                        } else if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV == 270) {
-                            inputs.ControllerInputs[DRIVE_CONTROLLER_ID].POV = 90;
-                        }
-                    }
-                    RunControls();
-                }
-            }
+        if (captureReplay.autoFinished) {
+            inputs.nullControls();
         } else {
-            Auto.autoCommand.execute();
+            inputs = captureReplay.readFile();
+            RunControls();
         }
-
 	}
 
 	/** This function is called once when teleop is enabled. */
@@ -181,7 +144,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 		holding = false;
 		inAuto = false;
 
-        Auto.autoFinished = false;
+        captureReplay.autoFinished = false;
 
 		if (SmartDashboard.getBoolean("resetAngleOffsets", false)) {
 			chassis.fixOffsets();
@@ -231,7 +194,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		inputs.nullControls();
 
-        selectedAuto = autoDropdown.getSelected();
+        selectedAuto[0] = captureReplay.DummyDropdown.getSelected();
 
 		inAuto = true;
 		holding = false;
@@ -243,12 +206,8 @@ import frc.robot.drivetrain.SwerveKinematics;
 		LED.currentColor = LED.RAINBOW_rainbowPallete;
 
 		matchTime = 15;
-
-        autoMode = SmartDashboard.getBoolean("autoMode", true);
-
-        if (autoMode) {
-            Auto.setupRecording(selectedAuto);
-        }
+        
+        captureReplay.setupRecording(selectedAuto);
 
     }
 
@@ -256,11 +215,11 @@ import frc.robot.drivetrain.SwerveKinematics;
 	@Override
 	public void testPeriodic() {
 
-        if (autoMode & (matchTime > 0)) {
+        if (matchTime > 0) {
 
             inputs.getControls();
             
-            Auto.record(inputs);
+            captureReplay.record(inputs);
 
             RunControls();
 
