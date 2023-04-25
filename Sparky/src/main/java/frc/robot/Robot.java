@@ -39,6 +39,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 	private static Intake intake = new Intake();
 
 	private static boolean inAuto = false;
+
 	private static boolean isFMSAttached = false;
 	private static Alliance alliance = Alliance.Invalid;
 	private static double matchTime = 0;
@@ -54,7 +55,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		chassis.zeroGyro();
 		chassis.configPIDS();
-
 		captureReplay.setupDropdowns();
 
         SmartDashboard.putBoolean("autoMode", true);
