@@ -2,6 +2,10 @@ package frc.robot;
 
 import java.io.Serializable;
 
+/**
+ * Controller Inputs class, implemented in Inputs.
+ * @see Inputs
+ */
 public class ControllerInputs implements Serializable {
     double rightY;
     double rightX;

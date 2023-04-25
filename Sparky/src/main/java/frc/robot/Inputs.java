@@ -6,18 +6,28 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-
+/**
+ * Inputs class that handles all controller inputs, works for Xbox controllers only.
+ */
 public class Inputs {
-  //Limits
+  /** Deadband for the sticks */
   static final double STICK_DEADBAND = 0.125;
+  /** Deadband for the triggers */
   static final double TRIGGER_DEADBAND = 0.1;
 
-  // Controller
+  /** Array of controllers */
   public XboxController[] Controllers = {null,null,null,null,null};
+  /** Array of rumbles for each controller, used for vibrating controllers */
   public GenericHID[] Rumbles = {null,null,null,null,null};
+  /** The count of controllers connected, DO NOT CHANGE */
   public int controllerCount = 0;
+  /** Array of the inputs for each of the connected controllers */
   public ControllerInputs[] ControllerInputs = {null,null,null,null,null};
 
+  /**
+   * Constructor for the Inputs class. Initilizes the controllerCount, Controllers, Rumbles, and ControllerInputs items.
+   * @param count (Int) The number of controllers, Max 5; Min 1
+   */
   public Inputs(int count) {
     controllerCount = count;
     for(int i = 0; i < count; i++){
@@ -27,6 +37,9 @@ public class Inputs {
     }
   }
 
+  /**
+   * Gets the controllers from the controllers for each connected controller, saves results to ControllerInputs array.
+   */
   void getControls() {
     //Gets controls for each assigned controller
     for(var i = 0; i < controllerCount; i++){
@@ -52,6 +65,9 @@ public class Inputs {
       }
   }
 
+  /**
+   * Nulls the controlls in the ControllerInputs array
+   */
   public void nullControls() {
     for(var i = 0; i < controllerCount; i++){
       ControllerInputs[i].rightY = 0;
