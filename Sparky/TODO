@@ -2,9 +2,6 @@ TODO list for programming
 
 ONCE WE HAVE THE BOT
  - test april tag following
- - test and create autos
- - test/fix arm move to angle code
- - see if we can fix the arm droopiness
 
 IF WE HAVE time
  - tune drivePID
