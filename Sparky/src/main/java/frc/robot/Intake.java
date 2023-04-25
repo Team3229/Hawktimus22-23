@@ -32,7 +32,7 @@ public class Intake {
         intakeMotor = new CANSparkMax(LEFT_ID, MotorType.kBrushless);
         intakeFollowerMotor = new CANSparkMax(RIGHT_ID, MotorType.kBrushless);
         intakeMotor.setInverted(false);
-        intakeFollowerMotor.follow(intakeMotor, true);
+        intakeFollowerMotor.setInverted(true);
 
         solenoid = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, ON_ID, OFF_ID);
 
@@ -43,7 +43,6 @@ public class Intake {
 
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         intakeMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
-        intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus0, 100);
         intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus1, 500);
         intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
     }
@@ -53,9 +52,11 @@ public class Intake {
         if (!cube) {
             solenoid.set(Value.kForward);
             intakeMotor.set(IN_HAND_ROTATIONAL_SPEED*0.6);
+            intakeFollowerMotor.set(IN_HAND_ROTATIONAL_SPEED*0.6);
         } else {
             solenoid.set(Value.kReverse);
             intakeMotor.set(IN_HAND_ROTATIONAL_SPEED);
+            intakeFollowerMotor.set(IN_HAND_ROTATIONAL_SPEED);
         }
     }
 
@@ -64,15 +65,18 @@ public class Intake {
         if(!cube){
             solenoid.set(Value.kForward);
             intakeMotor.set(OUT_HAND_ROTATIONAL_SPEED*2.5);
+            intakeFollowerMotor.set(OUT_HAND_ROTATIONAL_SPEED*2.5);
         } else {
             solenoid.set(Value.kReverse);
             intakeMotor.set(OUT_HAND_ROTATIONAL_SPEED);
+            intakeFollowerMotor.set(OUT_HAND_ROTATIONAL_SPEED);
         }
         
     }
 
     void stopMotors() {
         intakeMotor.stopMotor();
+        intakeFollowerMotor.stopMotor();
     }
 
 }

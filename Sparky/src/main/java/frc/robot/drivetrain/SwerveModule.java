@@ -55,7 +55,6 @@ public class SwerveModule {
 
         anglePIDController = angleMotor.getPIDController();
         drivePIDController = driveMotor.getPIDController();
-
         anglePIDController.setSmartMotionAccelStrategy(AccelStrategy.kTrapezoidal, 0);
         anglePIDController.setSmartMotionMaxAccel(angleMaxAccel, 0);
         anglePIDController.setSmartMotionMaxVelocity(angleMaxVel, 0);
