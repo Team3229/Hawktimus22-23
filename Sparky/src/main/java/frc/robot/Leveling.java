@@ -3,7 +3,6 @@
 package frc.robot;
 
 public class Leveling {
-    private static final double MOVE_SPEED = 0.5;
     private static final double ANGLE_TOLERANCE = 0.2;
     public static final double PITCH_OFFSET = 0.25;
 

@@ -43,7 +43,7 @@ public class Auto {
 	private static FileOutputStream fWriter;
 	private static ObjectOutputStream cmdWrite;
 
-	Controller controller = new Controller();
+	static Inputs inputs = new Inputs(2);
 
 	// PathPlanner
 
@@ -83,11 +83,11 @@ public class Auto {
 		}
 	}
 
-	public static ControllerInputs readFile() {
+	public static Inputs readFile() {
 		// System.out.println("Reading auto file...");
-		ControllerInputs inputs = Controller.nullControls();
+		inputs.nullControls();
 		try {
-		  inputs = (ControllerInputs) cmdRead.readObject();
+		  inputs.ControllerInputs = (ControllerInputs[]) cmdRead.readObject();
 		} catch (IOException err) {
 		  System.out.println("Finished reading auto file");
 		  autoFinished = true;
@@ -110,10 +110,10 @@ public class Auto {
 		}
 	}
 
-  	public static void record(ControllerInputs inputs) {
+  	public static void record(Inputs inputs) {
 		System.out.println("Writing auto file...");
 		try {
-			cmdWrite.writeObject(inputs);
+			cmdWrite.writeObject(inputs.ControllerInputs);
 		} catch(IOException err) {
 			System.out.println("Error writing auto file: " + err.toString());
 		}
