@@ -10,6 +10,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTable;
 
+/** Limelight class for detecting and using april tags
+ */
 public class Limelight {
     private final NetworkTable table;
 
@@ -36,6 +38,7 @@ public class Limelight {
         rotPID.enableContinuousInput(0, 360);
     }
 
+    /**Gets the values from the limelight */
     void getValues() {
         // Turn off Limelight LEDs
         table.getEntry("ledMode").setNumber(1);
@@ -47,6 +50,15 @@ public class Limelight {
         position = new Pose2d(new Translation2d(botPos[0], botPos[1]), Rotation2d.fromDegrees(botPos[5]));
     }
 
+    /**
+     * Goes in the direction of the april tag, if there is one in sight
+     * @deprecated Does not work
+     * @param targetX (double) The april tags X
+     * @param targetY (double) The april tags Y
+     * @param targetZ (double) The april tags Z
+     * @param alliance (Alliance) The alliance the robot is a part of
+     * @return (double[]) The movements to get closer to the tag
+     */
     double[] goToTarget(double targetX, double targetY, double targetZ, Alliance alliance) {
         if (seesTag) {
             posPID.setSetpoint(targetX);

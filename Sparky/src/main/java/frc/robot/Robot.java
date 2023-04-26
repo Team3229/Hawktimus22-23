@@ -24,7 +24,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 
     /** Array of the currently selected auto files, Increase length depending on how many options you have. */
 	private static String[] selectedAuto = {""};
-	private static boolean autoLeveling = false;
 
 	private static boolean holding = false;
 	private static Inputs inputs = new Inputs(2);
@@ -103,7 +102,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		inAuto = true;
 		holding = false;
-		autoLeveling = false;
 		arm.setLevel(0);
 
 		chassis.zeroGyro();
@@ -140,7 +138,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		inputs.nullControls();
 
-		autoLeveling = false;
 		holding = false;
 		inAuto = false;
 
@@ -198,7 +195,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		inAuto = true;
 		holding = false;
-		autoLeveling = false;
 		arm.setLevel(0);
 
 		chassis.zeroGyro();
@@ -304,16 +300,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 		if (limelight.seesTag & (matchTime == 0)) {
 			chassis.navxGyro.setAngleAdjustment(chassis.robotRotation.minus(limelight.position.getRotation()).getDegrees());
 		}
-
-        // toggle auto level (only for autonomous)
-        if (inputs.ControllerInputs[DRIVE_CONTROLLER_ID].StartButton & inAuto) {
-            autoLeveling = true;
-        }
-
-        // if we're auto leveling, move to work
-        if (autoLeveling) {
-            chassis.drive(0, Leveling.getBalanced(chassis.getPitch()+Leveling.PITCH_OFFSET), 0);
-        }
 
         // Line up with nearest cube grid
         // if (inputs.XButton) {

@@ -10,16 +10,27 @@ import java.util.Scanner;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-
+/** Offsets class for saving swerve module angle offsets to the RIO and reading them later */
 public class ModuleOffsets {
 
+    /** The base path into the RIO */
     private final String path = "/home/lvuser/";
+    /** The filenames we will be storing the offsets in */
     private final String[] fileNames = {"frontLeft.txt", "frontRight.txt", "backLeft.txt", "backRight.txt"};
 
+    /** Adds a boolean to reset the offsets or not within SmartDashboard, Implemented in Robot.java */
     public ModuleOffsets() {
         SmartDashboard.putBoolean("resetAngleOffsets", false);
     }
 
+    /**
+     * Calculates the offsets required to zero the angles, and writes it to the RIO
+     * @param fL (Rotation2d) The front left angle when rotated to be perpendicular to the forwards driving direction
+     * @param fR (Rotation2d) The front right angle when rotated to be perpendicular to the forwards driving direction
+     * @param bL (Rotation2d) The back left angle when rotated to be perpendicular to the forwards driving direction
+     * @param bR (Rotation2d) The back right angle when rotated to be perpendicular to the forwards driving direction
+     * @return (double[]) The new offsets that were just written to the RIO
+     */
     public double[] calculateOffsets(Rotation2d fL, Rotation2d fR, Rotation2d bL, Rotation2d bR) {
         // takes the current values, assumes they should be 0, and returns an [] of the new values to set them to after storing it for futute use
         // if old offsets < 90, its closer to 0. Else if > 90 & < 270, closer to 180. Else its > 270, so closer to 360
@@ -35,6 +46,10 @@ public class ModuleOffsets {
         return newOffsets;
     }
 
+    /**
+     * Writes the new offsets to the RIO in the files
+     * @param newAngles (double[]) The new angles to be written to the RIO
+     */
     private void writeOffsets(double[] newAngles) {
         // attempt to write the new offsets to the file, catches exceptions if failure
         // writes strings to the file, need to parse it to doubl.getDegrees()e once read.
@@ -50,6 +65,10 @@ public class ModuleOffsets {
         }
     }
 
+    /**
+     * Reads the currently stored values in the RIO
+     * @return (double[]) The currently stored values in the RIO 
+     */
     public double[] read() {
         // returns the currently stored values, 0,0,0,0 if none, as doubl.getDegrees()es.
         double[] values = {0,0,0,0};

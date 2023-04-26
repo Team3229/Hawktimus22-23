@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.PneumaticsControlModule;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 
+/** Intake class for controlling the intake */
 public class Intake {
     
     CANSparkMax intakeMotor;
@@ -28,6 +29,7 @@ public class Intake {
     private static final double IN_HAND_ROTATIONAL_SPEED = -0.2;
     private static final double OUT_HAND_ROTATIONAL_SPEED = 0.1;
 
+    /**Initilizes all the intakes motors, pneumatics, and compressor */
     Intake() {
         intakeMotor = new CANSparkMax(LEFT_ID, MotorType.kBrushless);
         intakeFollowerMotor = new CANSparkMax(RIGHT_ID, MotorType.kBrushless);
@@ -47,6 +49,10 @@ public class Intake {
         intakeFollowerMotor.setPeriodicFramePeriod(PeriodicFrame.kStatus2, 500);
     }
 
+    /**
+     * Grabs an object
+     * @param cube (boolean) Is the object we are grabbing a cube
+     */
     void grabObject(boolean cube){
         
         if (!cube) {
@@ -60,6 +66,10 @@ public class Intake {
         }
     }
 
+    /**
+     * Place the currently held object
+     * @param cube (boolean) Is the currently held object a cube
+     */
     void placeObject(boolean cube){
 
         if(!cube){
@@ -74,6 +84,7 @@ public class Intake {
         
     }
 
+    /** Stops the intake motors */
     void stopMotors() {
         intakeMotor.stopMotor();
         intakeFollowerMotor.stopMotor();

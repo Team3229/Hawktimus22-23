@@ -4,6 +4,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 
+/** LED class for controlling LED's on the robot */
 public class LED {
     
     private static Spark blinkin = new Spark(0);
@@ -35,6 +36,7 @@ public class LED {
 
     public static float currentColor = 0f;
 
+    /** Sets the color of the LED's */
     public static void setColor() {
         if (currentColor == 0f) {
             blinkin.stopMotor();
