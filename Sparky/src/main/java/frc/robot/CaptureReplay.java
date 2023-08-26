@@ -1,11 +1,23 @@
-// Author: Tony Simone (3229 Mentor)
+// Author: 3229 Programming Subteam 2022-2023
 
-// Auto recording class
-//
-// NOTE: Verified that we can write multiple serialized objects to a file and
-//       deserialize them properly. For the ControllerInputs class, this is
-//       fairly compact, also.
-//
+/*
+ * Capture Replay Class
+ * Capture Replay (CR) is a system of auto where you record an auto sequence, and play it back during the match.
+ * To setup CR for a new bot you must do the following
+ * -Remove all old bots dropdowns and stage logic
+ * -Create a dropdown for each "stage" of autos you would like to create
+ * -Create as many options (just a string, used as filename) for each dropdown as you like.
+ * -Implement them in both readDropdowns and setupDropdowns, following examples.
+ * -Add cases within setupPlayback as you have stages in the auto accordingly
+ * -Add logic chain for setupRecording, following its comment blobs instructions
+ * 
+ * To implement CR in Robot.java
+ * -Instantiate CaptureReplay
+ * -In autoInit call .closeFile THEN .setupPlayback
+ * -In autoPeriodic set your inputs to the return value of .readFile, pass it to your input handler
+ * -In testInit call .setupRecording AFTER making sure to select whatever settings you want with your dropdowns
+ * -In testPeriodic pass your inputs to .record as you drive. It will automatically clear null frames before and after the auto ensuring no wasted miliseconds.
+ */
 
 package frc.robot;
 
@@ -21,6 +33,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  */
 public class CaptureReplay {
 
+	/** Array of the currently selected auto files, Increase length depending on how many auto stages you have. */
+	private static String[] selectedAuto = {""};
+
 	static final boolean WRITE = true;
 	static final boolean READ = false;
 	/** Path on the RIO to save the auto files, make sure a directory is created before using if applicable. */
@@ -28,8 +43,20 @@ public class CaptureReplay {
 
 	/** Example dropdown for choosing an auto sequence, create multiple with better names as needed. */
 	public final SendableChooser <String> DummyDropdown = new SendableChooser <> ();
-	/** Example option for a dropdown */
+	/** Example option for a dropdown, */
 	public static final String DummyOption = "Dummy";
+
+	//SPARKY HOTFIX OPTIONS
+	//The following are options for the 2022-2023 Charged Up Season
+	//Remove these for future auto use, and remove their implemeation.
+	//When removing, make sure to switch from using OLDbasePath to basePath, and ssh into the rio to ensure the folder exists.
+	//These are only here for backwards compatitability and do not use the new multi stage system
+	//No time to remake them sadly, so they stay till 2023-2024 season :(
+	public final SendableChooser <String> SparkyAutos = new SendableChooser<>();
+	static final String OLDbasePath = "/home/lvuser/";
+	public final String basicLeft = "bbl";
+	public final String basicMid = "bbm";
+	public final String basicRight = "bbr";
 
 	/** No selection option, add to all dropdowns. */
 	public static final String noSelection = "N/A";
@@ -48,8 +75,6 @@ public class CaptureReplay {
 	/** Number of cached null frames during recording */
 	public int cachedNulls = 0;
 
-	/** String array of the chosen input file names */
-	private String[] inputFileNames;
 	/** The current step in the auto sequence */
 	private int autoStep = 1;
 	/** The inputs instance */
@@ -57,24 +82,38 @@ public class CaptureReplay {
 
 	public CaptureReplay() {}
 
-	/** Sets up the dropdowns and their options */
+	/**Reads the dropdowns and sets up selectedAuto for playback/recording autos. */
+	private void readDropdowns() {
+		//Change this so it sets up selectedAuto for all of the autos
+		//2022-2023 Charged Up Sparky auto options read
+		selectedAuto[0] = SparkyAutos.getSelected();
+	}
+	/** Sets up the dropdowns and their options, Call this on robotInit */
 	public void setupDropdowns() {
-		DummyDropdown.setDefaultOption("Dummy", DummyOption);
-		DummyDropdown.addOption("NO SELECTION", "N/A");
-		
-		SmartDashboard.putData("Dummy", DummyDropdown);
+		// EXAMPLE IMPLEMENTATION OF DROPDOWNS, DO NOT REMOVE
+		// DummyDropdown.setDefaultOption("NO SELECTION", noSelection);
+		// DummyDropdown.addOption("Dummy Option", DummyOption);
+		// SmartDashboard.putData("DummyDropdown", DummyDropdown);
+
+		//2022-2023 Charged Up Sparky auto options setup
+		SparkyAutos.setDefaultOption("NO SELECTION", noSelection);
+		SparkyAutos.addOption("Basic Left", basicLeft);
+		SparkyAutos.addOption("Basic Right", basicMid);
+		SparkyAutos.addOption("Basic Middle", basicRight);
+		SmartDashboard.putData("Sparky Autos", SparkyAutos);
 	}
 
 	/**
 	 * Sets up capture replay for the playback of an auto sequence
-	 * @param names (String[]) An array of the file identifiers, selected from the dropdowns
 	 */
-	public void setupPlayback(String[] names) {
-		inputFileNames = names;
+	public void setupPlayback() {
+		readDropdowns();
 		switch(autoStep) {
 			//Add more cases between 1 and 2, incrementing by one for each stage for autos, changing the paths as necessary.
+			//As an example stage two it would be selectedAuto[0] + selectedAuto[1] not just selectedAuto[0] or whatever, because were merging fnames to match recorded status
+			//Make sure to end with a case that ends the auto! Else everything shatters!
 			case 1:
-				cmdFile = new File(basePath + inputFileNames[0] + ".aut");
+				cmdFile = new File(OLDbasePath + selectedAuto[0] + ".aut");
 				break;
 			case 2:
 				//End of auto.
@@ -102,7 +141,7 @@ public class CaptureReplay {
 			// if were finished, check what stage we were in and see if theres another file we need to setup and begin playback for
 			closeFile();
 			++autoStep;
-			setupPlayback(inputFileNames);
+			setupPlayback();
 		} catch (ClassNotFoundException cerr) {
 			System.out.println("Could not read controller inputs object from auto file: " + cerr.toString());
 		}
@@ -113,18 +152,23 @@ public class CaptureReplay {
 	 * Sets up capture replay for recording a new file or rewriting an old one
 	 * @param inputFileName (String[]) An array of the file identifiers, selected from the dropdowns
 	 */
-	public void setupRecording(String[] inputFileName) {
+	public void setupRecording() {
+		readDropdowns();
 		inputsStarted = false;
-		//Example of how to do it with more than one
-		// if (inputFileName[1] == "N/A") {
-		// 	cmdFile = new File(basePath + inputFileNames[2] + inputFileNames[3] + ".aut");
-		// } else if (inputFileName[2] == "N/A"){
-		// 	cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[0] + ".aut");
-		// } else {
-		// 	cmdFile = new File(basePath + inputFileNames[1] + inputFileNames[2] + ".aut");
-		// }
-		//Init the file we have selected
-		cmdFile = new File(basePath + inputFileNames[0] + ".aut");
+		//EXPLANATION COMMENT BLOB BECAUSE THIS HAS IMPORTANT LOGIC
+		//You want to create a system to combine the sections into names according to what was selected
+		//As in lets say you have 3 stages to this auto
+		//If you want to record stage two, well that depends on what stage 1 was right?
+		//So you select stage1, assuming prerecorded, then select whatever stage two choice you are recording
+		//Record the stage two auto (Remember to start the robot at its ending location from the stage 1 or it all breaks!)
+		//So logic for three stages would be something like
+		// if 1 selected, nothing else, record 1
+		// elif 1 and 2 selected, record the file for the string name basePath + selectedAuto[0] + selectedAuto[1] + .aut
+		// elif 1 2 and 3 selected, record the file for that specific stage three auto
+		//I hope to all future readers this makes sense, because its a pain if you mess this up lol -NS
+
+		//This is just a hotfix because it needs to work with sparky, remove when setting up next bots auto.
+		cmdFile = new File(OLDbasePath + selectedAuto[0] + ".aut");
 		
 		try {
 			fWriter = new FileOutputStream(cmdFile);

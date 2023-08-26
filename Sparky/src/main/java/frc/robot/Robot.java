@@ -22,9 +22,6 @@ import frc.robot.drivetrain.SwerveKinematics;
  */
 	public class Robot extends TimedRobot {
 
-    /** Array of the currently selected auto files, Increase length depending on how many options you have. */
-	private static String[] selectedAuto = {""};
-
 	private static boolean holding = false;
 	private static Inputs inputs = new Inputs(2);
     private static final int DRIVE_CONTROLLER_ID = 0;
@@ -110,9 +107,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		matchTime = 15;
 
-        selectedAuto[0] = captureReplay.DummyDropdown.getSelected();
-		
-		captureReplay.setupPlayback(selectedAuto);
+		captureReplay.setupPlayback();
 
 	}
 
@@ -191,8 +186,6 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		inputs.nullControls();
 
-        selectedAuto[0] = captureReplay.DummyDropdown.getSelected();
-
 		inAuto = true;
 		holding = false;
 		arm.setLevel(0);
@@ -203,7 +196,7 @@ import frc.robot.drivetrain.SwerveKinematics;
 
 		matchTime = 15;
         
-        captureReplay.setupRecording(selectedAuto);
+        captureReplay.setupRecording();
 
     }
 
