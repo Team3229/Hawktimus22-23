@@ -17,6 +17,12 @@
  * -In autoPeriodic set your inputs to the return value of .readFile, pass it to your input handler
  * -In testInit call .setupRecording AFTER making sure to select whatever settings you want with your dropdowns
  * -In testPeriodic pass your inputs to .record as you drive. It will automatically clear null frames before and after the auto ensuring no wasted miliseconds.
+ * 
+ * To SSH into rio incase it is needed
+ * -Connect to robot
+ * -In terminal run sshlvuser@10.32.29.2 (Change middle two numbers to your respective team name if appliccable)
+ * -vi [filename] to open a file
+ * -:x to exit vi
  */
 
 package frc.robot;
